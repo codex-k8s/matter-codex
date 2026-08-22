@@ -72,7 +72,7 @@ spec:
   duration: 2160h
   renewBefore: 360h
   privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
-  dnsNames: [control.kodex.works]
+  dnsNames: [__MATTERCODEX_PUBLIC_HOST__]
   usages: [server auth]
   issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
 ---
@@ -172,6 +172,54 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  name: control-plane-nats-client
+  namespace: mattercodex-system
+spec:
+  secretName: control-plane-nats-client-tls
+  duration: 24h
+  renewBefore: 8h
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+  commonName: control-plane-nats-client
+  uris:
+    - spiffe://mattercodex.local/ns/mattercodex-system/sa/control-plane
+  usages: [client auth]
+  issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: control-plane-nats-bootstrap-client
+  namespace: mattercodex-system
+spec:
+  secretName: control-plane-nats-bootstrap-client-tls
+  duration: 24h
+  renewBefore: 8h
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+  commonName: control-plane-nats-bootstrap-client
+  uris:
+    - spiffe://mattercodex.local/ns/mattercodex-system/sa/control-plane-broker-bootstrap
+  usages: [client auth]
+  issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: control-api-gateway-nats-client
+  namespace: mattercodex-system
+spec:
+  secretName: control-api-gateway-nats-client-tls
+  duration: 24h
+  renewBefore: 8h
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+  commonName: control-api-gateway-nats-client
+  uris:
+    - spiffe://mattercodex.local/ns/mattercodex-system/sa/control-api-gateway
+  usages: [client auth]
+  issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
   name: mattercodex-object-store
   namespace: mattercodex-system
 spec:
@@ -185,6 +233,38 @@ spec:
     - mattercodex-object-store.mattercodex-system.svc.cluster.local
     - object-store.mattercodex-system.svc.cluster.local
   usages: [server auth]
+  issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: runtime-controller-callback-server
+  namespace: mattercodex-system
+spec:
+  secretName: runtime-controller-callback-server-tls
+  duration: 2160h
+  renewBefore: 360h
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+  dnsNames:
+    - runtime-controller-callback
+    - runtime-controller-callback.mattercodex-system.svc
+    - runtime-controller-callback.mattercodex-system.svc.cluster.local
+  usages: [server auth]
+  issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: runtime-execution-client
+  namespace: mattercodex-system
+spec:
+  secretName: runtime-execution-client-tls
+  duration: 24h
+  renewBefore: 8h
+  privateKey: {algorithm: ECDSA, size: 256, rotationPolicy: Always}
+  uris:
+    - spiffe://mattercodex.local/ns/mattercodex-system/sa/agent-runner
+  usages: [client auth]
   issuerRef: {name: mattercodex-prototype-ca, kind: Issuer}
 ---
 apiVersion: cert-manager.io/v1
@@ -908,7 +988,7 @@ data:
                             - match: {prefix: "/"}
                               route:
                                 cluster: legacy_mattermost
-                                host_rewrite_literal: chat.kodex.works
+                                host_rewrite_literal: __MATTERCODEX_MATTERMOST_HOST__
                     upgrade_configs:
                       - upgrade_type: websocket
                     http_filters:
@@ -1286,7 +1366,7 @@ spec:
             matchExpressions:
               - key: app.kubernetes.io/name
                 operator: In
-                values: [control-plane, runtime-controller]
+                values: [control-api-gateway, control-plane]
       ports:
         - {protocol: TCP, port: 4222}
 ---
@@ -1298,7 +1378,7 @@ spec:
     matchExpressions:
       - key: app.kubernetes.io/name
         operator: In
-        values: [control-plane, runtime-controller]
+        values: [control-api-gateway, control-plane]
   policyTypes: [Egress]
   egress:
     - to:

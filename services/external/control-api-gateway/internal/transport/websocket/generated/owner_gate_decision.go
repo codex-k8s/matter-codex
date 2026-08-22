@@ -4,11 +4,10 @@ package generated
 type OwnerGateDecision uint
 
 const (
-  OwnerGateDecisionPending OwnerGateDecision = iota
-  OwnerGateDecisionApproved
-  OwnerGateDecisionRejected
-  OwnerGateDecisionChangesRequested
-  OwnerGateDecisionCancelled
+  OwnerGateDecisionApprove OwnerGateDecision = iota
+  OwnerGateDecisionReject
+  OwnerGateDecisionRequestChanges
+  OwnerGateDecisionCancel
 )
 
 // Value returns the value of the enum.
@@ -19,11 +18,10 @@ func (op OwnerGateDecision) Value() any {
 	return OwnerGateDecisionValues[op]
 }
 
-var OwnerGateDecisionValues = []any{"PENDING","APPROVED","REJECTED","CHANGES_REQUESTED","CANCELLED"}
+var OwnerGateDecisionValues = []any{"APPROVE","REJECT","REQUEST_CHANGES","CANCEL"}
 var ValuesToOwnerGateDecision = map[any]OwnerGateDecision{
-  OwnerGateDecisionValues[OwnerGateDecisionPending]: OwnerGateDecisionPending,
-  OwnerGateDecisionValues[OwnerGateDecisionApproved]: OwnerGateDecisionApproved,
-  OwnerGateDecisionValues[OwnerGateDecisionRejected]: OwnerGateDecisionRejected,
-  OwnerGateDecisionValues[OwnerGateDecisionChangesRequested]: OwnerGateDecisionChangesRequested,
-  OwnerGateDecisionValues[OwnerGateDecisionCancelled]: OwnerGateDecisionCancelled,
+  OwnerGateDecisionValues[OwnerGateDecisionApprove]: OwnerGateDecisionApprove,
+  OwnerGateDecisionValues[OwnerGateDecisionReject]: OwnerGateDecisionReject,
+  OwnerGateDecisionValues[OwnerGateDecisionRequestChanges]: OwnerGateDecisionRequestChanges,
+  OwnerGateDecisionValues[OwnerGateDecisionCancel]: OwnerGateDecisionCancel,
 }

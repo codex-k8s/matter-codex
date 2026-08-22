@@ -9,7 +9,7 @@ GRPC_GO_PLUGIN_REVISION := 1
 ASYNCAPI ?= asyncapi
 CONTROL_API_GATEWAY_ASYNCAPI_VERSION := @asyncapi/cli/6.0.2
 
-.PHONY: check-go-toolchain check-proto-toolchain check-control-api-gateway-asyncapi-toolchain test-go-toolchain-contract test-go test-go-postgres test-go-all test-render-evidence tidy-go govulncheck gen-openapi gen-openapi-go gen-integration-gateway-openapi-go gen-interaction-gateway-openapi-go gen-control-api-gateway-openapi-go gen-control-api-gateway-asyncapi check-control-api-gateway-asyncapi-codegen lint-control-api-gateway-asyncapi gen-openapi-ts lint-proto build-proto gen-proto check-proto-codegen
+.PHONY: check-go-toolchain check-proto-toolchain check-control-api-gateway-asyncapi-toolchain test-go-toolchain-contract test-web-only-release test-authority-policy-codegen test-control-plane-postgres test-go test-go-all tidy-go govulncheck gen-openapi gen-openapi-go gen-control-api-gateway-openapi-go gen-control-api-gateway-asyncapi check-control-api-gateway-asyncapi-codegen lint-control-api-gateway-asyncapi gen-openapi-ts lint-proto build-proto gen-proto check-proto-codegen
 
 check-go-toolchain:
 	@./scripts/check-go-toolchain.sh
@@ -25,21 +25,26 @@ check-proto-toolchain:
 test-go-toolchain-contract: check-go-toolchain
 	@./scripts/tests/go-toolchain-contract-test.sh
 
-test-go: test-go-toolchain-contract
-	env -u GOFLAGS GOENV=off GOWORK=off go test -tags= ./...
+test-web-only-release:
+	@./scripts/tests/web-only-release-test.sh
 
-test-go-postgres: check-go-toolchain
-	@env -u GOFLAGS GOENV=off GOWORK=off go run ./services/external/bot-service/cmd/postgres-test-target --majors 15,16 -- go test -tags=postgres ./services/external/bot-service/internal/repository/postgres/... ./services/external/bot-service/internal/domain/service ./services/external/bot-service/internal/transport/http ./services/external/bot-service/internal/app -count=1
+test-authority-policy-codegen:
+	@./scripts/tests/authority-policy-codegen-test.sh
+
+test-control-plane-postgres:
+	@./scripts/tests/control-plane-postgres-test.sh
+
+test-go: test-go-toolchain-contract
+	@./scripts/test-go-modules.sh
 
 test-go-all:
 	@$(MAKE) test-go
-	@$(MAKE) test-go-postgres
-
-test-render-evidence: check-go-toolchain
-	go test ./services/external/bot-service/internal/app -run TestBotServiceRenderCountsNonEmptyObjects -count=1
 
 tidy-go: check-go-toolchain
-	go mod tidy
+	@for module in go.mod $$(find libs/go services -name go.mod -type f | sort); do \
+		directory=$$(dirname "$$module"); \
+		(cd "$$directory" && env -u GOFLAGS GOENV=off GOWORK=off go mod tidy); \
+	done
 
 govulncheck: check-go-toolchain
 	$(if $(filter file,$(origin GOVULNCHECK_VERSION)),,$(error GOVULNCHECK_VERSION нельзя переопределять))
@@ -48,14 +53,7 @@ govulncheck: check-go-toolchain
 
 gen-openapi: gen-openapi-go gen-openapi-ts
 
-gen-openapi-go: gen-integration-gateway-openapi-go gen-interaction-gateway-openapi-go gen-control-api-gateway-openapi-go
-	oapi-codegen -config tools/codegen/openapi/control-center-go.yaml specs/openapi/control-center.v1.yaml
-
-gen-integration-gateway-openapi-go:
-	oapi-codegen -config tools/codegen/openapi/integration-gateway-go.yaml contracts/openapi/integration-gateway/v1/openapi.yaml
-
-gen-interaction-gateway-openapi-go:
-	oapi-codegen -config tools/codegen/openapi/interaction-gateway-go.yaml contracts/openapi/interaction-gateway/v1/openapi.yaml
+gen-openapi-go: gen-control-api-gateway-openapi-go
 
 gen-control-api-gateway-openapi-go:
 	oapi-codegen -config tools/codegen/openapi/control-api-gateway-go.yaml contracts/openapi/control-api-gateway/v1/openapi.yaml
@@ -83,7 +81,7 @@ check-control-api-gateway-asyncapi-codegen:
 	./tools/codegen/check-control-api-gateway-asyncapi.sh
 
 gen-openapi-ts:
-	openapi-ts -f tools/codegen/openapi/control-center-ts.config.mjs
+	cd services/staff/control-center && npm exec -- openapi-ts -f openapi-ts.config.mjs
 
 lint-proto: check-proto-toolchain
 	buf lint

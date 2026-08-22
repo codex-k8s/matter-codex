@@ -241,12 +241,23 @@ switch (command) {
     break;
   }
   case "validate-oidc-snapshot": {
-    if (args.length !== 3) fail("validate-oidc-snapshot requires snapshot, SHA-256 and generation paths");
+    if (args.length !== 4) fail("validate-oidc-snapshot requires snapshot, SHA-256, generation and expected issuer");
     const snapshot = JSON.parse(readFileSync(args[0], "utf8"));
     const generation = readFileSync(args[2], "utf8").trim();
+    const expectedIssuer = args[3];
+    let issuerURL;
+    try {
+      issuerURL = new URL(expectedIssuer);
+    } catch {
+      fail("expected OIDC issuer is invalid");
+    }
+    if (issuerURL.protocol !== "https:" || issuerURL.username !== "" || issuerURL.password !== "" ||
+        issuerURL.search !== "" || issuerURL.hash !== "") {
+      fail("expected OIDC issuer is invalid");
+    }
     if (JSON.stringify(Object.keys(snapshot).sort()) !== JSON.stringify(["algorithms", "audience", "digest_sha256", "generation", "issuer", "jwks", "schema_version"]) ||
         snapshot.schema_version !== 1 || !Number.isSafeInteger(snapshot.generation) || snapshot.generation < 1 ||
-        String(snapshot.generation) !== generation || snapshot.issuer !== "https://sso.kodex.works/realms/mattercodex" ||
+        String(snapshot.generation) !== generation || snapshot.issuer !== expectedIssuer ||
         snapshot.audience !== "mattercodex-integration-gateway" || JSON.stringify(snapshot.algorithms) !== '["RS256"]' ||
         snapshot.jwks === null || !Array.isArray(snapshot.jwks.keys) || snapshot.jwks.keys.length < 1 || snapshot.jwks.keys.length > 16) {
       fail("OIDC provider snapshot binding is invalid");
@@ -585,17 +596,23 @@ switch (command) {
     break;
   }
   case "validate-nats-creds": {
-    if (args.length !== 4) fail("validate-nats-creds requires input, name, publish and subscribe sets");
+    if (args.length !== 6) fail("validate-nats-creds requires input, name, allow publish, allow subscribe, deny publish and deny subscribe sets");
     const value = readFileSync(args[0], "utf8");
     const jwtMatch = value.match(/BEGIN NATS USER JWT-----\s*([A-Za-z0-9_.-]+)\s*-+END NATS USER JWT/);
     if (!jwtMatch || !/BEGIN USER NKEY SEED/.test(value)) fail("NATS credentials file is invalid");
     const claims = decodeJWT(jwtMatch[1]);
     const expectedPublish = args[2].split(",").filter(Boolean).sort();
     const expectedSubscribe = args[3].split(",").filter(Boolean).sort();
+    const expectedPublishDeny = args[4].split(",").filter(Boolean).sort();
+    const expectedSubscribeDeny = args[5].split(",").filter(Boolean).sort();
     const actualPublish = [...(claims.nats?.pub?.allow ?? [])].sort();
     const actualSubscribe = [...(claims.nats?.sub?.allow ?? [])].sort();
+    const actualPublishDeny = [...(claims.nats?.pub?.deny ?? [])].sort();
+    const actualSubscribeDeny = [...(claims.nats?.sub?.deny ?? [])].sort();
     if (claims.name !== args[1] || JSON.stringify(actualPublish) !== JSON.stringify(expectedPublish) ||
-        JSON.stringify(actualSubscribe) !== JSON.stringify(expectedSubscribe)) fail("NATS user permissions are invalid");
+        JSON.stringify(actualSubscribe) !== JSON.stringify(expectedSubscribe) ||
+        JSON.stringify(actualPublishDeny) !== JSON.stringify(expectedPublishDeny) ||
+        JSON.stringify(actualSubscribeDeny) !== JSON.stringify(expectedSubscribeDeny)) fail("NATS user permissions are invalid");
     break;
   }
   case "validate-nats-server": {

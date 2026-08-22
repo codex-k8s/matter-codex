@@ -8,7 +8,7 @@ verify_certificate_hostname() {
   openssl verify -CAfile "$2" -verify_hostname "$3" "$1" >/dev/null 2>&1
 }
 usage() {
-  printf 'Usage: %s --mode render|preflight|apply|readback --external-material-file <path> [--context <exact-context>] [--output <path>] [--nsc-bin <path>]\n' "$0" >&2
+  printf 'Usage: %s --mode render|preflight|apply|readback --oidc-issuer <https-url> --external-material-file <path> [--context <exact-context>] [--output <path>] [--nsc-bin <path>]\n' "$0" >&2
 }
 
 mode=""
@@ -16,6 +16,7 @@ expected_context=""
 external_material_file=""
 output=""
 nsc_bin=""
+oidc_issuer=""
 while (($# > 0)); do
   case "$1" in
     --mode) mode="${2:-}"; shift 2 ;;
@@ -23,11 +24,13 @@ while (($# > 0)); do
     --external-material-file) external_material_file="${2:-}"; shift 2 ;;
     --output) output="${2:-}"; shift 2 ;;
     --nsc-bin) nsc_bin="${2:-}"; shift 2 ;;
+    --oidc-issuer) oidc_issuer="${2:-}"; shift 2 ;;
     --help) usage; exit 0 ;;
     *) usage; fail "unsupported argument: $1" ;;
   esac
 done
 case "$mode" in render|preflight|apply|readback) ;; *) fail "mode must be render, preflight, apply or readback" ;; esac
+[[ "$oidc_issuer" =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?(/[^[:space:]?#]*)?$ ]] || fail "exact HTTPS OIDC issuer is required"
 [[ "$mode" == readback || -r "$external_material_file" ]] || fail "external material file is required"
 [[ "$mode" != render || -n "$output" ]] || fail "render output is required"
 [[ "$mode" == render || -n "$expected_context" ]] || fail "exact Kubernetes context is required"
@@ -204,7 +207,8 @@ if [[ "$mode" == readback ]]; then
       >"$temporary_directory/$key" || fail "ConfigMap/integration-gateway-oidc-provider readback is invalid"
   done
   node "$helper" validate-oidc-snapshot "$temporary_directory/provider-snapshot.json" \
-    "$temporary_directory/provider-snapshot.sha256" "$temporary_directory/provider-snapshot.generation" >/dev/null
+    "$temporary_directory/provider-snapshot.sha256" "$temporary_directory/provider-snapshot.generation" \
+    "$oidc_issuer" >/dev/null
   while IFS= read -r name; do
     service_account=${name#internal-rpc-authority-}; service_account=${service_account%-workload-tls}
     cert="$temporary_directory/readback-$name.crt"
@@ -344,7 +348,8 @@ node "$helper" validate-git-aggregate \
 node "$helper" validate-oidc-snapshot \
   "$(value_path ConfigMap integration-gateway-oidc-provider provider-snapshot.json)" \
   "$(value_path ConfigMap integration-gateway-oidc-provider provider-snapshot.sha256)" \
-  "$(value_path ConfigMap integration-gateway-oidc-provider provider-snapshot.generation)" >/dev/null
+  "$(value_path ConfigMap integration-gateway-oidc-provider provider-snapshot.generation)" \
+  "$oidc_issuer" >/dev/null
 
 # Dynamic aggregate Secrets начинаются с канонического пустого поколения
 # и сохраняются при idempotent materialization без сброса runtime CAS state.
@@ -657,7 +662,6 @@ generate_tls() {
     integration-egress-proxy-server-tls) service=integration-egress-proxy; service_account=integration-egress-proxy ;;
     integration-egress-proxy-provider-client-tls) service=integration-egress-proxy-client; service_account=integration-egress-proxy ;;
     provider-health-adapter-server-tls) service=provider-health-adapter; service_account=provider-health-adapter ;;
-    runtime-controller-nats-tls) service_account=runtime-controller ;;
     internal-rpc-authority-*-workload-tls)
       service_account=${name#internal-rpc-authority-}; service_account=${service_account%-workload-tls}
       service=$service_account ;;
@@ -665,7 +669,7 @@ generate_tls() {
   esac
   if [[ -s "$cert" && -s "$key" && -s "$ca" ]]; then
     openssl verify -CAfile "$ca" "$cert" >/dev/null 2>&1 || fail "Secret/$name TLS chain is invalid"
-    if [[ "$name" == internal-rpc-authority-*-workload-tls || "$name" == runtime-controller-nats-tls ]]; then
+    if [[ "$name" == internal-rpc-authority-*-workload-tls ]]; then
       cert_text="$temporary_directory/$name.text"; openssl x509 -in "$cert" -noout -text >"$cert_text"
       grep -Fq "URI:spiffe://mattercodex.local/ns/$namespace/sa/$service_account" "$cert_text" || fail "Secret/$name SPIFFE identity is invalid"
     fi
@@ -701,12 +705,12 @@ jq -n --arg digest "$(sha256sum "$cert_der" | awk '{print $1}')" \
 
 # NATS account and users are generated as one atomic set; a partial live set is rejected.
 nats_existing=0
-for name in mattercodex-nats-credentials control-plane-nats runtime-controller-nats; do
+for name in mattercodex-nats-credentials control-plane-nats control-plane-nats-bootstrap control-api-gateway-nats; do
   if [[ -n "$expected_context" ]] && kubectl --context "$expected_context" -n "$namespace" get secret "$name" >/dev/null 2>&1; then
     nats_existing=$((nats_existing + 1))
   fi
 done
-if [[ "$nats_existing" -eq 3 ]]; then
+if [[ "$nats_existing" -eq 4 ]]; then
   nats_server_json="$temporary_directory/nats-server.json"
   kubectl --context "$expected_context" -n "$namespace" get secret mattercodex-nats-credentials -o json >"$nats_server_json"
   [[ "$(jq -c '[.data|keys[]]|sort' "$nats_server_json")" == '["account.jwt","account.public","operator.jwt","system-account.jwt","system-account.public"]' ]] || fail "NATS server credential key set mismatch"
@@ -726,13 +730,19 @@ else
   "$nsc_bin" -H "$NSC_HOME" add account -n applications >/dev/null
   "$nsc_bin" -H "$NSC_HOME" edit account -n applications --js-mem-storage 536870912 --js-disk-storage 8589934592 --js-streams 8 --js-consumer 32 >/dev/null
   "$nsc_bin" -H "$NSC_HOME" add user -a applications -n control-plane \
-    --allow-pub '$JS.API.>,control_plane.runtime_configuration_changed' --allow-sub '_INBOX.>' >/dev/null
-  "$nsc_bin" -H "$NSC_HOME" add user -a applications -n runtime-controller \
-    --allow-pub '$JS.API.>,$JS.ACK.>' --allow-sub '_INBOX.>,control_plane.runtime_configuration_changed' >/dev/null
+    --allow-pub '$JS.API.STREAM.INFO.CONTROL_PLANE,control_plane.platform.*.events,control_plane.run.*.*.events' \
+    --allow-sub '_INBOX.>' >/dev/null
+  "$nsc_bin" -H "$NSC_HOME" add user -a applications -n control-plane-bootstrap \
+    --allow-pub '$JS.API.STREAM.CREATE.CONTROL_PLANE,$JS.API.STREAM.INFO.CONTROL_PLANE' \
+    --allow-sub '_INBOX.>' >/dev/null
+  "$nsc_bin" -H "$NSC_HOME" add user -a applications -n control-api-gateway \
+    --allow-sub 'control_plane.platform.*.events,control_plane.run.*.*.events' --deny-pub '>' >/dev/null
   mkdir -p "$(dirname -- "$(value_path Secret control-plane-nats user.creds)")" \
-    "$(dirname -- "$(value_path Secret runtime-controller-nats user.creds)")"
+    "$(dirname -- "$(value_path Secret control-plane-nats-bootstrap user.creds)")" \
+    "$(dirname -- "$(value_path Secret control-api-gateway-nats user.creds)")"
   "$nsc_bin" -H "$NSC_HOME" generate creds -a applications -n control-plane -o "$(value_path Secret control-plane-nats user.creds)" >/dev/null 2>&1
-  "$nsc_bin" -H "$NSC_HOME" generate creds -a applications -n runtime-controller -o "$(value_path Secret runtime-controller-nats user.creds)" >/dev/null 2>&1
+  "$nsc_bin" -H "$NSC_HOME" generate creds -a applications -n control-plane-bootstrap -o "$(value_path Secret control-plane-nats-bootstrap user.creds)" >/dev/null 2>&1
+  "$nsc_bin" -H "$NSC_HOME" generate creds -a applications -n control-api-gateway -o "$(value_path Secret control-api-gateway-nats user.creds)" >/dev/null 2>&1
   "$nsc_bin" -H "$NSC_HOME" describe operator -n mattercodex -R -o "$temporary_directory/internal/operator.decorated" >/dev/null
   "$nsc_bin" -H "$NSC_HOME" describe account -n SYS -R -o "$temporary_directory/internal/system-account.decorated" >/dev/null
   "$nsc_bin" -H "$NSC_HOME" describe account -n applications -R -o "$temporary_directory/internal/account.decorated" >/dev/null
@@ -742,15 +752,19 @@ else
   "$nsc_bin" -H "$NSC_HOME" describe account -n SYS -J | jq -jer '.sub' >"$temporary_directory/internal/system-account.public"
   "$nsc_bin" -H "$NSC_HOME" describe account -n applications -J | jq -jer '.sub' >"$temporary_directory/internal/account.public"
 fi
-for name in control-plane-nats runtime-controller-nats; do
+for name in control-plane-nats control-plane-nats-bootstrap control-api-gateway-nats; do
   creds=$(value_path Secret "$name" user.creds)
-  if [[ "$name" == control-plane-nats ]]; then
-    node "$helper" validate-nats-creds "$creds" control-plane \
-      '$JS.API.>,control_plane.runtime_configuration_changed' '_INBOX.>'
-  else
-    node "$helper" validate-nats-creds "$creds" runtime-controller \
-      '$JS.ACK.>,$JS.API.>' '_INBOX.>,control_plane.runtime_configuration_changed'
-  fi
+  case "$name" in
+    control-plane-nats)
+      node "$helper" validate-nats-creds "$creds" control-plane \
+        '$JS.API.STREAM.INFO.CONTROL_PLANE,control_plane.platform.*.events,control_plane.run.*.*.events' '_INBOX.>' '' '' ;;
+    control-plane-nats-bootstrap)
+      node "$helper" validate-nats-creds "$creds" control-plane-bootstrap \
+        '$JS.API.STREAM.CREATE.CONTROL_PLANE,$JS.API.STREAM.INFO.CONTROL_PLANE' '_INBOX.>' '' '' ;;
+    control-api-gateway-nats)
+      node "$helper" validate-nats-creds "$creds" control-api-gateway '' \
+        'control_plane.platform.*.events,control_plane.run.*.*.events' '>' '' ;;
+  esac
 done
 node "$helper" validate-nats-server "$temporary_directory/internal/operator.jwt" \
   "$temporary_directory/internal/system-account.jwt" "$temporary_directory/internal/system-account.public" \

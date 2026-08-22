@@ -13,9 +13,7 @@ COPY libs/go/controlplaneapi/ libs/go/controlplaneapi/
 COPY libs/go/eventing/ libs/go/eventing/
 COPY libs/go/grpcserver/ libs/go/grpcserver/
 COPY libs/go/internalrpcauth/ libs/go/internalrpcauth/
-COPY libs/go/integrationgatewayapi/ libs/go/integrationgatewayapi/
 COPY libs/go/integrationgatewayauth/ libs/go/integrationgatewayauth/
-COPY libs/go/interactiongatewayapi/ libs/go/interactiongatewayapi/
 COPY libs/go/observability/ libs/go/observability/
 COPY libs/go/oidcidentity/ libs/go/oidcidentity/
 COPY libs/go/serviceruntime/ libs/go/serviceruntime/
@@ -30,10 +28,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false \
     -o /out/control-plane ./cmd/control-plane \
  && CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false \
     -ldflags="-s -w" \
-    -o /out/control-plane-cli ./cmd/cli \
- && CGO_ENABLED=0 GOOS=linux go build -trimpath -buildvcs=false \
-    -ldflags="-s -w" \
-    -o /out/application-grant-rotator ./cmd/application-grant-rotator
+    -o /out/control-plane-cli ./cmd/cli
 
 FROM gcr.io/distroless/static-debian12:nonroot@sha256:f5b485ea962d9bd1186b2f6b3a061191539b905b82ec395de78cbfae51f20e35 AS runtime
 
