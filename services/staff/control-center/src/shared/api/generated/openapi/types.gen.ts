@@ -3440,6 +3440,16 @@ export type ArtifactScanStateQuery = 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANT
 
 export type ArtifactSourceKindQuery = 'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT';
 
+export type AgentStateQuery = 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
+
+export type WorkflowStateQuery = 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
+
+export type ProviderAccountStateQuery = 'PENDING_AUTHORIZATION' | 'AUTHORIZED' | 'REAUTHORIZATION_REQUIRED' | 'REVOKED' | 'DISABLED';
+
+export type AuditActionQuery = string;
+
+export type AuditOutcomeQuery = string;
+
 /**
  * Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
  */
@@ -4170,6 +4180,7 @@ export type ListAgentsData = {
         projectRef: OpaqueRef;
     };
     query?: {
+        state?: 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -4264,6 +4275,7 @@ export type ListOrganizationAgentsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;
@@ -4294,6 +4306,7 @@ export type ListOrganizationWorkflowsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;
@@ -5331,6 +5344,7 @@ export type ListProviderAccountsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'PENDING_AUTHORIZATION' | 'AUTHORIZED' | 'REAUTHORIZATION_REQUIRED' | 'REVOKED' | 'DISABLED';
         definitionKey?: 'openai-codex';
         query?: string;
         pageSize?: number;
@@ -7705,6 +7719,7 @@ export type ListWorkflowsData = {
         projectRef: OpaqueRef;
     };
     query?: {
+        state?: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -9143,6 +9158,7 @@ export type ListIntegrationConnectionsData = {
     body?: never;
     path?: never;
     query?: {
+        definitionKey?: string;
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -10277,6 +10293,8 @@ export type ListAuditEventsData = {
     body?: never;
     path?: never;
     query?: {
+        outcome?: string;
+        action?: string;
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;

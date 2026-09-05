@@ -135,7 +135,12 @@ func (server *Server) ListAgents(w http.ResponseWriter, r *http.Request, ref gen
 	if !ok {
 		return
 	}
-	response, err := server.control.Query.ListAgents(r.Context(), &controlplanev1.ListAgentsRequest{ProjectRef: ref, Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query)})
+	state, stateOK := catalogStateFilter(p.State, controlplanev1.AgentState_value, "AGENT_STATE_")
+	if !stateOK {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
+	response, err := server.control.Query.ListAgents(r.Context(), &controlplanev1.ListAgentsRequest{ProjectRef: ref, Page: page(p.PageSize, p.PageToken), State: controlplanev1.AgentState(state), Query: stringValue(p.Query)})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
@@ -163,7 +168,12 @@ func (server *Server) ListWorkflows(w http.ResponseWriter, r *http.Request, ref 
 	if !ok {
 		return
 	}
-	response, err := server.control.Query.ListWorkflows(r.Context(), &controlplanev1.ListWorkflowsRequest{ProjectRef: ref, Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query)})
+	state, stateOK := catalogStateFilter(p.State, controlplanev1.WorkflowState_value, "WORKFLOW_STATE_")
+	if !stateOK {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
+	response, err := server.control.Query.ListWorkflows(r.Context(), &controlplanev1.ListWorkflowsRequest{ProjectRef: ref, Page: page(p.PageSize, p.PageToken), State: controlplanev1.WorkflowState(state), Query: stringValue(p.Query)})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
@@ -492,8 +502,12 @@ func (server *Server) ListIntegrationDefinitions(w http.ResponseWriter, r *http.
 	writeMessage(w, http.StatusOK, response, "", "definitions")
 }
 func (server *Server) ListIntegrationConnections(w http.ResponseWriter, r *http.Request, p generated.ListIntegrationConnectionsParams) {
+	if p.DefinitionKey != nil && !validSearchText(*p.DefinitionKey, 1, 80) {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return
+	}
 	response, err := server.control.Query.ListIntegrationConnections(r.Context(), &controlplanev1.ListIntegrationConnectionsRequest{
-		Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query),
+		Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query), DefinitionKey: stringValue(p.DefinitionKey),
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
@@ -518,7 +532,11 @@ func (server *Server) GetAdministration(w http.ResponseWriter, r *http.Request) 
 	writeMessage(w, http.StatusOK, response, "state", "")
 }
 func (server *Server) ListAuditEvents(w http.ResponseWriter, r *http.Request, p generated.ListAuditEventsParams) {
-	response, err := server.control.Query.ListAuditEvents(r.Context(), &controlplanev1.ListAuditEventsRequest{ProjectRef: stringValue(p.ProjectRef), Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query)})
+	if p.Action != nil && !validSearchText(*p.Action, 1, 160) || p.Outcome != nil && !validSearchText(*p.Outcome, 1, 80) {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
+	response, err := server.control.Query.ListAuditEvents(r.Context(), &controlplanev1.ListAuditEventsRequest{ProjectRef: stringValue(p.ProjectRef), Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query), Action: stringValue(p.Action), Outcome: stringValue(p.Outcome)})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return

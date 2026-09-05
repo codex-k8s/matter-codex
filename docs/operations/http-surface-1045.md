@@ -4,8 +4,8 @@ title: Полнота HTTP поверхности MVP и зависимости 
 type: operations
 status: approved
 owner: developer
-version: 1.2.0
-updated: 2026-09-05
+version: 1.3.0
+updated: 2026-09-06
 ---
 
 # Граница проверки
@@ -126,50 +126,48 @@ state/idempotency conflict 409, unavailable 503; private error details не вы
 readiness или deploy. Owner hydration/queue/publication и authority profiles62
 имеют checkpoint `dfd0621c5`; общий structural test не исключается.
 
-## Сверка принятого backlog MVP-UI-01–61 и CFG
+## Текущая сверка #1045 и D1–D7
 
-Сверка относится к поверхности #1045, а не к приёмке UI, producer или
-развёрнутого контура. Чисто визуальные требования реализует #1022.
-Наличие операции ниже означает HTTP mapping существующего Proto; readiness
-зависимого сервиса этим не подтверждается.
+Проверено по live Issue #1045 от 2026-09-06, принятому backlog MVP-UI-01–61
+и coherent HTTP `e9d8c550dcaa57120d67ec69f7c9b28f334a210f` / CP
+`c1a7fb8cdb02214f4b0187bd879a60b91c6a43a7`. Это актуальная карта;
+последующие записи с прежними SHA являются историей исправлений и не означают,
+что уже устранённые producer gaps снова открыты. Техническая полнота routes
+не подтверждает PWA acceptance либо развёрнутый рабочий путь.
 
-| Требования | Существующая HTTP/SDK поверхность | Оставшаяся граница |
+| Граница / требования | Фактическая HTTP/SDK цепочка | Проверка и остаток |
 | --- | --- | --- |
-| CFG, RoleImage и IntegrationDefinition | Managed list/get/revisions/impact, специализированные create/save/validate/publish/discard/rebind, Git import/copy/detach/write-back, recipe build/promotion | Полная build/package execution и доставка exact published revision принадлежат producer; общий prepublication plan ещё отсутствует |
-| 02–06, 10, 12–13 | Projects query/page, Runs states/page и Owner Gates query/state/states/page/total | Runs и global recent-results требуют server total/aggregates; готовый Owner Gates producer принят из CP898/858/724 |
-| 05, 19–23, 39–40 | Общие query/page для каталогов, provider accounts/readiness и integration definitions/connections/grants | Selector eligibility для конкретной operation/recipient не заменяется локальной фильтрацией; effective authority projection ожидает CP |
-| 09 | Assistant conversations query/page/title/archive, context и plan lifecycle | Геометрия и browser lifecycle — PWA; server context остаётся authority |
-| 11 | Same-origin session refresh и одноразовые realtime tickets | Длительная multi-tab/reconnect проверка принадлежит PWA/integrated baseline |
-| 17–18, 21 | Model capability catalog с exact revision/digest; runtime config и canonical TOML draft/validate/publish/rollback | CP должен связать selected account/model catalog pins и effort из TOML, дать versioned allowed-fields schema и безопасные line/column/key diagnostics |
-| 01, 07–08, 16, 48, 53–54 | Typed problems, prompt validate/preview diagnostics, environment readiness/agents, public search kind/ref/projectRef | Manifest/auth-proxy и browser routing проверяются в deploy/PWA; generic 404 не считается readiness |
-| 24–29, 32–33, 38 | Runs states, organization catalogs с project filter, agent avatar command, workflow projection/launch | Layout — PWA; aggregate counts и avatar lifecycle доказываются producer, а не наличием route |
-| 30–36 | Owner-scoped typed variables, prompt preview/service blocks и persisted RuntimeRevision diff | Requested/effective/unavailable authority projection и полный continuation notice/preview требуют CP; исторический diff не заменяет их |
-| 37, 61 | VFS list/search, typed Skills/Memory lifecycle, exact revision bindings и artifacts | VFSNode пока без revision/lifecycle/scan/selection eligibility; запросы без active/trash/kind фильтров. MCP runtime и writable workspace — отдельные consumers |
-| 41–42 | Typed mailbox draft/preview/validate/publish/discard/bind/unbind/read и credential receipt/list; остальные typed integrations через существующий registry | D5 owner/policy59 и exact delivery/readiness пока не завершены; universal proxy не добавляется |
-| 43–45 | Schedule specification/preview/revisions и prompt preview, Environment read/readiness/agents | Cron materialization/continuation и eligibility принадлежат scheduler/CP; inspector — PWA |
-| 46–50 | Environment draft lifecycle; Secret encrypted draft и immutable prepublication impact plan/per-item outcomes; exact Secret pin в Environment | Prepublication plan для Environment/Prompt/Instructions/RoleImage ещё нужен в CP. Postpublication impact/rebind не закрывает это требование |
-| 51–52 | Provider delete/revoke/verify/reauthorize/device challenge и typed provider errors | Durable cleanup, blockers и real provider path требуют producer integration |
-| 14–15, 55–60 | Typed STT settings/catalog/availability и bounded multipart transcription через protected client; инструкции и variables read | Размер редактора — PWA. Реальный provider smoke и итоговая readiness требуют разрешённого контура; локальные fixtures не заменяют его |
+| D1, 04–13, 24–29, 32–33, 38 | Global/project каталоги, Home Runs/query/states/total, resumable Sessions через owner ListRuns, exact OwnerGate Get/List/query/states/total, Assistant conversations/context/plan | Owner eligibility/count/cursor передаются без browser fanout; route/mapping race PASS. Browser layout/reload/multitab — отдельная PWA проверка |
+| D2, 17–19, 21 | Account catalog status/freshness, exact revision/digest/provider pins, model-specific default и TOML override; versioned schema/diagnostics; overlay history/Get/rollback | HTTP сохраняет output-only default и не принимает его как authority. Catalog/schema negative mappings PASS; реальный provider availability не выводится из конфигурации |
+| D3, 30–35 | POST typed catalog/query к ListTemplateVariables, Validate/Preview для Agent/Workflow stage, ordered sections/used slots/context pins; effective capabilities64 | HTTP641 сохраняет scope/digest и причины PERMISSION_REQUIRED/CAPABILITY_REQUIRED, false и deferred runtime context. Owner actual renderer доставлен отдельно; HTTP negative tests PASS |
+| D4, 36 | SESSION_CONTINUATION preview, prospective и materialized RuntimeDiff, immutable previous/current/template/attempt pins | No fake prelaunch refs; incompatible pins дают 502, invalid input — 400. Durable notice/claim принадлежит CP641/controller, browser consumer проверяется отдельно |
+| D5, 41–42 | Typed EMAIL UI/YAML preview/draft/validate/publish/discard/bind/unbind, masked credentials и receipt recovery, per-protocol delivery status; typed integration package metadata | Owner59/640 и shared adapters потреблены. Mapping/negative checks PASS; реальный SMTP/IMAP/POP3/provider path не объявляется PASS локальным HTTP fixture |
+| D6, 46–50 | Encrypted Secret draft save/Get/validate/discard, prepublication impact, explicit selection, safe Secret version и Environment revision descriptor | Plaintext не возвращается; OCC/idempotency/recovery без подмены receipt latest GET. Full gateway checks PASS |
+| D7, 01/23/43–48 и CFG | RoleImage643, Environment644, Instructions/Prompt645 immutable Prepare/Get/Publish plans; typed results и binding pins; Git source4 + writeback7; managed history/copy/detach | Все public RPC текущего CP имеют HTTP consumers; source ownership и partial outcomes сохраняются. Shared lifecycle/build/delivery/runtime эффекты проверяет владелец, итоговый product acceptance отдельно |
+| 37/61 | VFS hierarchy/descriptors/query/state/kinds, Skill/Memory lifecycle, immutable artifact bindings, file targets67 и Run attachment eligibility | Public read не раскрывает runtime locators; private MCP66/stream71 остаются private runtime RPC. Writable workspace не реализуется browser endpoint |
+| 14–15/55–60 | Admin-safe adapter model catalog, authoritative bootstrap/availability, typed STT config и bounded multipart transcription через защищённый client | Actual unary issuer/proof interception и closed negative cases PASS; adapter observedAt не readiness. Live provider smoke и новый deploy NOT RUN |
+| 51–52 | Provider delete/revoke/verify/reauthorize/device challenge и safe status reasons | Owner lifecycle/cleanup не симулируется HTTP. Real provider operational refresh требует отдельной runtime проверки |
+| 39–40 | Generic integration list/get и agent effective grants существуют; file target selector67 уже специализирован | **Открыто:** exact connection/project/recipient/capability candidates для новой выдачи integration grant отсутствовали у CP. Gauss реализует четыре typed query/profile72; generic list/readiness не заменяют operation eligibility |
+| Остальные визуальные пункты 01–61 | Shared errors, CSRF, no-store, search и существующие typed read/command routes | Визуальная геометрия, editor UX, i18n и browser recovery принадлежат PWA; наличие SDK не является их приёмкой |
 
-Недостающие CP контракты переданы владельцу #1046. Gateway не добавляет
-самостоятельно новые RPC, eligibility, authorizations или успешные состояния
-для закрытия этих строк.
+Системная сверка request fields выявила additional mapping gaps существующих
+ListAgents/ListWorkflows.state (project и global), ListProviderAccounts.state,
+ListAuditEvents.action/outcome и ListIntegrationConnections.definition_key.
+Они передаются текущим каталогным дополнением; sourceKinds[] файлов уже
+передаётся единым owner RPC. Enum states закрыты, query/cursor не меняются,
+никакого клиентского подсчёта или widening authority не добавляется.
 
-Поле `ProviderAccount.safe_status_reason` существующего CP read model теперь
-описано как optional `safeStatusReason` в SDK. HTTP сохраняет закрытый owner
-reason и отклоняет неизвестный текст вместо его выдачи пользователю. Это не
-вычисление account/model compatibility или effective permission в gateway.
+Каталогное дополнение: full gateway race PASS (HTTP 5.727s), targeted filters
+race 1.065s, vet/build, strict OpenAPI/SDK и byte-identical Go/TS replay PASS.
+Proto/policy71 source не менялись после проверенного e9d. Известный owner gap
+ListIntegrationConnections query/cursor и exact grant candidates передан Gauss;
+его новый policy72 ещё не входит в данный checkpoint.
 
-MVP-UI-39–42: verified actor → integration definitions/connections → CP registry
-и owner grants → HTTP/SDK selectors. Proto IntegrationRisk/ApprovalPolicy/
-ResourceKind/DefinitionOrigin преобразуются только как typed enum; неизвестное
-значение и противоречие legacy risk/typedRisk закрыто отклоняются. `typedRisk`
-не дублирует публичный `risk`. Флаги hasMinimum/hasMaximum превращаются в
-optional numeric bounds, включая явный 0. Safe canonical inputSchema из
-registry передаётся вместе с проверенным SHA256 и лимитом 256 KiB; HTTP не
-вычисляет из этой схемы authority и не исполняет arbitrary provider calls.
-Connection сохраняет публичные credential readiness/hint, а internal
-credentialRevision descriptor исключается согласно OpenAPI projection.
+Полный gateway race на e9d PASS (HTTP 5.712s), vet/build, strict OpenAPI/SDK,
+Go/TS byte replay, Proto lint/build/replay и policy71 PASS. Дополнительный
+test-only exact Prompt Prepare прошёл targeted race 1.028s. Это не новый
+Docker image, protected HTTP→CP/browser acceptance, общий review или CI:
+они остаются NOT RUN в рамках данного HTTP checkpoint.
 
 ## Home/Decisions: query, states и total
 
