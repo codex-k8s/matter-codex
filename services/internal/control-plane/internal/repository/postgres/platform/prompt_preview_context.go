@@ -7,8 +7,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/errs"
@@ -30,7 +31,7 @@ func (repository *Repository) GetPromptPreviewContextSnapshot(ctx context.Contex
 ) (entity.PromptMaterializationSnapshot, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	if (kind != promptservice.TargetAgent && kind != promptservice.TargetWorkflowStage) || ref == "" ||
+	if (kind != promptservice.TargetAgent && kind != promptservice.TargetWorkflowStage && kind != promptservice.TargetSessionContinuation) || ref == "" ||
 		input.ExpectedAgentVersion < 0 || input.ExpectedWorkflowVersion < 0 || !validBoundedRunInput(input.Input) {
 		return entity.PromptMaterializationSnapshot{}, errs.ErrInvalid
 	}
@@ -43,7 +44,29 @@ func (repository *Repository) GetPromptPreviewContextSnapshot(ctx context.Contex
 		return entity.PromptMaterializationSnapshot{}, errs.ErrUnavailable
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
+	snapshot, err := repository.promptPreviewContextTx(ctx, tx, current, kind, ref, input)
+	if err != nil {
+		return entity.PromptMaterializationSnapshot{}, err
+	}
+	if tx.Commit(ctx) != nil {
+		return entity.PromptMaterializationSnapshot{}, errs.ErrUnavailable
+	}
+	return snapshot, nil
+}
+
+func (repository *Repository) promptPreviewContextTx(ctx context.Context, tx pgx.Tx, current scope,
+	kind, ref string, input query.PromptPreviewContext,
+) (entity.PromptMaterializationSnapshot, error) {
+	if kind == promptservice.TargetSessionContinuation {
+		return repository.promptContinuationPreviewTx(ctx, tx, current, ref, input)
+	}
+	if (kind != promptservice.TargetAgent && kind != promptservice.TargetWorkflowStage) || ref == "" ||
+		input.ExpectedAgentVersion < 0 || input.ExpectedAgentVersion > 9007199254740991 || input.ExpectedWorkflowVersion < 0 || input.ExpectedWorkflowVersion > 9007199254740991 ||
+		!validBoundedRunInput(input.Input) || len(input.Task) > 64<<10 || !utf8.ValidString(input.Task) || strings.ContainsRune(input.Task, 0) {
+		return entity.PromptMaterializationSnapshot{}, errs.ErrInvalid
+	}
 	var workflow entity.Workflow
+	var err error
 	var version *entity.WorkflowVersion
 	var step *entity.WorkflowStep
 	agentRef := ref
@@ -77,7 +100,7 @@ func (repository *Repository) GetPromptPreviewContextSnapshot(ctx context.Contex
 		if selected, ok := promptWorkflowStep(*version, input.WorkflowStageKey); ok {
 			step = &selected
 		}
-		if step == nil || !validWorkflowRunInput(version.Inputs, input.Input) {
+		if step == nil || !input.ScopeOnly && !validWorkflowRunInput(version.Inputs, input.Input) {
 			return entity.PromptMaterializationSnapshot{}, errs.ErrInvalid
 		}
 		agentRef = step.AgentRef
@@ -106,10 +129,21 @@ func (repository *Repository) GetPromptPreviewContextSnapshot(ctx context.Contex
 			return entity.PromptMaterializationSnapshot{}, errs.ErrNotFound
 		}
 		applyWorkflowPromptContext(&snapshot, workflow.Ref, workflow.Version, *version, *step)
+		if err := repository.hydrateWorkflowPromptTemplateTx(ctx, tx, current, &snapshot); err != nil {
+			return entity.PromptMaterializationSnapshot{}, err
+		}
+		if err := refreshPromptFileScopes(&snapshot); err != nil {
+			return entity.PromptMaterializationSnapshot{}, err
+		}
 		snapshot.Variables["task"] = step.Instructions
 		snapshot.WorkflowStage = step.Name
 	}
 	snapshot.StructuredVariables["input"].(map[string]any)["values"] = input.Input
+	if input.Task != "" {
+		snapshot.Variables["task"] = input.Task
+	} else {
+		snapshot.UnavailableVariables["task"] = "RUNTIME_CONTEXT_REQUIRED"
+	}
 	narrowPromptIntegrationScope(&snapshot)
 	if input.AttachmentSetRef != "" {
 		if err := repository.promptPreviewAttachmentsTx(ctx, tx, current, target.projectID, &snapshot, input.AttachmentSetRef); err != nil {
@@ -127,9 +161,6 @@ func (repository *Repository) GetPromptPreviewContextSnapshot(ctx context.Contex
 	}
 	digest := sha256.Sum256(raw)
 	snapshot.ContextPin.Digest = hex.EncodeToString(digest[:])
-	if tx.Commit(ctx) != nil {
-		return entity.PromptMaterializationSnapshot{}, errs.ErrUnavailable
-	}
 	return snapshot, nil
 }
 
@@ -140,11 +171,24 @@ func (repository *Repository) promptPreviewAttachmentsTx(ctx context.Context, tx
 	if snapshot.TargetKind == promptservice.TargetWorkflowStage {
 		purpose = "WORKFLOW_INPUT"
 	}
+	if snapshot.TargetKind == promptservice.TargetSessionContinuation {
+		purpose = "SESSION_TURN"
+	}
 	var set sealedAttachmentSet
 	if err := tx.QueryRow(ctx, queryAttachmentSetsResolveFinalized, pgx.StrictNamedArgs{"organization_id": current.organizationID,
 		"project_id": projectID, "attachment_set_ref": ref, "purpose": purpose}).Scan(&set.ID, &set.Ref, &set.ManifestDigest, &set.Purpose, &set.ItemCount, &set.TotalSizeBytes); err != nil {
 		return errs.ErrNotFound
 	}
+	if err := repository.promptPreviewAttachmentSetTx(ctx, tx, current, projectID, snapshot, set, false); err != nil {
+		return err
+	}
+	snapshot.ContextPin.AttachmentSetRef, snapshot.ContextPin.AttachmentManifestDigest = set.Ref, set.ManifestDigest
+	return refreshPromptFileScopes(snapshot)
+}
+
+func (repository *Repository) promptPreviewAttachmentSetTx(ctx context.Context, tx pgx.Tx, current scope, projectID string,
+	snapshot *entity.PromptMaterializationSnapshot, set sealedAttachmentSet, historical bool,
+) error {
 	rows, err := tx.Query(ctx, queryPromptPreviewAttachmentItems, pgx.StrictNamedArgs{"organization_id": current.organizationID, "project_id": projectID, "attachment_set_id": set.ID})
 	if err != nil {
 		return errs.ErrUnavailable
@@ -163,35 +207,27 @@ func (repository *Repository) promptPreviewAttachmentsTx(ctx context.Context, tx
 	if err != nil || int64(len(refs)) != set.ItemCount {
 		return errs.ErrConflict
 	}
-	for _, ref := range refs {
-		target, err := repository.resolveAccessTarget(ctx, tx, current.organizationID, entity.AccessScope{Kind: "RESOURCE_INSTANCE", ProjectRef: snapshot.ProjectRef, ResourceKind: "ARTIFACT", ResourceRef: ref})
-		if err != nil || repository.requireAccess(ctx, tx, current, "artifact.view", target) != nil || repository.requireAccess(ctx, tx, current, "artifact.download", target) != nil {
-			return errs.ErrNotFound
+	if err := repository.authorizePromptArtifactsTx(ctx, tx, current, snapshot.ProjectRef, refs); err != nil {
+		if errors.Is(err, errs.ErrNotFound) {
+			disablePromptFileScopes(snapshot, "PERMISSION_REQUIRED")
+			return refreshPromptFileScopes(snapshot)
 		}
+		return err
 	}
 	items, err := repository.listAttachmentSetItemsTx(ctx, tx, set.ID)
 	if err != nil {
 		return err
 	}
-	descriptors := make([]any, 0, len(items))
 	for _, item := range items {
 		item.AttachmentSetRef, item.AttachmentPurpose, item.Provenance = set.Ref, set.Purpose, "CURRENT_TURN"
-		path, err := runtimecontract.ArtifactWorkspacePath(set.Ref, item.RunnerInputArtifact)
-		if err != nil {
-			return errs.ErrUnavailable
+		if historical {
+			item.Scope, item.Provenance = runtimecontract.AttachmentScopeSession, "SESSION_HISTORY"
 		}
-		descriptors = append(descriptors, map[string]any{"artifact_ref": item.Ref, "revision_ref": fmt.Sprintf("%s@%d", item.Ref, item.Revision),
-			"name": item.FileName, "media_type": item.MediaType, "size": item.SizeBytes, "sha256": item.Digest, "path": path,
-			"source": item.Source, "version": item.Version, "purpose": item.AttachmentPurpose})
+		snapshot.Artifacts = append(snapshot.Artifacts, item.RunnerInputArtifact)
 	}
-	input := snapshot.StructuredVariables["input"].(map[string]any)
-	for key, value := range promptFileScope(descriptors, "/workspace/input/"+ref+"/files", "/workspace/input/"+ref+"/manifest.json") {
-		input[key] = value
+	if len(snapshot.Artifacts) > 2048 {
+		return errs.ErrConflict
 	}
-	if snapshot.TargetKind == promptservice.TargetWorkflowStage {
-		snapshot.StructuredVariables["workflow"] = promptFileScope(descriptors, "/workspace", "/workspace/input/manifest.json")
-	}
-	snapshot.ContextPin.AttachmentSetRef, snapshot.ContextPin.AttachmentManifestDigest = set.Ref, set.ManifestDigest
 	return nil
 }
 
@@ -219,14 +255,18 @@ func (repository *Repository) promptPreviewAgentTx(ctx context.Context, tx pgx.T
 	snapshot.Variables["agent.ref"], snapshot.Variables["agent.name"], snapshot.Variables["project.ref"], snapshot.Variables["project.name"] = ref, name, snapshot.ProjectRef, projectName
 	snapshot.Variables["organization.ref"], snapshot.Variables["user.ref"], snapshot.Variables["task"] = current.organizationRef, current.actorRef, purpose
 	snapshot.Variables["user.name"] = current.actorName
-	snapshot.Variables["environment.ref"] = view.Environment.Ref
+	snapshot.Variables["environment.ref"] = view.Environment.CurrentVersion.Ref
 	tools := make([]runtimecontract.RuntimeEnvironmentTool, 0, len(view.Environment.CurrentVersion.Tools))
 	for _, tool := range view.Environment.CurrentVersion.Tools {
 		tools = append(tools, runtimecontract.RuntimeEnvironmentTool{Name: tool.Name, Description: tool.Description, Command: tool.Command})
 	}
-	snapshot.StructuredVariables, err = promptStructuredVariables(nil, tools, runtimecontract.RuntimeEnvironmentImage{}, view.Environment.Ref, "", "")
+	image := runtimecontract.RuntimeEnvironmentImage{Reference: view.Environment.CurrentVersion.Image.Reference, Digest: view.Environment.CurrentVersion.Image.Digest}
+	snapshot.StructuredVariables, err = promptStructuredVariables(nil, tools, image, view.Environment.CurrentVersion.Ref, "", "")
 	if err != nil {
 		return entity.PromptMaterializationSnapshot{}, errs.ErrUnavailable
+	}
+	if err := repository.promptPreviewKnowledgeTx(ctx, tx, current, &snapshot); err != nil {
+		return entity.PromptMaterializationSnapshot{}, err
 	}
 	var grants []map[string]string
 	snapshot.UserCapabilities, grants, err = repository.agentCapabilityAuthority(ctx, tx, current, snapshot.ProjectRef, ref, snapshot.AgentCapabilities)

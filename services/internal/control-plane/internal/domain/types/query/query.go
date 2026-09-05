@@ -21,5 +21,7 @@ type Filter struct {
 }
 
 type TemplateVariableContext struct {
-	AgentRef, RuntimeRevisionRef string
+	AgentRef, RuntimeRevisionRef                 string
+	TargetKind, TargetRef, ExpectedContextDigest string
+	Preview                                      PromptPreviewContext
 }

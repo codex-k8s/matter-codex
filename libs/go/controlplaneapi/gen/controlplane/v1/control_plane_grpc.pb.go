@@ -11323,6 +11323,10 @@ const (
 	RuntimeWorkService_ClaimExecution_FullMethodName                                  = "/controlplane.v1.RuntimeWorkService/ClaimExecution"
 	RuntimeWorkService_GetRuntimeEnvironmentRoleImageConfiguration_FullMethodName     = "/controlplane.v1.RuntimeWorkService/GetRuntimeEnvironmentRoleImageConfiguration"
 	RuntimeWorkService_ReadExecutionArtifact_FullMethodName                           = "/controlplane.v1.RuntimeWorkService/ReadExecutionArtifact"
+	RuntimeWorkService_SearchExecutionFiles_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/SearchExecutionFiles"
+	RuntimeWorkService_GetExecutionFileMetadata_FullMethodName                        = "/controlplane.v1.RuntimeWorkService/GetExecutionFileMetadata"
+	RuntimeWorkService_PreviewExecutionFile_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/PreviewExecutionFile"
+	RuntimeWorkService_GetExecutionFileManifest_FullMethodName                        = "/controlplane.v1.RuntimeWorkService/GetExecutionFileManifest"
 	RuntimeWorkService_RenewExecution_FullMethodName                                  = "/controlplane.v1.RuntimeWorkService/RenewExecution"
 	RuntimeWorkService_ReportExecutionProgress_FullMethodName                         = "/controlplane.v1.RuntimeWorkService/ReportExecutionProgress"
 	RuntimeWorkService_CommitProviderCredentialRefresh_FullMethodName                 = "/controlplane.v1.RuntimeWorkService/CommitProviderCredentialRefresh"
@@ -11360,6 +11364,10 @@ type RuntimeWorkServiceClient interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(ctx context.Context, in *GetRuntimeEnvironmentRoleImageConfigurationRequest, opts ...grpc.CallOption) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(ctx context.Context, in *ReadExecutionArtifactRequest, opts ...grpc.CallOption) (*ReadExecutionArtifactResponse, error)
+	SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error)
+	GetExecutionFileMetadata(ctx context.Context, in *GetExecutionFileMetadataRequest, opts ...grpc.CallOption) (*GetExecutionFileMetadataResponse, error)
+	PreviewExecutionFile(ctx context.Context, in *PreviewExecutionFileRequest, opts ...grpc.CallOption) (*PreviewExecutionFileResponse, error)
+	GetExecutionFileManifest(ctx context.Context, in *GetExecutionFileManifestRequest, opts ...grpc.CallOption) (*GetExecutionFileManifestResponse, error)
 	RenewExecution(ctx context.Context, in *RenewExecutionRequest, opts ...grpc.CallOption) (*RenewExecutionResponse, error)
 	ReportExecutionProgress(ctx context.Context, in *ReportExecutionProgressRequest, opts ...grpc.CallOption) (*ReportExecutionProgressResponse, error)
 	CommitProviderCredentialRefresh(ctx context.Context, in *CommitProviderCredentialRefreshRequest, opts ...grpc.CallOption) (*CommitProviderCredentialRefreshResponse, error)
@@ -11458,6 +11466,46 @@ func (c *runtimeWorkServiceClient) ReadExecutionArtifact(ctx context.Context, in
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ReadExecutionArtifactResponse)
 	err := c.cc.Invoke(ctx, RuntimeWorkService_ReadExecutionArtifact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runtimeWorkServiceClient) SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SearchExecutionFilesResponse)
+	err := c.cc.Invoke(ctx, RuntimeWorkService_SearchExecutionFiles_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runtimeWorkServiceClient) GetExecutionFileMetadata(ctx context.Context, in *GetExecutionFileMetadataRequest, opts ...grpc.CallOption) (*GetExecutionFileMetadataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetExecutionFileMetadataResponse)
+	err := c.cc.Invoke(ctx, RuntimeWorkService_GetExecutionFileMetadata_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runtimeWorkServiceClient) PreviewExecutionFile(ctx context.Context, in *PreviewExecutionFileRequest, opts ...grpc.CallOption) (*PreviewExecutionFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreviewExecutionFileResponse)
+	err := c.cc.Invoke(ctx, RuntimeWorkService_PreviewExecutionFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runtimeWorkServiceClient) GetExecutionFileManifest(ctx context.Context, in *GetExecutionFileManifestRequest, opts ...grpc.CallOption) (*GetExecutionFileManifestResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetExecutionFileManifestResponse)
+	err := c.cc.Invoke(ctx, RuntimeWorkService_GetExecutionFileManifest_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -11697,6 +11745,10 @@ type RuntimeWorkServiceServer interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(context.Context, *GetRuntimeEnvironmentRoleImageConfigurationRequest) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error)
+	SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error)
+	GetExecutionFileMetadata(context.Context, *GetExecutionFileMetadataRequest) (*GetExecutionFileMetadataResponse, error)
+	PreviewExecutionFile(context.Context, *PreviewExecutionFileRequest) (*PreviewExecutionFileResponse, error)
+	GetExecutionFileManifest(context.Context, *GetExecutionFileManifestRequest) (*GetExecutionFileManifestResponse, error)
 	RenewExecution(context.Context, *RenewExecutionRequest) (*RenewExecutionResponse, error)
 	ReportExecutionProgress(context.Context, *ReportExecutionProgressRequest) (*ReportExecutionProgressResponse, error)
 	CommitProviderCredentialRefresh(context.Context, *CommitProviderCredentialRefreshRequest) (*CommitProviderCredentialRefreshResponse, error)
@@ -11751,6 +11803,18 @@ func (UnimplementedRuntimeWorkServiceServer) GetRuntimeEnvironmentRoleImageConfi
 }
 func (UnimplementedRuntimeWorkServiceServer) ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReadExecutionArtifact not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchExecutionFiles not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) GetExecutionFileMetadata(context.Context, *GetExecutionFileMetadataRequest) (*GetExecutionFileMetadataResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetExecutionFileMetadata not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) PreviewExecutionFile(context.Context, *PreviewExecutionFileRequest) (*PreviewExecutionFileResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PreviewExecutionFile not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) GetExecutionFileManifest(context.Context, *GetExecutionFileManifestRequest) (*GetExecutionFileManifestResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetExecutionFileManifest not implemented")
 }
 func (UnimplementedRuntimeWorkServiceServer) RenewExecution(context.Context, *RenewExecutionRequest) (*RenewExecutionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RenewExecution not implemented")
@@ -11961,6 +12025,78 @@ func _RuntimeWorkService_ReadExecutionArtifact_Handler(srv interface{}, ctx cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(RuntimeWorkServiceServer).ReadExecutionArtifact(ctx, req.(*ReadExecutionArtifactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RuntimeWorkService_SearchExecutionFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchExecutionFilesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RuntimeWorkServiceServer).SearchExecutionFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RuntimeWorkService_SearchExecutionFiles_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RuntimeWorkServiceServer).SearchExecutionFiles(ctx, req.(*SearchExecutionFilesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RuntimeWorkService_GetExecutionFileMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetExecutionFileMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RuntimeWorkServiceServer).GetExecutionFileMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RuntimeWorkService_GetExecutionFileMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RuntimeWorkServiceServer).GetExecutionFileMetadata(ctx, req.(*GetExecutionFileMetadataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RuntimeWorkService_PreviewExecutionFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreviewExecutionFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RuntimeWorkServiceServer).PreviewExecutionFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RuntimeWorkService_PreviewExecutionFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RuntimeWorkServiceServer).PreviewExecutionFile(ctx, req.(*PreviewExecutionFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RuntimeWorkService_GetExecutionFileManifest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetExecutionFileManifestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RuntimeWorkServiceServer).GetExecutionFileManifest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RuntimeWorkService_GetExecutionFileManifest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RuntimeWorkServiceServer).GetExecutionFileManifest(ctx, req.(*GetExecutionFileManifestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -12395,6 +12531,22 @@ var RuntimeWorkService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReadExecutionArtifact",
 			Handler:    _RuntimeWorkService_ReadExecutionArtifact_Handler,
+		},
+		{
+			MethodName: "SearchExecutionFiles",
+			Handler:    _RuntimeWorkService_SearchExecutionFiles_Handler,
+		},
+		{
+			MethodName: "GetExecutionFileMetadata",
+			Handler:    _RuntimeWorkService_GetExecutionFileMetadata_Handler,
+		},
+		{
+			MethodName: "PreviewExecutionFile",
+			Handler:    _RuntimeWorkService_PreviewExecutionFile_Handler,
+		},
+		{
+			MethodName: "GetExecutionFileManifest",
+			Handler:    _RuntimeWorkService_GetExecutionFileManifest_Handler,
 		},
 		{
 			MethodName: "RenewExecution",

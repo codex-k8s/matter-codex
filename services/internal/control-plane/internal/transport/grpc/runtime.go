@@ -86,6 +86,11 @@ func castRuntimeRevision(values map[string]any) *controlplanev1.RuntimeRevisionS
 	if !castRuntimeContext(result, values["contextSnapshot"], mapString(values, "projectRef")) {
 		return nil
 	}
+	fileCatalog, validFileCatalog := castRuntimeFileCatalog(values["fileCatalog"])
+	if !validFileCatalog {
+		return nil
+	}
+	result.FileCatalog = fileCatalog
 	result.InstructionRef = mapString(values, "instructionRef")
 	result.InstructionDigest = mapString(values, "instructionDigest")
 	result.PromptTemplateRef = mapString(values, "promptTemplateRef")

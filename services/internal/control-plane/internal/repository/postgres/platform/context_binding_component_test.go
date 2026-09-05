@@ -136,6 +136,7 @@ func testContextBinding(t *testing.T, ctx context.Context, repository *Repositor
 		if memory {
 			return
 		}
+		testRuntimeSkillFileManifest(t, ctx, repository, service, claim, want)
 		file := snapshot.Skills[0].Files[0]
 		download, err := service.ReadExecutionArtifact(ctx, reader, stringMap(claim, "leaseRef"), stringMap(claim, "fence"), runtimeRevisionMapInt64(claim, "generation"), file.ArtifactRef)
 		if !want {

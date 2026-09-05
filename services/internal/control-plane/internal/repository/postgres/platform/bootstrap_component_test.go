@@ -3862,6 +3862,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || created.Schedule == nil || created.Schedule.CronExpression != "30 9 * * 1-5" || created.Schedule.TimeOfDay != "09:30" || created.Schedule.NextRunAt == nil {
 		t.Fatalf("create normalized schedule: schedule=%#v err=%v", created.Schedule, err)
 	}
+	capturedTemplateRef := bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-captured-template", `Captured {{.task}} / {{.run.ref}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentMakeScheduleDueQuery, created.Schedule.Ref); err != nil {
 		t.Fatalf("make schedule due: %v", err)
 	}
@@ -3877,6 +3878,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 		t.Fatalf("claim due schedule: claims=%#v err=%v", claims, err)
 	}
 	staleClaim := claims[0]
+	bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-changed-template", `Changed {{.task}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentExpireScheduleClaimQuery, stringMap(staleClaim, "occurrenceRef")); err != nil {
 		t.Fatalf("expire schedule claim: %v", err)
 	}
@@ -3919,7 +3921,12 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || len(duplicateClaims) != 0 {
 		t.Fatalf("active schedule occurrence was claimed twice: claims=%#v err=%v", duplicateClaims, err)
 	}
-	runVersion := materialized.Run.Version
+	checkCapturedScheduleRuntime(t, ctx, repository, service, materialized.Run.Ref, capturedTemplateRef)
+	currentScheduledRun, _, err := service.GetRunGraph(ctx, owner, materialized.Run.Ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runVersion := currentScheduledRun.Version
 	cancelled, err := service.Execute(ctx, command.Command{
 		Kind: command.CancelRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "schedule-run-cancel", ExpectedVersion: &runVersion},
@@ -5707,6 +5714,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	runAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"RUN_INPUT", "lifecycle-run-attachment-set", secondRevision.Ref)
+	testReadonlyArtifactClaim(t, ctx, repository, service, owner, worker, runtimeReader, project.Project.Ref, agent.Agent.Ref, runAttachmentSetRef, secondRevision.Ref)
 	launch, err := service.Execute(ctx, command.Command{Kind: command.LaunchRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-launch-1"}, Payload: command.LaunchRunInput{
 			ProjectRef: project.Project.Ref, Title: "Answer customer", TitleSource: "USER_EDITED", Task: "Prepare an answer about delivery status.",
@@ -5751,6 +5759,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if !ok || len(catalog) != 2 {
 		t.Fatalf("runtime artifact catalog = %#v, want input and knowledge artifacts", lease["artifacts"])
 	}
+	testRuntimeFileQueries(t, ctx, repository, service, owner, lease)
 	runtimeDownload, err := service.ReadExecutionArtifact(ctx, runtimeReader, stringMap(lease, "leaseRef"), stringMap(lease, "fence"), lease["generation"].(int64), secondRevision.Ref)
 	if err != nil {
 		t.Fatalf("read lease-bound runtime artifact: %v", err)
@@ -5784,10 +5793,36 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	outputAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"SESSION_TURN", "lifecycle-output-reuse-set", completed.CreatedRefs[0])
+	continuationContext := query.PromptPreviewContext{Task: "Add a concise follow-up for the customer.", AttachmentSetRef: outputAttachmentSetRef}
+	prospective, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, "")
+	if err != nil || prospective.RuntimeDiff == nil || prospective.ContextPin.Digest == "" {
+		t.Fatalf("prospective continuation preview missing: %v", err)
+	}
+	if prospective.RuntimeDiff.CurrentRevisionRef != "" || prospective.RuntimeDiff.TurnRef != "" || prospective.RuntimeDiff.Attempt != 0 {
+		t.Fatal("prelaunch continuation fabricated runtime identity")
+	}
+	previewAgain, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, prospective.ContextPin.Digest)
+	if err != nil || previewAgain.RuntimeDiff == nil || previewAgain.RuntimeDiff.Digest != prospective.RuntimeDiff.Digest {
+		t.Fatalf("prospective continuation preview changed without mutation: %v", err)
+	}
+	for _, rejected := range []struct {
+		pin      string
+		expected error
+	}{{"malformed", domainerrs.ErrInvalid}, {strings.Repeat("f", 64), domainerrs.ErrVersionMismatch}} {
+		_, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
+			Mutation: value.Mutation{IdempotencyKey: "lifecycle-rejected-preview-" + rejected.pin[:3]}, Payload: command.SessionTurnInput{
+				SessionRef: launch.Run.SessionRef, Task: continuationContext.Task, AttachmentSetRef: outputAttachmentSetRef, ExpectedPromptContextDigest: rejected.pin}})
+		if !errors.Is(err, rejected.expected) {
+			t.Fatalf("invalid continuation preview pin accepted: %v", err)
+		}
+	}
 	continued, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-continuation-1"}, Payload: command.SessionTurnInput{
 			SessionRef: launch.Run.SessionRef, RunRef: launch.Run.Ref, Task: "Add a concise follow-up for the customer.",
-			AttachmentSetRef: outputAttachmentSetRef,
+			AttachmentSetRef:            outputAttachmentSetRef,
+			ExpectedPromptContextDigest: prospective.ContextPin.Digest,
 		}})
 	if err != nil || continued.Run == nil || continued.Graph == nil || continued.Run.State != "RUNNING" {
 		t.Fatalf("continue session: run=%#v graph=%#v err=%v", continued.Run, continued.Graph, err)

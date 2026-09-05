@@ -43,6 +43,10 @@ JOIN LATERAL (
     SELECT exact.item,0 AS priority,exact.ordinal
     FROM jsonb_array_elements(COALESCE(revision.safe_snapshot -> 'artifacts', '[]'::jsonb))
          WITH ORDINALITY AS exact(item, ordinal)
+    JOIN control_plane.subjects input_actor ON input_actor.id=root_run.initiated_by
+      AND input_actor.organization_id=lease.organization_id AND input_actor.active
+    JOIN control_plane.catalog_access_targets input_target ON input_target.organization_id=lease.organization_id
+      AND input_target.kind='ARTIFACT' AND input_target.id=artifact.id
     WHERE exact.item ->> 'ref' = artifact.ref
       AND exact.item ->> 'digest' = artifact.digest
       AND exact.item ->> 'digest' = content.digest
@@ -52,6 +56,8 @@ JOIN LATERAL (
       AND exact.item -> 'sizeBytes' = to_jsonb(artifact.size_bytes)
       AND exact.item ->> 'source' = artifact.source
       AND content.size_bytes = artifact.size_bytes
+      AND control_plane.catalog_resource_visible(lease.organization_id,input_actor.id,'artifact.view','ARTIFACT',input_target.id,input_target.project_id,input_target.owner_id,input_target.related_ids,statement_timestamp(),false)
+      AND control_plane.catalog_resource_visible(lease.organization_id,input_actor.id,'artifact.download','ARTIFACT',input_target.id,input_target.project_id,input_target.owner_id,input_target.related_ids,statement_timestamp(),false)
     UNION ALL
     SELECT jsonb_build_object('version',artifact.version),1,0::bigint
     FROM jsonb_array_elements(COALESCE(revision.safe_snapshot #> '{contextSnapshot,skills}','[]'::jsonb)) AS skill(item)
@@ -77,6 +83,12 @@ JOIN LATERAL (
           WHERE file.item->>'artifact_ref'=artifact.ref AND file.item->>'digest'=artifact.digest
             AND file.item->'artifact_revision'=to_jsonb(artifact.revision)
             AND file.item->'size_bytes'=to_jsonb(artifact.size_bytes))
+    UNION ALL
+    SELECT jsonb_build_object('version',entry.artifact_version),2,0::bigint
+    FROM control_plane.runtime_file_catalogs catalog
+    JOIN control_plane.runtime_file_visible_entries entry ON entry.catalog_id=catalog.id
+    WHERE catalog.runtime_revision_ref=revision.ref AND entry.artifact_id=artifact.id
+      AND catalog.organization_id=lease.organization_id AND catalog.generation=lease.generation
     ) candidates
     ORDER BY candidates.priority,candidates.ordinal
     LIMIT 1

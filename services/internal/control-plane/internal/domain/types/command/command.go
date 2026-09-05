@@ -293,6 +293,7 @@ type LaunchRunInput struct {
 }
 type SessionTurnInput struct {
 	SessionRef, RunRef, NodeRef, Task, AttachmentSetRef string
+	ExpectedPromptContextDigest                         string
 }
 type RunCommandInput struct{ RunRef, Reason string }
 type GateResolutionInput struct {
@@ -457,10 +458,15 @@ type InteractionIdentityInput struct {
 }
 
 type ManagedConfigurationInput struct {
+	PromptScope                                                                                 *PromptTemplateScopeInput
 	PlanRef                                                                                     string
 	SelectedItemRefs                                                                            []string
 	ConfigurationRef, ProjectRef, Name, Kind, ContentFormat, Content, RevisionRef, ImpactDigest string
 	Consumers                                                                                   []entity.ManagedConfigurationConsumer
+}
+
+type PromptTemplateScopeInput struct {
+	TargetKind, TargetRef, AgentRef, WorkflowRevisionRef, WorkflowStageKey, ExpectedContextDigest, TemplateKind string
 }
 
 type EmailMailboxInput struct {

@@ -35,10 +35,49 @@ type RuntimeDiff struct {
 
 var runtimeComponentOrder = []string{"INSTRUCTIONS", "MODEL", "REASONING", "IMAGE", "ENVIRONMENT", "FILES", "SKILLS", "MEMORY", "TOOLS", "MCP", "INTEGRATIONS", "CAPABILITIES", "POLICY"}
 
+// ValidateRuntimeDiff повторно проверяет closed schema и digest сохранённого notice.
+func ValidateRuntimeDiff(diff RuntimeDiff) error {
+	previous, current := map[string][]RuntimeDescriptor{}, map[string][]RuntimeDescriptor{}
+	for _, component := range runtimeComponentOrder {
+		previous[component], current[component] = nil, nil
+	}
+	last := -1
+	for _, change := range diff.Changes {
+		position := slices.Index(runtimeComponentOrder, change.Component)
+		if position <= last || change.Action != "USE_CURRENT_CONTEXT" || slices.Equal(change.Previous, change.Current) {
+			return ErrInvalid
+		}
+		last = position
+		previous[change.Component], current[change.Component] = change.Previous, change.Current
+	}
+	var checked RuntimeDiff
+	var err error
+	if diff.CurrentRevisionRef == "" {
+		checked, err = CompareProspectiveRuntimeContexts(previous, current, diff)
+	} else {
+		checked, err = CompareRuntimeContexts(previous, current, diff)
+	}
+	if err != nil || diff.Digest != checked.Digest {
+		return ErrInvalid
+	}
+	return nil
+}
+
 func CompareRuntimeContexts(previous, current map[string][]RuntimeDescriptor, identity RuntimeDiff) (RuntimeDiff, error) {
 	if identity.PreviousRevisionRef == "" || identity.CurrentRevisionRef == "" || identity.PreviousRevisionRef == identity.CurrentRevisionRef || identity.SessionRef == "" || identity.TurnRef == "" || identity.Attempt < 1 {
 		return RuntimeDiff{}, fmt.Errorf("runtime diff identity is invalid: %w", ErrInvalid)
 	}
+	return compareRuntimeDescriptors(previous, current, identity)
+}
+
+func CompareProspectiveRuntimeContexts(previous, current map[string][]RuntimeDescriptor, identity RuntimeDiff) (RuntimeDiff, error) {
+	if identity.PreviousRevisionRef == "" || identity.SessionRef == "" || identity.CurrentRevisionRef != "" || identity.TurnRef != "" || identity.Attempt != 0 {
+		return RuntimeDiff{}, fmt.Errorf("prospective runtime diff identity is invalid: %w", ErrInvalid)
+	}
+	return compareRuntimeDescriptors(previous, current, identity)
+}
+
+func compareRuntimeDescriptors(previous, current map[string][]RuntimeDescriptor, identity RuntimeDiff) (RuntimeDiff, error) {
 	for _, context := range []map[string][]RuntimeDescriptor{previous, current} {
 		if len(context) != len(runtimeComponentOrder) {
 			return RuntimeDiff{}, ErrInvalid
