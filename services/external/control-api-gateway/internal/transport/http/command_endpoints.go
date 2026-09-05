@@ -460,6 +460,10 @@ func (server *Server) ResolveOwnerGate(w http.ResponseWriter, r *http.Request, r
 		writeRPCProblem(w, err)
 		return
 	}
+	if response.GetGate() == nil || response.Gate.Ref != ref {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
 	writeMessage(w, http.StatusOK, response, "", "")
 }
 

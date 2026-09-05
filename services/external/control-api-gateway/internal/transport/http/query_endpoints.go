@@ -325,6 +325,10 @@ func (server *Server) GetOwnerGate(w http.ResponseWriter, r *http.Request, ref g
 		writeRPCProblem(w, err)
 		return
 	}
+	if response.GetGate() == nil || response.Gate.Ref != ref {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
 	writeMessage(w, http.StatusOK, response, "gate", "")
 }
 func (server *Server) ListArtifacts(w http.ResponseWriter, r *http.Request, ref generated.ProjectRef, p generated.ListArtifactsParams) {

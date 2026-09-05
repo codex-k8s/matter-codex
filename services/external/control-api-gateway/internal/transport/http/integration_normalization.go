@@ -23,6 +23,10 @@ func normalizeIntegrationEnum(value any, descriptor protoreflect.EnumDescriptor)
 		prefix = "INTEGRATION_RESOURCE_KIND_"
 	case "controlplane.v1.IntegrationDefinitionOrigin":
 		prefix = "INTEGRATION_DEFINITION_ORIGIN_"
+	case "controlplane.v1.OwnerGateDecision":
+		prefix = "OWNER_GATE_DECISION_"
+	case "controlplane.v1.OwnerGateState":
+		prefix = "OWNER_GATE_STATE_"
 	default:
 		return value, nil
 	}
@@ -39,6 +43,8 @@ func normalizeIntegrationEnum(value any, descriptor protoreflect.EnumDescriptor)
 
 func normalizeIntegrationShape(value map[string]any, descriptor protoreflect.MessageDescriptor) error {
 	switch descriptor.FullName() {
+	case "controlplane.v1.OwnerGate":
+		return validateOwnerGateProjection(value)
 	case "controlplane.v1.IntegrationConnection":
 		delete(value, "credentialRevision")
 	case "controlplane.v1.IntegrationCapability", "controlplane.v1.IntegrationGrant":

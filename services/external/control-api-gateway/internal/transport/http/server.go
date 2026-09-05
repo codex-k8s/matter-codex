@@ -253,7 +253,7 @@ func withProjectReference(writer http.ResponseWriter, request *http.Request, ref
 func writeMessage(writer http.ResponseWriter, statusCode int, message proto.Message, field string, pageField string) {
 	value, err := messageMap(message)
 	if err != nil {
-		if errors.Is(err, errPublicSecretDescriptor) || errors.Is(err, errPublicProviderStatusReason) || errors.Is(err, errPublicIntegrationShape) || errors.Is(err, errRuntimeCatalogView) {
+		if errors.Is(err, errPublicSecretDescriptor) || errors.Is(err, errPublicProviderStatusReason) || errors.Is(err, errPublicIntegrationShape) || errors.Is(err, errRuntimeCatalogView) || errors.Is(err, errOwnerGateShape) {
 			writeLocalProblem(writer, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
 			return
 		}
@@ -425,6 +425,10 @@ func requiredProtoScalarDefault(descriptor protoreflect.MessageDescriptor, field
 	}
 	if field.Kind() == protoreflect.StringKind {
 		switch descriptor.FullName() {
+		case "controlplane.v1.OwnerGateDecisionConsequence":
+			return "", field.JSONName() == "safeSummary"
+		case "controlplane.v1.IntegrationIntent":
+			return "", field.JSONName() == "connectionName"
 		case "controlplane.v1.ProviderAccountCandidate":
 			return "", field.JSONName() == "defaultReasoningEffort"
 		case "controlplane.v1.ConfigOverlayField":
@@ -451,6 +455,8 @@ func requiredProtoScalarDefault(descriptor protoreflect.MessageDescriptor, field
 	}
 	if field.Kind() == protoreflect.BoolKind {
 		switch descriptor.FullName() {
+		case "controlplane.v1.OwnerGateDecisionConsequence":
+			return false, field.JSONName() == "executesExternalEffect" || field.JSONName() == "terminalForRun"
 		case "controlplane.v1.IntegrationCapability":
 			return false, field.JSONName() == "approvalRequired"
 		case "controlplane.v1.IntegrationConfigurationField":
@@ -552,6 +558,9 @@ func LocalizeSafeErrors(value any, localize func(string) string) {
 		}
 	case map[string]any:
 		for key, item := range current {
+			if key == "integrationIntent" {
+				continue
+			}
 			LocalizeSafeErrors(item, localize)
 			if text, ok := item.(string); ok && strings.HasPrefix(text, "i18n:") {
 				current[key] = localize(strings.TrimPrefix(text, "i18n:"))
@@ -591,6 +600,10 @@ func normalize(value any) {
 		}
 	case map[string]any:
 		for key, item := range current {
+			// Typed intent уже проверен по Proto; его owner data не являются enum.
+			if key == "integrationIntent" || key == "decisionConsequences" {
+				continue
+			}
 			normalize(item)
 			if text, ok := item.(string); ok {
 				current[key] = normalizeEnum(text)
