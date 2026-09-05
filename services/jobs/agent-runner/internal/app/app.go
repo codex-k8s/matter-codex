@@ -214,11 +214,13 @@ func runTurn(ctx context.Context, input model.Input, client *callback.Client, wo
 	if err != nil {
 		return completeFailure(ctx, input, client, runtimeExecutionFailureCode(err))
 	}
-	if err := checkWorkspaceProcess(ctx); err != nil {
-		return completeFailure(ctx, input, client, "RUNTIME_WORKSPACE_INVALID")
-	}
+	// Уже совершённые native effects сохраняются и при последующем отказе
+	// workspace/quota; такой отказ не превращает выполнение в отсутствие действий.
 	if err := recordNativeToolTimeline(ctx, input, client, result.ToolCalls); err != nil {
 		return err
+	}
+	if err := checkWorkspaceProcess(ctx); err != nil {
+		return completeFailure(ctx, input, client, "RUNTIME_WORKSPACE_INVALID")
 	}
 	if result.Outcome != "SUCCEEDED" {
 		_, message, _ := codex.TerminalPresentation(result.FailureCode)
