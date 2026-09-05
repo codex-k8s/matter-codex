@@ -219,15 +219,21 @@ func runTurn(ctx context.Context, input model.Input, client *callback.Client, wo
 	if err := recordNativeToolTimeline(ctx, input, client, result.ToolCalls); err != nil {
 		return err
 	}
-	if err := checkWorkspaceProcess(ctx); err != nil {
-		return completeFailure(ctx, input, client, "RUNTIME_WORKSPACE_INVALID")
+	return completeExecutedTurn(ctx, input, client, result, checkWorkspaceProcess)
+}
+
+// Завершение учитывает расход провайдера даже при отказе последующей проверки
+// workspace или публикации результата; повтор callback сохраняет тот же Usage.
+func completeExecutedTurn(ctx context.Context, input model.Input, client *callback.Client, result codex.Result, checkWorkspace func(context.Context) error) error {
+	if err := checkWorkspace(ctx); err != nil {
+		return completeFailureWithSummaryAndUsage(ctx, input, client, "RUNTIME_WORKSPACE_INVALID", "i18n:RUNTIME_WORKSPACE_INVALID", result.Usage)
 	}
 	if result.Outcome != "SUCCEEDED" {
 		_, message, _ := codex.TerminalPresentation(result.FailureCode)
 		return completeResultFailure(ctx, input, client, result, message)
 	}
 	if strings.TrimSpace(result.FinalMessage) == "" || len(result.FinalMessage) > 64<<10 || !utf8.ValidString(result.FinalMessage) {
-		return completeFailure(ctx, input, client, "RUNTIME_RESULT_INVALID")
+		return completeFailureWithSummaryAndUsage(ctx, input, client, "RUNTIME_RESULT_INVALID", "i18n:RUNTIME_RESULT_INVALID", result.Usage)
 	}
 	if input.CodexSandbox == "workspace-write" && hasCapability(input, runtimecontract.ArtifactCapability) {
 		if err := workspacepolicy.PublishResult(ctx, input.WorkspaceRoot, input.WorkspacePolicy, workspacepolicy.ResultProvenance{
@@ -235,16 +241,16 @@ func runTurn(ctx context.Context, input model.Input, client *callback.Client, wo
 			RuntimeRevisionVersion: input.RuntimeRevisionVersion, RuntimeRevisionDigest: input.RuntimeRevisionDigest,
 			Attempt: input.Attempt, ExecutionBindingDigest: input.ExecutionBindingDigest,
 		}); err != nil {
-			return completeFailure(ctx, input, client, "RUNTIME_WORKSPACE_INVALID")
+			return completeFailureWithSummaryAndUsage(ctx, input, client, "RUNTIME_WORKSPACE_INVALID", "i18n:RUNTIME_WORKSPACE_INVALID", result.Usage)
 		}
 	}
 	artifacts, err := completionArtifacts(input, result.FinalMessage)
 	if err != nil {
-		return completeFailure(ctx, input, client, "RUNTIME_ARTIFACT_INVALID")
+		return completeFailureWithSummaryAndUsage(ctx, input, client, "RUNTIME_ARTIFACT_INVALID", "i18n:RUNTIME_ARTIFACT_INVALID", result.Usage)
 	}
 	payload := runtimecontract.RunnerCompletionRequest{RuntimeRevisionDigest: input.RuntimeRevisionDigest, Attempt: input.Attempt, Success: true, ResultSummary: result.FinalMessage, Usage: result.Usage, Artifacts: artifacts, CodexSessionID: result.SessionID, ArchiveRelativePath: result.ArchiveRelativePath, ArchiveSHA256: result.ArchiveSHA256, ArchiveSizeBytes: result.ArchiveSizeBytes}
 	if payload.Validate() != nil {
-		return completeFailure(ctx, input, client, "RUNTIME_RESULT_INVALID")
+		return completeFailureWithSummaryAndUsage(ctx, input, client, "RUNTIME_RESULT_INVALID", "i18n:RUNTIME_RESULT_INVALID", result.Usage)
 	}
 	return client.Complete(ctx, input, payload)
 }
