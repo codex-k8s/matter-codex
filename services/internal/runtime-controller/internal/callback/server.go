@@ -575,6 +575,7 @@ func emptyMCPParams(raw json.RawMessage) bool {
 
 func tools(input runtimecontract.RunnerInput) []map[string]any {
 	result := []map[string]any{runMetadataTool()}
+	result = append(result, runtimeFileTools(input)...)
 	if input.SystemAssistant {
 		result = append(result, configurationCatalogTool(), assistantPlanTool(input), assistantMetadataTool())
 	}
@@ -663,6 +664,8 @@ func (server *Server) callTool(writer http.ResponseWriter, request *http.Request
 		result, err = server.delegate(request.Context(), input, params.Arguments, rpc.ID)
 	case "invoke_integration":
 		result, err = server.invoke(request.Context(), input, params.Arguments, rpc.ID)
+	case runtimecontract.FileToolSearch, runtimecontract.FileToolMetadata, runtimecontract.FileToolPreview, runtimecontract.FileToolManifest:
+		result, err = server.callFileTool(request.Context(), input, params.Name, params.Arguments)
 	default:
 		err = errors.New("tool is not available")
 	}
@@ -1151,6 +1154,14 @@ func (server *Server) recordToolCall(ctx context.Context, input runtimecontract.
 }
 
 func safeToolCallParameters(input runtimecontract.RunnerInput, tool string, arguments map[string]any) (map[string]any, string, string, bool) {
+	if runtimecontract.IsRuntimeFileTool(tool) {
+		purpose, _ := arguments["purpose"].(string)
+		_, ok := runtimeFilePurpose(input, purpose)
+		if !ok {
+			return nil, "", "", false
+		}
+		return map[string]any{"purpose": purpose}, "", input.FileCatalog.Ref, true
+	}
 	switch tool {
 	case "get_configuration_catalog":
 		return map[string]any{}, "platform.configuration.read", "", input.SystemAssistant

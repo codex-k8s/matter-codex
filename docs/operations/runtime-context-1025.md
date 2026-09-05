@@ -4,7 +4,7 @@ title: Проекция Skills и памяти runtime-controller
 type: operations
 status: approved
 owner: backend
-version: 1.1.0
+version: 1.2.0
 updated: 2026-09-05
 ---
 
@@ -21,6 +21,7 @@ updated: 2026-09-05
 | Continuation | Новый server-owned turn/attempt | CP новая revision после закрытия предыдущего графа | Новый Pod; resume только с owner-разрешённым неизменным context digest |
 | Retry | Новый grant/fence, не прежний ticket | CP новая attempt/revision | Новые projections; чужой или прежний callback отклоняется |
 | Skill file | Init mTLS, ticket, execution binding и точный pin | CP ReadExecutionArtifact с lease/fence/generation | Membership в snapshot до RPC, bounded bytes и exact digest после RPC |
+| File catalog | Runner callback mTLS, ticket, execution/MCP binding | CP SearchExecutionFiles/GetExecutionFileMetadata/PreviewExecutionFile/GetExecutionFileManifest, exact catalog и свежая owner eligibility | Только advertised purpose, bounded count/cursor/preview; exact response readback и обязательный RecordRunToolCall без query/content |
 | Memory | Полномочия из owner revision, не filesystem path | CP snapshot с binding/revision/retention | Read-only typed records, без knowledge-artifact fallback |
 | Renew | Та же active lease/attempt/fence | CP RenewExecution | Нельзя менять snapshot продлением lease |
 | Warm reuse | Точная system session и compatibility digest | CP desired revision и claimed turn | Только одинаковые pins; changed context не передаётся старому Pod |
@@ -60,6 +61,28 @@ execution headers и membership проверяются до owner RPC. Посл�
 сверяются project/ref/revision/size/digest и фактический SHA-256 bytes.
 Receive budget отдельного RPC равен pin size + 64KiB metadata, без изменения
 лимитов остальных методов. Ошибка не возвращает частичный файл или raw body.
+
+Вклад642 подключён merge `4f97ab180a88edb0da458c4ee0f945ad11f6650f`:
+Proto source объединён семантически, Go regenerated канонически и replay PASS.
+Optional `file_catalog` не меняет старый snapshot без поля; новый descriptor
+входит в digest до materialization. Warm без execution lease не объявляет
+файловые MCP tools. Grants не выводятся из полного списка файлов проекта:
+controller использует только purposes, выданные owner конкретной revision.
+
+Consumer-проверки: authenticated HTTP callback → настоящий generated gRPC
+client через disposable in-memory transport → четыре owner RPC → exact
+metadata/page/preview validation → обязательная activity. Отказ activity не
+отдаёт preview; activity не хранит query и file contents. Подмена catalog,
+revision, purpose, project, entry, digest, count/cursor и unknown input fields
+закрыто отклоняется. Workload test проверяет materialization, v7 JSON schema
+и изменение MCP binding после подмены catalog digest.
+
+Локальные callback/workload race: PASS1.182/1.761s, полный controller race,
+vet и build PASS на consumer source tree до checkpoint. Общий baseline,
+protected deployment и live agent приёмка — NOT RUN. Выявленный общий разрыв
+полного чтения 32MiB unary / 512MiB permitted input остаётся незавершённым;
+следующий additive streaming transport сохраняет product limit и не повышает
+размер всех unary gRPC envelopes.
 
 ## Интеграционные зависимости
 

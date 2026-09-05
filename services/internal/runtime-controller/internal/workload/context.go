@@ -11,6 +11,9 @@ func hydrateRuntimeContext(input *runtimecontract.RunnerInput, revision *cp.Runt
 	if input == nil || revision == nil {
 		return runtimecontract.ErrRuntimeContext
 	}
+	if err := hydrateRuntimeFileCatalog(input, revision); err != nil {
+		return err
+	}
 	snapshot := runtimecontract.RuntimeContextSnapshot{Schema: runtimecontract.RuntimeContextSchema,
 		OrganizationRef: input.OrganizationRef, ProjectRef: input.ProjectRef, AgentRef: input.AgentRef,
 		Skills: []runtimecontract.RuntimeSkillBundle{}, Memories: []runtimecontract.RuntimeMemoryRecord{}}
@@ -56,6 +59,37 @@ func hydrateRuntimeContext(input *runtimecontract.RunnerInput, revision *cp.Runt
 		return runtimecontract.ErrRuntimeContext
 	}
 	input.ContextSnapshot = &snapshot
+	return nil
+}
+
+func hydrateRuntimeFileCatalog(input *runtimecontract.RunnerInput, revision *cp.RuntimeRevisionSnapshot) error {
+	input.FileCatalog = nil
+	source := revision.GetFileCatalog()
+	if source == nil {
+		return nil
+	}
+	if input.Mode != runtimecontract.RunnerModeTurn || input.ProjectRef == "" {
+		return runtimecontract.ErrRuntimeContext
+	}
+	catalog := &runtimecontract.RuntimeFileCatalog{Ref: source.GetRef(), Digest: source.GetDigest(), Total: source.GetTotal()}
+	for _, purpose := range source.GetPurposes() {
+		switch purpose {
+		case cp.RuntimeFilePurpose_RUNTIME_FILE_PURPOSE_PROJECT:
+			catalog.Purposes = append(catalog.Purposes, runtimecontract.FilePurposeProject)
+		case cp.RuntimeFilePurpose_RUNTIME_FILE_PURPOSE_WORKSPACE_INPUT:
+			catalog.Purposes = append(catalog.Purposes, runtimecontract.FilePurposeWorkspaceInput)
+		case cp.RuntimeFilePurpose_RUNTIME_FILE_PURPOSE_RUN_RESULT:
+			catalog.Purposes = append(catalog.Purposes, runtimecontract.FilePurposeRunResult)
+		case cp.RuntimeFilePurpose_RUNTIME_FILE_PURPOSE_SKILL:
+			catalog.Purposes = append(catalog.Purposes, runtimecontract.FilePurposeSkill)
+		default:
+			return runtimecontract.ErrRuntimeContext
+		}
+	}
+	if catalog.Validate() != nil {
+		return runtimecontract.ErrRuntimeContext
+	}
+	input.FileCatalog = catalog
 	return nil
 }
 

@@ -4,8 +4,8 @@ title: runtime-controller
 type: service
 status: approved
 owner: developer
-version: 3.0.0
-updated: 2026-09-04
+version: 3.1.0
+updated: 2026-09-05
 ---
 
 # runtime-controller
@@ -83,6 +83,24 @@ Callback и MCP requests несут exact organization/project/run/node/session/
 turn/attempt, RuntimeRevision digest, input digest, method и binding digest.
 Проверка capability/grant выполняется по той же RuntimeRevision и не расширяет
 eligibility из payload.
+
+Execution с owner `file_catalog` получает четыре read-only инструмента:
+`search_files`, `get_file_metadata`, `preview_file`, `get_file_manifest`.
+Контроллер закрепляет descriptor в RuntimeRevision и execution/MCP digest до
+materialization. Tools берут lease/fence/generation/catalog из проверенного
+callback input; caller выбирает только объявленный purpose, query/page либо
+exact entry/ref/revision/digest. Search и manifest ограничены 100 строками,
+cursor — 512 символами, preview — 16KiB. Произвольного path/project selector
+нет. Ответ проверяется по catalog, purpose, project и exact file pins до
+выдачи агенту; activity содержит только purpose и catalog grant.
+
+Вклад owner642: `ccefadda86f25370924a5a4fd19f57d7ace7ae85`.
+Локальные generated gRPC и authenticated callback tests проверяют все четыре
+операции, подмену snapshot/file и отказ при недоступном обязательном audit.
+Полное тело файла требует отдельного protected transfer. Текущий unary
+`ReadExecutionArtifact` ограничен 32MiB при разрешённом input до 512MiB;
+согласование потоковой передачи и её consumer остаётся обязательной работой.
+Эти проверки не заменяют live agent/workspace acceptance.
 
 ## System assistant
 
