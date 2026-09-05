@@ -333,6 +333,10 @@ service RuntimeWorkService {
   // immutable revision, выбранную binding конкретного RuntimeEnvironment.
   rpc GetRuntimeEnvironmentRoleImageConfiguration(GetRuntimeEnvironmentRoleImageConfigurationRequest) returns (GetRuntimeEnvironmentRoleImageConfigurationResponse);
   rpc ReadExecutionArtifact(ReadExecutionArtifactRequest) returns (ReadExecutionArtifactResponse);
+  rpc SearchExecutionFiles(SearchExecutionFilesRequest) returns (SearchExecutionFilesResponse);
+  rpc GetExecutionFileMetadata(GetExecutionFileMetadataRequest) returns (GetExecutionFileMetadataResponse);
+  rpc PreviewExecutionFile(PreviewExecutionFileRequest) returns (PreviewExecutionFileResponse);
+  rpc GetExecutionFileManifest(GetExecutionFileManifestRequest) returns (GetExecutionFileManifestResponse);
   rpc RenewExecution(RenewExecutionRequest) returns (RenewExecutionResponse);
   rpc ReportExecutionProgress(ReportExecutionProgressRequest) returns (ReportExecutionProgressResponse);
   rpc CommitProviderCredentialRefresh(CommitProviderCredentialRefreshRequest) returns (CommitProviderCredentialRefreshResponse);
@@ -2742,6 +2746,98 @@ message RuntimeRevisionSnapshot {
   // Server-owned effective effort из exact catalog default либо TOML override.
   string effective_reasoning_effort = 71;
   RuntimeReasoningMode reasoning_mode = 72;
+  RuntimeFileCatalog file_catalog = 73;
+}
+
+enum RuntimeFilePurpose {
+  RUNTIME_FILE_PURPOSE_UNSPECIFIED = 0;
+  RUNTIME_FILE_PURPOSE_PROJECT = 1;
+  RUNTIME_FILE_PURPOSE_WORKSPACE_INPUT = 2;
+  RUNTIME_FILE_PURPOSE_RUN_RESULT = 3;
+  RUNTIME_FILE_PURPOSE_SKILL = 4;
+}
+
+// Descriptor входит в digest RuntimeRevision; записи каталога остаются у CP.
+message RuntimeFileCatalog {
+  string ref = 1;
+  string digest = 2;
+  int64 total = 3;
+  repeated RuntimeFilePurpose purposes = 4;
+}
+
+message ExecutionFileContext {
+  string lease_ref = 1;
+  string fence = 2;
+  int64 generation = 3;
+  string catalog_ref = 4;
+  string catalog_digest = 5;
+  RuntimeFilePurpose purpose = 6;
+}
+
+message ExecutionFileRef {
+  string artifact_ref = 1;
+  int64 revision = 2;
+  string digest = 3;
+  string entry_ref = 4;
+}
+
+message ExecutionFileDescriptor {
+  string artifact_ref = 1;
+  int64 revision = 2;
+  int64 version = 3;
+  string digest = 4;
+  string name = 5;
+  string media_type = 6;
+  int64 size_bytes = 7;
+  RuntimeFilePurpose purpose = 8;
+  string project_ref = 9;
+  string run_ref = 10;
+  string source = 11;
+  string source_ref = 12;
+  string source_revision_ref = 13;
+  string entry_ref = 14;
+}
+
+message SearchExecutionFilesRequest {
+  ExecutionFileContext context = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message SearchExecutionFilesResponse {
+  RuntimeFileCatalog catalog = 1;
+  repeated ExecutionFileDescriptor items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
+}
+message GetExecutionFileMetadataRequest {
+  ExecutionFileContext context = 1;
+  ExecutionFileRef file = 2;
+}
+message GetExecutionFileMetadataResponse {
+  RuntimeFileCatalog catalog = 1;
+  ExecutionFileDescriptor file = 2;
+}
+message PreviewExecutionFileRequest {
+  ExecutionFileContext context = 1;
+  ExecutionFileRef file = 2;
+  int32 maximum_bytes = 3;
+}
+message PreviewExecutionFileResponse {
+  RuntimeFileCatalog catalog = 1;
+  ExecutionFileDescriptor file = 2;
+  string text = 3;
+  bool truncated = 4;
+  string preview_digest = 5;
+}
+message GetExecutionFileManifestRequest {
+  ExecutionFileContext context = 1;
+  PageRequest page = 2;
+}
+message GetExecutionFileManifestResponse {
+  RuntimeFileCatalog catalog = 1;
+  repeated ExecutionFileDescriptor items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
 }
 
 message SavePromptTemplateDraftRequest {

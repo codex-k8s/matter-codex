@@ -5733,6 +5733,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if !ok || len(catalog) != 2 {
 		t.Fatalf("runtime artifact catalog = %#v, want input and knowledge artifacts", lease["artifacts"])
 	}
+	testRuntimeFileQueries(t, ctx, repository, service, owner, lease)
 	runtimeDownload, err := service.ReadExecutionArtifact(ctx, runtimeReader, stringMap(lease, "leaseRef"), stringMap(lease, "fence"), lease["generation"].(int64), secondRevision.Ref)
 	if err != nil {
 		t.Fatalf("read lease-bound runtime artifact: %v", err)

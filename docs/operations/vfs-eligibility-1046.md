@@ -4,7 +4,7 @@ title: Виртуальные файлы и авторитетная досту�
 type: operations
 status: approved
 owner: developer
-version: 1.0.0
+version: 1.1.0
 updated: 2026-09-05
 ---
 
@@ -55,6 +55,14 @@ Code SHA `43c318b24426da3ae3d0f6fec8e88207f732adce`; следующий commit �
 `vfs-envelope-race.log`, `vfs-final-contracts.log`, `vfs-final-vet.log` и
 `vfs-final-build.log` находятся только в приватном локальном evidence-каталоге.
 
-Это вклад в незавершённый unit. Дополнение иерархии, полный Runtime MCP producer
+Дополнение иерархии `bfe7dd679f91a820e8c9c0fcd3a5500132f4f1d5` прошло полный
+Bootstrap23.953s, race/vet/build и SQL boundary: project entity folders находятся
+непосредственно под проектом, Agent knowledge inputs имеют immutable leaves,
+Skill bundle раскрывает exact `SKILL.md` и supporting files с deduplicated
+вложенными папками. Checkbox/actions соответствуют типу и server eligibility.
+Предыдущая попытка narrow PG пропустила prerequisite fixtures и завершилась
+FAIL; доказательство получено полным Bootstrap, не ослаблением launch guards.
+
+Это вклад в незавершённый unit. Полный Runtime MCP producer
 и consumer, HTTP/SDK/PWA новых полей, live/runtime acceptance — NOT RUN.
 Документ не объявляет MVP-UI-37/61 полностью выполненными.

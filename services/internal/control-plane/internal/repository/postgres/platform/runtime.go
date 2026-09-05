@@ -30,11 +30,22 @@ func (repository *Repository) ReadExecutionArtifact(ctx context.Context, princip
 	if err != nil {
 		return platformrepo.ArtifactDownload{}, err
 	}
+	dbctx, stop := context.WithTimeout(ctx, 5*time.Second)
+	defer stop()
+	tx, err := repository.pool.BeginTx(dbctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
+	if err != nil {
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
+	}
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+		defer cancel()
+		_ = tx.Rollback(cleanup)
+	}()
 	fenceDigest := sha256.Sum256([]byte(fence))
 	item := entity.Artifact{}
 	var objectKey, objectVersion, objectETag, objectDigest string
 	var objectSize int64
-	err = repository.pool.QueryRow(ctx, queryRuntimeReadexecutionartifactSelectArtifactContent, pgx.StrictNamedArgs{
+	err = tx.QueryRow(dbctx, queryRuntimeReadexecutionartifactSelectArtifactContent, pgx.StrictNamedArgs{
 		"organization_id": scope.organizationID,
 		"lease_ref":       leaseRef,
 		"fence_digest":    hex.EncodeToString(fenceDigest[:]),
@@ -65,6 +76,24 @@ func (repository *Repository) ReadExecutionArtifact(ctx context.Context, princip
 		(objectETag != "" && object.ETag != objectETag) {
 		_ = object.Body.Close()
 		return platformrepo.ArtifactDownload{}, errs.ErrConflict
+	}
+	auditRef, err := newRef("aud")
+	if err != nil {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, err
+	}
+	tag, err := tx.Exec(dbctx, queryRuntimeFilesBodyAudit, pgx.StrictNamedArgs{
+		"audit_ref": auditRef, "organization_id": scope.organizationID, "artifact_ref": artifactRef,
+		"lease_ref": leaseRef, "fence_digest": hex.EncodeToString(fenceDigest[:]), "generation": generation,
+		"correlation": scope.correlationRef,
+	})
+	if err != nil || tag.RowsAffected() != 1 {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
+	}
+	if tx.Commit(dbctx) != nil {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
 	}
 	return platformrepo.ArtifactDownload{Artifact: item, Reader: object.Body}, nil
 }
@@ -166,6 +195,14 @@ func (repository *Repository) recordRunToolCall(ctx context.Context, tx pgx.Tx, 
 	if !ok || !validToolCallProjection(payload) {
 		return commandOutcome{}, errs.ErrInvalid
 	}
+	filePurpose := ""
+	if runtimecontract.IsRuntimeFileTool(payload.Tool) {
+		filePurpose, _ = payload.SafeParameters["purpose"].(string)
+		if len(payload.SafeParameters) != 1 || !contains([]string{runtimecontract.FilePurposeProject, runtimecontract.FilePurposeRunResult, runtimecontract.FilePurposeSkill, runtimecontract.FilePurposeWorkspaceInput}, filePurpose) ||
+			!strings.HasPrefix(payload.GrantRef, "vfc_") || payload.CapabilityRef != "" {
+			return commandOutcome{}, errs.ErrInvalid
+		}
+	}
 	lease, err := repository.lease(ctx, tx, scope, command.LeaseInput{LeaseRef: payload.LeaseRef, Fence: payload.Fence, Generation: payload.Generation}, true)
 	if err != nil {
 		return commandOutcome{}, err
@@ -175,6 +212,7 @@ func (repository *Repository) recordRunToolCall(ctx context.Context, tx pgx.Tx, 
 	if err := tx.QueryRow(ctx, queryRuntimeRecordtoolcallSelectActorAndGrant, pgx.StrictNamedArgs{
 		"organization_id": scope.organizationID, "node_id": lease["nodeID"], "generation": payload.Generation,
 		"grant_ref": payload.GrantRef, "capability_ref": payload.CapabilityRef,
+		"tool": payload.Tool, "purpose": filePurpose,
 	}).Scan(&actorRef, &actorName, &systemAssistant, &grantAllowed); errors.Is(err, pgx.ErrNoRows) {
 		return commandOutcome{}, errs.ErrNotFound
 	} else if err != nil {
@@ -254,6 +292,9 @@ func containsSensitiveToolKey(value any) bool {
 }
 
 func toolCapabilityMatches(tool, capability string, integration, systemAssistant bool) bool {
+	if runtimecontract.IsRuntimeFileTool(tool) {
+		return integration && capability == ""
+	}
 	if integration {
 		return tool == "invoke_integration" && capability != ""
 	}
@@ -721,6 +762,9 @@ func (repository *Repository) claimExecution(ctx context.Context, tx pgx.Tx, sco
 		}
 		snapshot["contextSnapshot"] = contextSnapshot
 		snapshot["codexSessionID"] = runtimeContextSessionID(codexSessionID, candidate.previousContextDigest, contextSnapshot.Digest)
+		if err := captureRuntimeFileCatalog(ctx, tx, scope, snapshot, contextSnapshot); err != nil {
+			return commandOutcome{}, err
+		}
 		revisionDigestHex, err := runtimeRevisionDigestFromSnapshot(snapshot)
 		if err != nil {
 			return commandOutcome{}, errs.ErrConflict
@@ -1029,6 +1073,17 @@ func runtimeRevisionDigestFromSnapshot(values map[string]any) (string, error) {
 	input.InputArtifacts = runtimeRevisionArtifacts(values["artifacts"])
 	input.DelegationTargets = runtimeRevisionDelegationTargets(values["delegationTargets"])
 	input.SessionContext = runtimeRevisionSessionContext(values["sessionContext"])
+	if raw, ok := values["fileCatalog"]; ok {
+		encoded, err := json.Marshal(raw)
+		if err != nil {
+			return "", errs.ErrConflict
+		}
+		var catalog runtimecontract.RuntimeFileCatalog
+		if json.Unmarshal(encoded, &catalog) != nil || catalog.Validate() != nil {
+			return "", errs.ErrConflict
+		}
+		input.FileCatalog = &catalog
+	}
 	if raw, ok := values["contextSnapshot"]; ok {
 		encoded, err := json.Marshal(raw)
 		if err != nil {

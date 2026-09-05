@@ -183,7 +183,7 @@ func main() {
 		Operations: controlplaneclient.SecretDraftGatewayOperations(), AuthoritySources: []string{"OIDC_SESSION", "DOMAIN_STATE"},
 		TargetWorkloadID: secretBrokerID, TargetSPIFFEID: secretBrokerPeer, TargetAudience: secretBrokerAudience, TargetTLSServerName: secretBrokerTLS,
 	})
-	value := document{Version: 1, PolicyRevision: 65, Policy: policy{
+	value := document{Version: 1, PolicyRevision: 66, Policy: policy{
 		AuthorityABIVersion: 2,
 		TrustDomain:         "kodex.local", DefaultDecision: "DENY", TokenTTLSeconds: 30,
 		AllowedClockSkewSeconds: 5, MaxCompactJWSBytes: 8192,
@@ -280,6 +280,12 @@ func requiredProjects(operations map[string]string) map[string]struct{} {
 }
 
 func operationRequestProfile(operationID, fullMethod string) requestProfile {
+	// Полный nested execution/catalog pin покрывается canonical Proto digest.
+	// Отдельные resource/version/attempt headers здесь не назначают полномочия.
+	switch operationID {
+	case "platform.runtime.files.search", "platform.runtime.files.metadata", "platform.runtime.files.preview", "platform.runtime.files.manifest":
+		return requestProfile{Mode: "UNARY_PROTO_SHA256", Resource: "FORBIDDEN", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
+	}
 	mode := "UNARY_PROTO_SHA256"
 	if strings.HasPrefix(operationID, "platform.runtime-secret-drafts.") || strings.HasPrefix(operationID, "platform.configuration-sources.work.") || strings.HasPrefix(operationID, "platform.configuration-writebacks.work.") {
 		return requestProfile{Mode: mode, Resource: "FORBIDDEN", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}

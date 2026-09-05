@@ -151,6 +151,7 @@
       "items": {"$ref": "#/$defs/attachment_set"}
     },
     "context_snapshot": {"$ref": "#/$defs/context_snapshot"},
+    "file_catalog": {"$ref": "#/$defs/file_catalog"},
     "input_artifacts": {
       "type": "array",
       "items": {"$ref": "#/$defs/input_artifact"}
@@ -215,6 +216,7 @@
   "allOf": [
     {"if": {"properties": {"reasoning_mode": {"const": "SUPPORTED"}}}, "then": {"properties": {"effective_reasoning_effort": {"minLength": 1}}}, "else": {"properties": {"effective_reasoning_effort": {"const": ""}}}},
     {"required": ["context_snapshot"]},
+    {"if": {"required": ["file_catalog"]}, "then": {"properties": {"mode": {"const": "TURN"}}, "required": ["project_ref"]}},
     {
       "if": {"properties": {"mode": {"const": "TURN"}}, "required": ["mode"]},
       "then": {
@@ -302,6 +304,17 @@
     }
   ],
   "$defs": {
+    "file_catalog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "digest", "total", "purposes"],
+      "properties": {
+        "ref": {"type": "string", "pattern": "^vfc_[A-Za-z0-9_-]{8,84}$"},
+        "digest": {"$ref": "#/$defs/sha256"},
+        "total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+        "purposes": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true,
+          "items": {"enum": ["PROJECT", "RUN_RESULT", "SKILL", "WORKSPACE_INPUT"]}}
+      }
+    },
     "context_snapshot": {
       "type": "object", "additionalProperties": false,
       "required": ["schema", "organization_ref", "project_ref", "agent_ref", "skills", "memories", "digest"],
