@@ -169,7 +169,7 @@ test("Сопоставляет настоящий результат, owner meta
 function quotaFixture() {
   const data = fixture();
   data.run.state = "FAILED";
-  data.run.safeErrorCode = "RUNTIME_WORKSPACE_INVALID";
+  data.run.safeErrorCode = "RUNTIME_INPUT_INVALID";
   data.run.artifactRefs = [];
   data.parameters.observation = {
     reason: "QUOTA_EXCEEDED",

@@ -168,8 +168,11 @@ repo-owned `kubectl exec` в точном `role-runtime` запускается 
 annotations. Принимается только `QUOTA_EXCEEDED`, без чтения содержимого
 файлов. Другой denial, смена Pod или недоступная проверка завершают сценарий
 ошибкой. После завершения модели authoritative Run должен иметь `FAILED`,
-`RUNTIME_WORKSPACE_INVALID`, ни одного result artifact и успешное native
+`RUNTIME_INPUT_INVALID`, ни одного result artifact и успешное native
 shell event. Общего workspace error без exact canary недостаточно.
+Это опубликованный safeErrorCode: внутренний `RUNTIME_WORKSPACE_INVALID`
+нормализуется runner в `RUNTIME_INPUT_INVALID`. Оснастка не требует
+несуществующего отдельного публичного workspace error code.
 
 Runner `13c092f5131e17b8f1a7be4e1657f77bc1e88cde` сохраняет уже выполненные
 native effects до post-execution quota check. На этом runner SHA **PASS**:

@@ -425,7 +425,7 @@ export async function verifyWorkspaceQuota({
     run.projectRef !== projectRef ||
     run.target?.ref !== agentRef ||
     run.state !== "FAILED" ||
-    run.safeErrorCode !== "RUNTIME_WORKSPACE_INVALID" ||
+    run.safeErrorCode !== "RUNTIME_INPUT_INVALID" ||
     !Number.isSafeInteger(run.attempt) ||
     run.attempt < 1 ||
     !Array.isArray(run.artifactRefs) ||
