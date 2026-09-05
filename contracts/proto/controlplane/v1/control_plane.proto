@@ -91,6 +91,7 @@ service PlatformQueryService {
   rpc ListManagedConfigurationHistory(ListManagedConfigurationHistoryRequest) returns (ListManagedConfigurationHistoryResponse);
   rpc ListManagedConfigurations(ListManagedConfigurationsRequest) returns (ListManagedConfigurationsResponse);
   rpc GetManagedConfigurationImpact(GetManagedConfigurationImpactRequest) returns (GetManagedConfigurationImpactResponse);
+  rpc GetRoleImageImpactPlan(GetRoleImageImpactPlanRequest) returns (GetRoleImageImpactPlanResponse);
   rpc GetManagedConfigurationGitWriteBack(GetManagedConfigurationGitWriteBackRequest) returns (GetManagedConfigurationGitWriteBackResponse);
   rpc ListManagedConfigurationGitWriteBacks(ListManagedConfigurationGitWriteBacksRequest) returns (ListManagedConfigurationGitWriteBacksResponse);
   rpc GetSystemSTTConfiguration(GetSystemSTTConfigurationRequest) returns (GetSystemSTTConfigurationResponse);
@@ -244,6 +245,7 @@ service PlatformCommandService {
   rpc ValidateRoleImageRevisionDraft(ValidateRoleImageRevisionDraftRequest) returns (ValidateRoleImageRevisionDraftResponse);
   rpc PublishRoleImageRevisionDraft(PublishRoleImageRevisionDraftRequest) returns (PublishRoleImageRevisionDraftResponse);
   rpc RebindRoleImageConsumers(RebindRoleImageConsumersRequest) returns (RebindRoleImageConsumersResponse);
+  rpc PrepareRoleImageImpactPlan(PrepareRoleImageImpactPlanRequest) returns (PrepareRoleImageImpactPlanResponse);
   rpc CreateIntegrationDefinitionDraft(CreateIntegrationDefinitionDraftRequest) returns (CreateIntegrationDefinitionDraftResponse);
   rpc ValidateIntegrationDefinitionDraft(ValidateIntegrationDefinitionDraftRequest) returns (ValidateIntegrationDefinitionDraftResponse);
   rpc PublishIntegrationDefinitionDraft(PublishIntegrationDefinitionDraftRequest) returns (PublishIntegrationDefinitionDraftResponse);
@@ -5295,10 +5297,75 @@ message RebindRoleImageConsumersRequest {
   string revision_ref = 3;
   string impact_digest = 4;
   repeated ManagedConfigurationConsumer consumers = 5;
+  string plan_ref = 6;
+  repeated string selected_item_refs = 7;
 }
 message RebindRoleImageConsumersResponse {
   ManagedConfigurationSet configuration = 1;
   ManagedConfigurationRevision revision = 2;
+  RoleImageImpactPlan plan = 3;
+}
+enum RoleImageImpactPlanState {
+  ROLE_IMAGE_IMPACT_PLAN_STATE_UNSPECIFIED = 0;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_PREPARED = 1;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_APPLIED = 2;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_EXPIRED = 3;
+}
+enum RoleImageImpactOutcome {
+  ROLE_IMAGE_IMPACT_OUTCOME_UNSPECIFIED = 0;
+  ROLE_IMAGE_IMPACT_OUTCOME_PENDING = 1;
+  ROLE_IMAGE_IMPACT_OUTCOME_APPLIED = 2;
+  ROLE_IMAGE_IMPACT_OUTCOME_CONFLICT = 3;
+  ROLE_IMAGE_IMPACT_OUTCOME_FORBIDDEN = 4;
+  ROLE_IMAGE_IMPACT_OUTCOME_NOT_SELECTED = 5;
+}
+message RoleImageImpactPlan {
+  string ref = 1;
+  int64 version = 2;
+  string configuration_ref = 3;
+  int64 configuration_version = 4;
+  string revision_ref = 5;
+  string revision_digest = 6;
+  string recipe_ref = 7;
+  int64 recipe_generation = 8;
+  string build_ref = 9;
+  string artifact_ref = 10;
+  string artifact_digest = 11;
+  string admission_policy_digest = 12;
+  string digest = 13;
+  int64 total = 14;
+  RoleImageImpactPlanState state = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp expires_at = 17;
+}
+message RoleImageImpactItem {
+  string ref = 1;
+  string environment_ref = 2;
+  int64 environment_version = 3;
+  string source_version_ref = 4;
+  string source_version_digest = 5;
+  RuntimeEnvironmentConsumer consumer = 6;
+  RoleImageImpactOutcome outcome = 7;
+  string result_environment_version_ref = 8;
+  string result_binding_ref = 9;
+  int64 result_binding_version = 10;
+}
+message PrepareRoleImageImpactPlanRequest {
+  MutationContext mutation = 1;
+  string configuration_ref = 2;
+  string revision_ref = 3;
+}
+message PrepareRoleImageImpactPlanResponse { RoleImageImpactPlan plan = 1; }
+message GetRoleImageImpactPlanRequest {
+  string plan_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message GetRoleImageImpactPlanResponse {
+  RoleImageImpactPlan plan = 1;
+  repeated RoleImageImpactItem items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
 }
 message CreateIntegrationDefinitionDraftRequest {
   MutationContext mutation = 1;

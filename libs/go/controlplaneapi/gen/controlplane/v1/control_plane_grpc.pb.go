@@ -96,6 +96,7 @@ const (
 	PlatformQueryService_ListManagedConfigurationHistory_FullMethodName       = "/controlplane.v1.PlatformQueryService/ListManagedConfigurationHistory"
 	PlatformQueryService_ListManagedConfigurations_FullMethodName             = "/controlplane.v1.PlatformQueryService/ListManagedConfigurations"
 	PlatformQueryService_GetManagedConfigurationImpact_FullMethodName         = "/controlplane.v1.PlatformQueryService/GetManagedConfigurationImpact"
+	PlatformQueryService_GetRoleImageImpactPlan_FullMethodName                = "/controlplane.v1.PlatformQueryService/GetRoleImageImpactPlan"
 	PlatformQueryService_GetManagedConfigurationGitWriteBack_FullMethodName   = "/controlplane.v1.PlatformQueryService/GetManagedConfigurationGitWriteBack"
 	PlatformQueryService_ListManagedConfigurationGitWriteBacks_FullMethodName = "/controlplane.v1.PlatformQueryService/ListManagedConfigurationGitWriteBacks"
 	PlatformQueryService_GetSystemSTTConfiguration_FullMethodName             = "/controlplane.v1.PlatformQueryService/GetSystemSTTConfiguration"
@@ -188,6 +189,7 @@ type PlatformQueryServiceClient interface {
 	ListManagedConfigurationHistory(ctx context.Context, in *ListManagedConfigurationHistoryRequest, opts ...grpc.CallOption) (*ListManagedConfigurationHistoryResponse, error)
 	ListManagedConfigurations(ctx context.Context, in *ListManagedConfigurationsRequest, opts ...grpc.CallOption) (*ListManagedConfigurationsResponse, error)
 	GetManagedConfigurationImpact(ctx context.Context, in *GetManagedConfigurationImpactRequest, opts ...grpc.CallOption) (*GetManagedConfigurationImpactResponse, error)
+	GetRoleImageImpactPlan(ctx context.Context, in *GetRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*GetRoleImageImpactPlanResponse, error)
 	GetManagedConfigurationGitWriteBack(ctx context.Context, in *GetManagedConfigurationGitWriteBackRequest, opts ...grpc.CallOption) (*GetManagedConfigurationGitWriteBackResponse, error)
 	ListManagedConfigurationGitWriteBacks(ctx context.Context, in *ListManagedConfigurationGitWriteBacksRequest, opts ...grpc.CallOption) (*ListManagedConfigurationGitWriteBacksResponse, error)
 	GetSystemSTTConfiguration(ctx context.Context, in *GetSystemSTTConfigurationRequest, opts ...grpc.CallOption) (*GetSystemSTTConfigurationResponse, error)
@@ -975,6 +977,16 @@ func (c *platformQueryServiceClient) GetManagedConfigurationImpact(ctx context.C
 	return out, nil
 }
 
+func (c *platformQueryServiceClient) GetRoleImageImpactPlan(ctx context.Context, in *GetRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*GetRoleImageImpactPlanResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRoleImageImpactPlanResponse)
+	err := c.cc.Invoke(ctx, PlatformQueryService_GetRoleImageImpactPlan_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformQueryServiceClient) GetManagedConfigurationGitWriteBack(ctx context.Context, in *GetManagedConfigurationGitWriteBackRequest, opts ...grpc.CallOption) (*GetManagedConfigurationGitWriteBackResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetManagedConfigurationGitWriteBackResponse)
@@ -1128,6 +1140,7 @@ type PlatformQueryServiceServer interface {
 	ListManagedConfigurationHistory(context.Context, *ListManagedConfigurationHistoryRequest) (*ListManagedConfigurationHistoryResponse, error)
 	ListManagedConfigurations(context.Context, *ListManagedConfigurationsRequest) (*ListManagedConfigurationsResponse, error)
 	GetManagedConfigurationImpact(context.Context, *GetManagedConfigurationImpactRequest) (*GetManagedConfigurationImpactResponse, error)
+	GetRoleImageImpactPlan(context.Context, *GetRoleImageImpactPlanRequest) (*GetRoleImageImpactPlanResponse, error)
 	GetManagedConfigurationGitWriteBack(context.Context, *GetManagedConfigurationGitWriteBackRequest) (*GetManagedConfigurationGitWriteBackResponse, error)
 	ListManagedConfigurationGitWriteBacks(context.Context, *ListManagedConfigurationGitWriteBacksRequest) (*ListManagedConfigurationGitWriteBacksResponse, error)
 	GetSystemSTTConfiguration(context.Context, *GetSystemSTTConfigurationRequest) (*GetSystemSTTConfigurationResponse, error)
@@ -1375,6 +1388,9 @@ func (UnimplementedPlatformQueryServiceServer) ListManagedConfigurations(context
 }
 func (UnimplementedPlatformQueryServiceServer) GetManagedConfigurationImpact(context.Context, *GetManagedConfigurationImpactRequest) (*GetManagedConfigurationImpactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetManagedConfigurationImpact not implemented")
+}
+func (UnimplementedPlatformQueryServiceServer) GetRoleImageImpactPlan(context.Context, *GetRoleImageImpactPlanRequest) (*GetRoleImageImpactPlanResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRoleImageImpactPlan not implemented")
 }
 func (UnimplementedPlatformQueryServiceServer) GetManagedConfigurationGitWriteBack(context.Context, *GetManagedConfigurationGitWriteBackRequest) (*GetManagedConfigurationGitWriteBackResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetManagedConfigurationGitWriteBack not implemented")
@@ -2804,6 +2820,24 @@ func _PlatformQueryService_GetManagedConfigurationImpact_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformQueryService_GetRoleImageImpactPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRoleImageImpactPlanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformQueryServiceServer).GetRoleImageImpactPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformQueryService_GetRoleImageImpactPlan_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformQueryServiceServer).GetRoleImageImpactPlan(ctx, req.(*GetRoleImageImpactPlanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformQueryService_GetManagedConfigurationGitWriteBack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetManagedConfigurationGitWriteBackRequest)
 	if err := dec(in); err != nil {
@@ -3246,6 +3280,10 @@ var PlatformQueryService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PlatformQueryService_GetManagedConfigurationImpact_Handler,
 		},
 		{
+			MethodName: "GetRoleImageImpactPlan",
+			Handler:    _PlatformQueryService_GetRoleImageImpactPlan_Handler,
+		},
+		{
 			MethodName: "GetManagedConfigurationGitWriteBack",
 			Handler:    _PlatformQueryService_GetManagedConfigurationGitWriteBack_Handler,
 		},
@@ -3417,6 +3455,7 @@ const (
 	PlatformCommandService_ValidateRoleImageRevisionDraft_FullMethodName           = "/controlplane.v1.PlatformCommandService/ValidateRoleImageRevisionDraft"
 	PlatformCommandService_PublishRoleImageRevisionDraft_FullMethodName            = "/controlplane.v1.PlatformCommandService/PublishRoleImageRevisionDraft"
 	PlatformCommandService_RebindRoleImageConsumers_FullMethodName                 = "/controlplane.v1.PlatformCommandService/RebindRoleImageConsumers"
+	PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName               = "/controlplane.v1.PlatformCommandService/PrepareRoleImageImpactPlan"
 	PlatformCommandService_CreateIntegrationDefinitionDraft_FullMethodName         = "/controlplane.v1.PlatformCommandService/CreateIntegrationDefinitionDraft"
 	PlatformCommandService_ValidateIntegrationDefinitionDraft_FullMethodName       = "/controlplane.v1.PlatformCommandService/ValidateIntegrationDefinitionDraft"
 	PlatformCommandService_PublishIntegrationDefinitionDraft_FullMethodName        = "/controlplane.v1.PlatformCommandService/PublishIntegrationDefinitionDraft"
@@ -3585,6 +3624,7 @@ type PlatformCommandServiceClient interface {
 	ValidateRoleImageRevisionDraft(ctx context.Context, in *ValidateRoleImageRevisionDraftRequest, opts ...grpc.CallOption) (*ValidateRoleImageRevisionDraftResponse, error)
 	PublishRoleImageRevisionDraft(ctx context.Context, in *PublishRoleImageRevisionDraftRequest, opts ...grpc.CallOption) (*PublishRoleImageRevisionDraftResponse, error)
 	RebindRoleImageConsumers(ctx context.Context, in *RebindRoleImageConsumersRequest, opts ...grpc.CallOption) (*RebindRoleImageConsumersResponse, error)
+	PrepareRoleImageImpactPlan(ctx context.Context, in *PrepareRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*PrepareRoleImageImpactPlanResponse, error)
 	CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(ctx context.Context, in *ValidateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(ctx context.Context, in *PublishIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5012,6 +5052,16 @@ func (c *platformCommandServiceClient) RebindRoleImageConsumers(ctx context.Cont
 	return out, nil
 }
 
+func (c *platformCommandServiceClient) PrepareRoleImageImpactPlan(ctx context.Context, in *PrepareRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*PrepareRoleImageImpactPlanResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareRoleImageImpactPlanResponse)
+	err := c.cc.Invoke(ctx, PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformCommandServiceClient) CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateIntegrationDefinitionDraftResponse)
@@ -5349,6 +5399,7 @@ type PlatformCommandServiceServer interface {
 	ValidateRoleImageRevisionDraft(context.Context, *ValidateRoleImageRevisionDraftRequest) (*ValidateRoleImageRevisionDraftResponse, error)
 	PublishRoleImageRevisionDraft(context.Context, *PublishRoleImageRevisionDraftRequest) (*PublishRoleImageRevisionDraftResponse, error)
 	RebindRoleImageConsumers(context.Context, *RebindRoleImageConsumersRequest) (*RebindRoleImageConsumersResponse, error)
+	PrepareRoleImageImpactPlan(context.Context, *PrepareRoleImageImpactPlanRequest) (*PrepareRoleImageImpactPlanResponse, error)
 	CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(context.Context, *ValidateIntegrationDefinitionDraftRequest) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(context.Context, *PublishIntegrationDefinitionDraftRequest) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5791,6 +5842,9 @@ func (UnimplementedPlatformCommandServiceServer) PublishRoleImageRevisionDraft(c
 }
 func (UnimplementedPlatformCommandServiceServer) RebindRoleImageConsumers(context.Context, *RebindRoleImageConsumersRequest) (*RebindRoleImageConsumersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RebindRoleImageConsumers not implemented")
+}
+func (UnimplementedPlatformCommandServiceServer) PrepareRoleImageImpactPlan(context.Context, *PrepareRoleImageImpactPlanRequest) (*PrepareRoleImageImpactPlanResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareRoleImageImpactPlan not implemented")
 }
 func (UnimplementedPlatformCommandServiceServer) CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateIntegrationDefinitionDraft not implemented")
@@ -8315,6 +8369,24 @@ func _PlatformCommandService_RebindRoleImageConsumers_Handler(srv interface{}, c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformCommandService_PrepareRoleImageImpactPlan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareRoleImageImpactPlanRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformCommandServiceServer).PrepareRoleImageImpactPlan(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformCommandServiceServer).PrepareRoleImageImpactPlan(ctx, req.(*PrepareRoleImageImpactPlanRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformCommandService_CreateIntegrationDefinitionDraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateIntegrationDefinitionDraftRequest)
 	if err := dec(in); err != nil {
@@ -9199,6 +9271,10 @@ var PlatformCommandService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RebindRoleImageConsumers",
 			Handler:    _PlatformCommandService_RebindRoleImageConsumers_Handler,
+		},
+		{
+			MethodName: "PrepareRoleImageImpactPlan",
+			Handler:    _PlatformCommandService_PrepareRoleImageImpactPlan_Handler,
 		},
 		{
 			MethodName: "CreateIntegrationDefinitionDraft",
