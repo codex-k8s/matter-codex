@@ -2883,6 +2883,107 @@ export type ProviderApiKeyInput = {
     apiKey: string;
 };
 
+export type IntegrationCandidateReason = 'READY' | 'CONNECTION_UNAVAILABLE' | 'RECIPIENT_UNAVAILABLE' | 'PACKAGE_UNAVAILABLE' | 'GRANT_UNAVAILABLE' | 'WORKFLOW_EXCLUDED';
+
+export type IntegrationGrantCandidateContext = {
+    connectionRef?: OpaqueRef;
+    projectRef?: OpaqueRef;
+    recipientKind?: 'AGENT' | 'WORKFLOW';
+    recipientRef?: OpaqueRef;
+    capabilityKey?: string;
+    workflowRef?: OpaqueRef;
+    stepKey?: string;
+};
+
+export type IntegrationGrantCandidatePins = {
+    contextDigest: string;
+    connectionVersion?: number;
+    definitionVersion?: string;
+    definitionDigest?: string;
+    projectVersion?: number;
+    recipientVersion?: number;
+    workflowRevisionRef?: OpaqueRef;
+};
+
+export type IntegrationGrantConnectionCandidate = {
+    connectionRef: OpaqueRef;
+    name: string;
+    definitionKey: string;
+    providerName: string;
+    credentialKind?: 'TOKEN' | 'PASSWORD';
+    projectRef?: OpaqueRef;
+    resourceScope: {
+        [key: string]: string;
+    };
+    grantable: boolean;
+    usable: boolean;
+    reason: IntegrationCandidateReason;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantConnectionCandidatePage = {
+    items: Array<IntegrationGrantConnectionCandidate>;
+    total: number;
+    nextPageToken?: string;
+    contextDigest: string;
+    context: IntegrationGrantCandidateContext;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantProjectCandidate = {
+    projectRef: OpaqueRef;
+    name: string;
+    grantable: boolean;
+    reason: IntegrationCandidateReason;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantProjectCandidatePage = {
+    items: Array<IntegrationGrantProjectCandidate>;
+    total: number;
+    nextPageToken?: string;
+    contextDigest: string;
+    context: IntegrationGrantCandidateContext;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantRecipientCandidate = {
+    recipientRef: OpaqueRef;
+    name: string;
+    recipientKind: 'AGENT' | 'WORKFLOW';
+    projectRef: OpaqueRef;
+    grantable: boolean;
+    reason: IntegrationCandidateReason;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantRecipientCandidatePage = {
+    items: Array<IntegrationGrantRecipientCandidate>;
+    total: number;
+    nextPageToken?: string;
+    contextDigest: string;
+    context: IntegrationGrantCandidateContext;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantCapabilityCandidate = {
+    capability: IntegrationCapability;
+    grantable: boolean;
+    reason: IntegrationCandidateReason;
+    currentGrantRef?: OpaqueRef;
+    currentGrantVersion?: number;
+    pins: IntegrationGrantCandidatePins;
+};
+
+export type IntegrationGrantCapabilityCandidatePage = {
+    items: Array<IntegrationGrantCapabilityCandidate>;
+    total: number;
+    nextPageToken?: string;
+    contextDigest: string;
+    context: IntegrationGrantCandidateContext;
+    pins: IntegrationGrantCandidatePins;
+};
+
 export type IntegrationCapability = {
     key: string;
     name: string;
@@ -9153,6 +9254,137 @@ export type ListIntegrationDefinitionsResponses = {
 };
 
 export type ListIntegrationDefinitionsResponse = ListIntegrationDefinitionsResponses[keyof ListIntegrationDefinitionsResponses];
+
+export type ListIntegrationGrantConnectionCandidatesData = {
+    body?: never;
+    path?: never;
+    query: {
+        purpose: 'GRANT' | 'USE';
+        projectRef?: OpaqueRef;
+        recipientKind?: 'AGENT' | 'WORKFLOW';
+        recipientRef?: OpaqueRef;
+        capabilityKey?: string;
+        workflowRef?: OpaqueRef;
+        stepKey?: string;
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/integration-grant-candidates/connections';
+};
+
+export type ListIntegrationGrantConnectionCandidatesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListIntegrationGrantConnectionCandidatesError = ListIntegrationGrantConnectionCandidatesErrors[keyof ListIntegrationGrantConnectionCandidatesErrors];
+
+export type ListIntegrationGrantConnectionCandidatesResponses = {
+    /**
+     * Точный контекст, pins, отфильтрованный total и страница кандидатов
+     */
+    200: IntegrationGrantConnectionCandidatePage;
+};
+
+export type ListIntegrationGrantConnectionCandidatesResponse = ListIntegrationGrantConnectionCandidatesResponses[keyof ListIntegrationGrantConnectionCandidatesResponses];
+
+export type ListIntegrationGrantProjectCandidatesData = {
+    body?: never;
+    path?: never;
+    query: {
+        connectionRef: OpaqueRef;
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/integration-grant-candidates/projects';
+};
+
+export type ListIntegrationGrantProjectCandidatesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListIntegrationGrantProjectCandidatesError = ListIntegrationGrantProjectCandidatesErrors[keyof ListIntegrationGrantProjectCandidatesErrors];
+
+export type ListIntegrationGrantProjectCandidatesResponses = {
+    /**
+     * Точный контекст, pins, отфильтрованный total и страница кандидатов
+     */
+    200: IntegrationGrantProjectCandidatePage;
+};
+
+export type ListIntegrationGrantProjectCandidatesResponse = ListIntegrationGrantProjectCandidatesResponses[keyof ListIntegrationGrantProjectCandidatesResponses];
+
+export type ListIntegrationGrantRecipientCandidatesData = {
+    body?: never;
+    path?: never;
+    query: {
+        recipientKind: 'AGENT' | 'WORKFLOW';
+        connectionRef: OpaqueRef;
+        projectRef: OpaqueRef;
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/integration-grant-candidates/recipients';
+};
+
+export type ListIntegrationGrantRecipientCandidatesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListIntegrationGrantRecipientCandidatesError = ListIntegrationGrantRecipientCandidatesErrors[keyof ListIntegrationGrantRecipientCandidatesErrors];
+
+export type ListIntegrationGrantRecipientCandidatesResponses = {
+    /**
+     * Точный контекст, pins, отфильтрованный total и страница кандидатов
+     */
+    200: IntegrationGrantRecipientCandidatePage;
+};
+
+export type ListIntegrationGrantRecipientCandidatesResponse = ListIntegrationGrantRecipientCandidatesResponses[keyof ListIntegrationGrantRecipientCandidatesResponses];
+
+export type ListIntegrationGrantCapabilityCandidatesData = {
+    body?: never;
+    path?: never;
+    query: {
+        connectionRef: OpaqueRef;
+        projectRef: OpaqueRef;
+        recipientKind: 'AGENT' | 'WORKFLOW';
+        recipientRef: OpaqueRef;
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/integration-grant-candidates/capabilities';
+};
+
+export type ListIntegrationGrantCapabilityCandidatesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListIntegrationGrantCapabilityCandidatesError = ListIntegrationGrantCapabilityCandidatesErrors[keyof ListIntegrationGrantCapabilityCandidatesErrors];
+
+export type ListIntegrationGrantCapabilityCandidatesResponses = {
+    /**
+     * Точный контекст, pins, отфильтрованный total и страница кандидатов
+     */
+    200: IntegrationGrantCapabilityCandidatePage;
+};
+
+export type ListIntegrationGrantCapabilityCandidatesResponse = ListIntegrationGrantCapabilityCandidatesResponses[keyof ListIntegrationGrantCapabilityCandidatesResponses];
 
 export type ListIntegrationConnectionsData = {
     body?: never;

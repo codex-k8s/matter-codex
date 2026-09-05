@@ -4,7 +4,7 @@ title: Полнота HTTP поверхности MVP и зависимости 
 type: operations
 status: approved
 owner: developer
-version: 1.3.0
+version: 1.4.0
 updated: 2026-09-06
 ---
 
@@ -129,8 +129,8 @@ readiness или deploy. Owner hydration/queue/publication и authority profiles
 ## Текущая сверка #1045 и D1–D7
 
 Проверено по live Issue #1045 от 2026-09-06, принятому backlog MVP-UI-01–61
-и coherent HTTP `e9d8c550dcaa57120d67ec69f7c9b28f334a210f` / CP
-`c1a7fb8cdb02214f4b0187bd879a60b91c6a43a7`. Это актуальная карта;
+и coherent HTTP `2b04cd87b8c152d1dabbed0777bb45944968934e` / CP
+`0efbdc6dc04af0320f4959c7fd417728f454cd9b`. Это актуальная карта;
 последующие записи с прежними SHA являются историей исправлений и не означают,
 что уже устранённые producer gaps снова открыты. Техническая полнота routes
 не подтверждает PWA acceptance либо развёрнутый рабочий путь.
@@ -147,7 +147,7 @@ readiness или deploy. Owner hydration/queue/publication и authority profiles
 | 37/61 | VFS hierarchy/descriptors/query/state/kinds, Skill/Memory lifecycle, immutable artifact bindings, file targets67 и Run attachment eligibility | Public read не раскрывает runtime locators; private MCP66/stream71 остаются private runtime RPC. Writable workspace не реализуется browser endpoint |
 | 14–15/55–60 | Admin-safe adapter model catalog, authoritative bootstrap/availability, typed STT config и bounded multipart transcription через защищённый client | Actual unary issuer/proof interception и closed negative cases PASS; adapter observedAt не readiness. Live provider smoke и новый deploy NOT RUN |
 | 51–52 | Provider delete/revoke/verify/reauthorize/device challenge и safe status reasons | Owner lifecycle/cleanup не симулируется HTTP. Real provider operational refresh требует отдельной runtime проверки |
-| 39–40 | Generic integration list/get и agent effective grants существуют; file target selector67 уже специализирован | **Открыто:** exact connection/project/recipient/capability candidates для новой выдачи integration grant отсутствовали у CP. Gauss реализует четыре typed query/profile72; generic list/readiness не заменяют operation eligibility |
+| 39–40 | Четыре typed integration-grant-candidates RPC/profile72 → HTTP → SDK, exact GRANT/USE и dependent prefix/context pins | CP646 проверяет общий grant admission до OCC/replay; HTTP не подменяет USE выдачей. Recipient kind входит в owner count/cursor; generic connection query/cursor также исправлены владельцем. Targeted mapper и полный gateway race PASS; PWA/live acceptance отдельно |
 | Остальные визуальные пункты 01–61 | Shared errors, CSRF, no-store, search и существующие typed read/command routes | Визуальная геометрия, editor UX, i18n и browser recovery принадлежат PWA; наличие SDK не является их приёмкой |
 
 Системная сверка request fields выявила additional mapping gaps существующих
@@ -157,11 +157,18 @@ ListAuditEvents.action/outcome и ListIntegrationConnections.definition_key.
 передаётся единым owner RPC. Enum states закрыты, query/cursor не меняются,
 никакого клиентского подсчёта или widening authority не добавляется.
 
-Каталогное дополнение: full gateway race PASS (HTTP 5.727s), targeted filters
-race 1.065s, vet/build, strict OpenAPI/SDK и byte-identical Go/TS replay PASS.
-Proto/policy71 source не менялись после проверенного e9d. Известный owner gap
-ListIntegrationConnections query/cursor и exact grant candidates передан Gauss;
-его новый policy72 ещё не входит в данный checkpoint.
+Текущий 72 checkpoint: full gateway race PASS (HTTP 6.046s), включая public RPC
+completeness и прежние lifecycle suites. Targeted candidates race 1.082s,
+strict OpenAPI/SDK, byte-identical Go/TS replay, полный gateway vet/build,
+Proto lint/build/codegen replay, policy72 replay и authority ABI render PASS.
+Полная матрица четырёх
+selector приведена в `http-integration-candidates-1045.md`.
+Первый full gateway запуск: FAIL среды — compiler `disk quota exceeded` в
+`/tmp`. Повтор с owner-private disk TMPDIR/GOTMPDIR прошёл; чужие caches не
+удалялись. Это не отменяет исходный инфраструктурный FAIL.
+
+Предыдущее каталогное дополнение: full gateway race PASS (HTTP 5.727s), targeted
+filters race 1.065s, vet/build, strict OpenAPI/SDK и Go/TS replay PASS.
 
 Полный gateway race на e9d PASS (HTTP 5.712s), vet/build, strict OpenAPI/SDK,
 Go/TS byte replay, Proto lint/build/replay и policy71 PASS. Дополнительный

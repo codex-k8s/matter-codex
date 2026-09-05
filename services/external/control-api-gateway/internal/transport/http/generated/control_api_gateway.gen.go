@@ -1383,16 +1383,16 @@ func (e EmailMailboxApprovalPolicy) Valid() bool {
 
 // Defines values for EmailMailboxAuthMethod.
 const (
-	OAUTHBEARER EmailMailboxAuthMethod = "OAUTHBEARER"
-	PASSWORD    EmailMailboxAuthMethod = "PASSWORD"
+	EmailMailboxAuthMethodOAUTHBEARER EmailMailboxAuthMethod = "OAUTHBEARER"
+	EmailMailboxAuthMethodPASSWORD    EmailMailboxAuthMethod = "PASSWORD"
 )
 
 // Valid indicates whether the value is a known member of the EmailMailboxAuthMethod enum.
 func (e EmailMailboxAuthMethod) Valid() bool {
 	switch e {
-	case OAUTHBEARER:
+	case EmailMailboxAuthMethodOAUTHBEARER:
 		return true
-	case PASSWORD:
+	case EmailMailboxAuthMethodPASSWORD:
 		return true
 	default:
 		return false
@@ -1732,6 +1732,36 @@ func (e InstructionVersionState) Valid() bool {
 	}
 }
 
+// Defines values for IntegrationCandidateReason.
+const (
+	IntegrationCandidateReasonCONNECTIONUNAVAILABLE IntegrationCandidateReason = "CONNECTION_UNAVAILABLE"
+	IntegrationCandidateReasonGRANTUNAVAILABLE      IntegrationCandidateReason = "GRANT_UNAVAILABLE"
+	IntegrationCandidateReasonPACKAGEUNAVAILABLE    IntegrationCandidateReason = "PACKAGE_UNAVAILABLE"
+	IntegrationCandidateReasonREADY                 IntegrationCandidateReason = "READY"
+	IntegrationCandidateReasonRECIPIENTUNAVAILABLE  IntegrationCandidateReason = "RECIPIENT_UNAVAILABLE"
+	IntegrationCandidateReasonWORKFLOWEXCLUDED      IntegrationCandidateReason = "WORKFLOW_EXCLUDED"
+)
+
+// Valid indicates whether the value is a known member of the IntegrationCandidateReason enum.
+func (e IntegrationCandidateReason) Valid() bool {
+	switch e {
+	case IntegrationCandidateReasonCONNECTIONUNAVAILABLE:
+		return true
+	case IntegrationCandidateReasonGRANTUNAVAILABLE:
+		return true
+	case IntegrationCandidateReasonPACKAGEUNAVAILABLE:
+		return true
+	case IntegrationCandidateReasonREADY:
+		return true
+	case IntegrationCandidateReasonRECIPIENTUNAVAILABLE:
+		return true
+	case IntegrationCandidateReasonWORKFLOWEXCLUDED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for IntegrationCapabilityApprovalPolicy.
 const (
 	IntegrationCapabilityApprovalPolicyHUMANEACHEFFECT IntegrationCapabilityApprovalPolicy = "HUMAN_EACH_EFFECT"
@@ -2041,6 +2071,60 @@ func (e IntegrationGrantRisk) Valid() bool {
 	case IntegrationGrantRiskSENSITIVE:
 		return true
 	case IntegrationGrantRiskWRITE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IntegrationGrantCandidateContextRecipientKind.
+const (
+	IntegrationGrantCandidateContextRecipientKindAGENT    IntegrationGrantCandidateContextRecipientKind = "AGENT"
+	IntegrationGrantCandidateContextRecipientKindWORKFLOW IntegrationGrantCandidateContextRecipientKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the IntegrationGrantCandidateContextRecipientKind enum.
+func (e IntegrationGrantCandidateContextRecipientKind) Valid() bool {
+	switch e {
+	case IntegrationGrantCandidateContextRecipientKindAGENT:
+		return true
+	case IntegrationGrantCandidateContextRecipientKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IntegrationGrantConnectionCandidateCredentialKind.
+const (
+	IntegrationGrantConnectionCandidateCredentialKindPASSWORD IntegrationGrantConnectionCandidateCredentialKind = "PASSWORD"
+	IntegrationGrantConnectionCandidateCredentialKindTOKEN    IntegrationGrantConnectionCandidateCredentialKind = "TOKEN"
+)
+
+// Valid indicates whether the value is a known member of the IntegrationGrantConnectionCandidateCredentialKind enum.
+func (e IntegrationGrantConnectionCandidateCredentialKind) Valid() bool {
+	switch e {
+	case IntegrationGrantConnectionCandidateCredentialKindPASSWORD:
+		return true
+	case IntegrationGrantConnectionCandidateCredentialKindTOKEN:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for IntegrationGrantRecipientCandidateRecipientKind.
+const (
+	IntegrationGrantRecipientCandidateRecipientKindAGENT    IntegrationGrantRecipientCandidateRecipientKind = "AGENT"
+	IntegrationGrantRecipientCandidateRecipientKindWORKFLOW IntegrationGrantRecipientCandidateRecipientKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the IntegrationGrantRecipientCandidateRecipientKind enum.
+func (e IntegrationGrantRecipientCandidateRecipientKind) Valid() bool {
+	switch e {
+	case IntegrationGrantRecipientCandidateRecipientKindAGENT:
+		return true
+	case IntegrationGrantRecipientCandidateRecipientKindWORKFLOW:
 		return true
 	default:
 		return false
@@ -6685,6 +6769,78 @@ func (e GetArtifactImpactParamsAction) Valid() bool {
 	}
 }
 
+// Defines values for ListIntegrationGrantCapabilityCandidatesParamsRecipientKind.
+const (
+	ListIntegrationGrantCapabilityCandidatesParamsRecipientKindAGENT    ListIntegrationGrantCapabilityCandidatesParamsRecipientKind = "AGENT"
+	ListIntegrationGrantCapabilityCandidatesParamsRecipientKindWORKFLOW ListIntegrationGrantCapabilityCandidatesParamsRecipientKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the ListIntegrationGrantCapabilityCandidatesParamsRecipientKind enum.
+func (e ListIntegrationGrantCapabilityCandidatesParamsRecipientKind) Valid() bool {
+	switch e {
+	case ListIntegrationGrantCapabilityCandidatesParamsRecipientKindAGENT:
+		return true
+	case ListIntegrationGrantCapabilityCandidatesParamsRecipientKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListIntegrationGrantConnectionCandidatesParamsPurpose.
+const (
+	GRANT ListIntegrationGrantConnectionCandidatesParamsPurpose = "GRANT"
+	USE   ListIntegrationGrantConnectionCandidatesParamsPurpose = "USE"
+)
+
+// Valid indicates whether the value is a known member of the ListIntegrationGrantConnectionCandidatesParamsPurpose enum.
+func (e ListIntegrationGrantConnectionCandidatesParamsPurpose) Valid() bool {
+	switch e {
+	case GRANT:
+		return true
+	case USE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListIntegrationGrantConnectionCandidatesParamsRecipientKind.
+const (
+	ListIntegrationGrantConnectionCandidatesParamsRecipientKindAGENT    ListIntegrationGrantConnectionCandidatesParamsRecipientKind = "AGENT"
+	ListIntegrationGrantConnectionCandidatesParamsRecipientKindWORKFLOW ListIntegrationGrantConnectionCandidatesParamsRecipientKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the ListIntegrationGrantConnectionCandidatesParamsRecipientKind enum.
+func (e ListIntegrationGrantConnectionCandidatesParamsRecipientKind) Valid() bool {
+	switch e {
+	case ListIntegrationGrantConnectionCandidatesParamsRecipientKindAGENT:
+		return true
+	case ListIntegrationGrantConnectionCandidatesParamsRecipientKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListIntegrationGrantRecipientCandidatesParamsRecipientKind.
+const (
+	ListIntegrationGrantRecipientCandidatesParamsRecipientKindAGENT    ListIntegrationGrantRecipientCandidatesParamsRecipientKind = "AGENT"
+	ListIntegrationGrantRecipientCandidatesParamsRecipientKindWORKFLOW ListIntegrationGrantRecipientCandidatesParamsRecipientKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the ListIntegrationGrantRecipientCandidatesParamsRecipientKind enum.
+func (e ListIntegrationGrantRecipientCandidatesParamsRecipientKind) Valid() bool {
+	switch e {
+	case ListIntegrationGrantRecipientCandidatesParamsRecipientKindAGENT:
+		return true
+	case ListIntegrationGrantRecipientCandidatesParamsRecipientKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListManagedConfigurationsParamsKind.
 const (
 	EMAILMAILBOX          ListManagedConfigurationsParamsKind = "EMAIL_MAILBOX"
@@ -6846,25 +7002,25 @@ func (e ListArtifactsParamsType) Valid() bool {
 
 // Defines values for ListArtifactsParamsScanState.
 const (
-	CLEAN       ListArtifactsParamsScanState = "CLEAN"
-	FAILED      ListArtifactsParamsScanState = "FAILED"
-	PENDING     ListArtifactsParamsScanState = "PENDING"
-	QUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
-	SCANNING    ListArtifactsParamsScanState = "SCANNING"
+	ListArtifactsParamsScanStateCLEAN       ListArtifactsParamsScanState = "CLEAN"
+	ListArtifactsParamsScanStateFAILED      ListArtifactsParamsScanState = "FAILED"
+	ListArtifactsParamsScanStatePENDING     ListArtifactsParamsScanState = "PENDING"
+	ListArtifactsParamsScanStateQUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
+	ListArtifactsParamsScanStateSCANNING    ListArtifactsParamsScanState = "SCANNING"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsScanState enum.
 func (e ListArtifactsParamsScanState) Valid() bool {
 	switch e {
-	case CLEAN:
+	case ListArtifactsParamsScanStateCLEAN:
 		return true
-	case FAILED:
+	case ListArtifactsParamsScanStateFAILED:
 		return true
-	case PENDING:
+	case ListArtifactsParamsScanStatePENDING:
 		return true
-	case QUARANTINED:
+	case ListArtifactsParamsScanStateQUARANTINED:
 		return true
-	case SCANNING:
+	case ListArtifactsParamsScanStateSCANNING:
 		return true
 	default:
 		return false
@@ -7029,16 +7185,16 @@ func (e ListProviderAccountsParamsDefinitionKey) Valid() bool {
 
 // Defines values for ListRunsParamsTargetType.
 const (
-	ListRunsParamsTargetTypeAGENT    ListRunsParamsTargetType = "AGENT"
-	ListRunsParamsTargetTypeWORKFLOW ListRunsParamsTargetType = "WORKFLOW"
+	AGENT    ListRunsParamsTargetType = "AGENT"
+	WORKFLOW ListRunsParamsTargetType = "WORKFLOW"
 )
 
 // Valid indicates whether the value is a known member of the ListRunsParamsTargetType enum.
 func (e ListRunsParamsTargetType) Valid() bool {
 	switch e {
-	case ListRunsParamsTargetTypeAGENT:
+	case AGENT:
 		return true
-	case ListRunsParamsTargetTypeWORKFLOW:
+	case WORKFLOW:
 		return true
 	default:
 		return false
@@ -8446,6 +8602,9 @@ type InstructionVersionPage struct {
 	NextPageToken *string              `json:"nextPageToken,omitempty"`
 }
 
+// IntegrationCandidateReason defines model for IntegrationCandidateReason.
+type IntegrationCandidateReason string
+
 // IntegrationCapability defines model for IntegrationCapability.
 type IntegrationCapability struct {
 	ApprovalPolicy    IntegrationCapabilityApprovalPolicy `json:"approvalPolicy"`
@@ -8615,12 +8774,128 @@ type IntegrationGrantApprovalPolicy string
 // IntegrationGrantRisk defines model for IntegrationGrant.Risk.
 type IntegrationGrantRisk string
 
+// IntegrationGrantCandidateContext defines model for IntegrationGrantCandidateContext.
+type IntegrationGrantCandidateContext struct {
+	CapabilityKey *string                                        `json:"capabilityKey,omitempty"`
+	ConnectionRef *OpaqueRef                                     `json:"connectionRef,omitempty"`
+	ProjectRef    *OpaqueRef                                     `json:"projectRef,omitempty"`
+	RecipientKind *IntegrationGrantCandidateContextRecipientKind `json:"recipientKind,omitempty"`
+	RecipientRef  *OpaqueRef                                     `json:"recipientRef,omitempty"`
+	StepKey       *string                                        `json:"stepKey,omitempty"`
+	WorkflowRef   *OpaqueRef                                     `json:"workflowRef,omitempty"`
+}
+
+// IntegrationGrantCandidateContextRecipientKind defines model for IntegrationGrantCandidateContext.RecipientKind.
+type IntegrationGrantCandidateContextRecipientKind string
+
+// IntegrationGrantCandidatePins defines model for IntegrationGrantCandidatePins.
+type IntegrationGrantCandidatePins struct {
+	ConnectionVersion   *int64     `json:"connectionVersion,omitempty"`
+	ContextDigest       string     `json:"contextDigest"`
+	DefinitionDigest    *string    `json:"definitionDigest,omitempty"`
+	DefinitionVersion   *string    `json:"definitionVersion,omitempty"`
+	ProjectVersion      *int64     `json:"projectVersion,omitempty"`
+	RecipientVersion    *int64     `json:"recipientVersion,omitempty"`
+	WorkflowRevisionRef *OpaqueRef `json:"workflowRevisionRef,omitempty"`
+}
+
+// IntegrationGrantCapabilityCandidate defines model for IntegrationGrantCapabilityCandidate.
+type IntegrationGrantCapabilityCandidate struct {
+	Capability          IntegrationCapability         `json:"capability"`
+	CurrentGrantRef     *OpaqueRef                    `json:"currentGrantRef,omitempty"`
+	CurrentGrantVersion *int64                        `json:"currentGrantVersion,omitempty"`
+	Grantable           bool                          `json:"grantable"`
+	Pins                IntegrationGrantCandidatePins `json:"pins"`
+	Reason              IntegrationCandidateReason    `json:"reason"`
+}
+
+// IntegrationGrantCapabilityCandidatePage defines model for IntegrationGrantCapabilityCandidatePage.
+type IntegrationGrantCapabilityCandidatePage struct {
+	Context       IntegrationGrantCandidateContext      `json:"context"`
+	ContextDigest string                                `json:"contextDigest"`
+	Items         []IntegrationGrantCapabilityCandidate `json:"items"`
+	NextPageToken *string                               `json:"nextPageToken,omitempty"`
+	Pins          IntegrationGrantCandidatePins         `json:"pins"`
+	Total         int64                                 `json:"total"`
+}
+
+// IntegrationGrantConnectionCandidate defines model for IntegrationGrantConnectionCandidate.
+type IntegrationGrantConnectionCandidate struct {
+	ConnectionRef  OpaqueRef                                          `json:"connectionRef"`
+	CredentialKind *IntegrationGrantConnectionCandidateCredentialKind `json:"credentialKind,omitempty"`
+	DefinitionKey  string                                             `json:"definitionKey"`
+	Grantable      bool                                               `json:"grantable"`
+	Name           string                                             `json:"name"`
+	Pins           IntegrationGrantCandidatePins                      `json:"pins"`
+	ProjectRef     *OpaqueRef                                         `json:"projectRef,omitempty"`
+	ProviderName   string                                             `json:"providerName"`
+	Reason         IntegrationCandidateReason                         `json:"reason"`
+	ResourceScope  map[string]string                                  `json:"resourceScope"`
+	Usable         bool                                               `json:"usable"`
+}
+
+// IntegrationGrantConnectionCandidateCredentialKind defines model for IntegrationGrantConnectionCandidate.CredentialKind.
+type IntegrationGrantConnectionCandidateCredentialKind string
+
+// IntegrationGrantConnectionCandidatePage defines model for IntegrationGrantConnectionCandidatePage.
+type IntegrationGrantConnectionCandidatePage struct {
+	Context       IntegrationGrantCandidateContext      `json:"context"`
+	ContextDigest string                                `json:"contextDigest"`
+	Items         []IntegrationGrantConnectionCandidate `json:"items"`
+	NextPageToken *string                               `json:"nextPageToken,omitempty"`
+	Pins          IntegrationGrantCandidatePins         `json:"pins"`
+	Total         int64                                 `json:"total"`
+}
+
 // IntegrationGrantInput defines model for IntegrationGrantInput.
 type IntegrationGrantInput struct {
 	AgentRef      *OpaqueRef `json:"agentRef,omitempty"`
 	CapabilityKey string     `json:"capabilityKey"`
 	Enabled       bool       `json:"enabled"`
 	WorkflowRef   *OpaqueRef `json:"workflowRef,omitempty"`
+}
+
+// IntegrationGrantProjectCandidate defines model for IntegrationGrantProjectCandidate.
+type IntegrationGrantProjectCandidate struct {
+	Grantable  bool                          `json:"grantable"`
+	Name       string                        `json:"name"`
+	Pins       IntegrationGrantCandidatePins `json:"pins"`
+	ProjectRef OpaqueRef                     `json:"projectRef"`
+	Reason     IntegrationCandidateReason    `json:"reason"`
+}
+
+// IntegrationGrantProjectCandidatePage defines model for IntegrationGrantProjectCandidatePage.
+type IntegrationGrantProjectCandidatePage struct {
+	Context       IntegrationGrantCandidateContext   `json:"context"`
+	ContextDigest string                             `json:"contextDigest"`
+	Items         []IntegrationGrantProjectCandidate `json:"items"`
+	NextPageToken *string                            `json:"nextPageToken,omitempty"`
+	Pins          IntegrationGrantCandidatePins      `json:"pins"`
+	Total         int64                              `json:"total"`
+}
+
+// IntegrationGrantRecipientCandidate defines model for IntegrationGrantRecipientCandidate.
+type IntegrationGrantRecipientCandidate struct {
+	Grantable     bool                                            `json:"grantable"`
+	Name          string                                          `json:"name"`
+	Pins          IntegrationGrantCandidatePins                   `json:"pins"`
+	ProjectRef    OpaqueRef                                       `json:"projectRef"`
+	Reason        IntegrationCandidateReason                      `json:"reason"`
+	RecipientKind IntegrationGrantRecipientCandidateRecipientKind `json:"recipientKind"`
+	RecipientRef  OpaqueRef                                       `json:"recipientRef"`
+}
+
+// IntegrationGrantRecipientCandidateRecipientKind defines model for IntegrationGrantRecipientCandidate.RecipientKind.
+type IntegrationGrantRecipientCandidateRecipientKind string
+
+// IntegrationGrantRecipientCandidatePage defines model for IntegrationGrantRecipientCandidatePage.
+type IntegrationGrantRecipientCandidatePage struct {
+	Context       IntegrationGrantCandidateContext     `json:"context"`
+	ContextDigest string                               `json:"contextDigest"`
+	Items         []IntegrationGrantRecipientCandidate `json:"items"`
+	NextPageToken *string                              `json:"nextPageToken,omitempty"`
+	Pins          IntegrationGrantCandidatePins        `json:"pins"`
+	Total         int64                                `json:"total"`
 }
 
 // IntegrationIntent defines model for IntegrationIntent.
@@ -12360,6 +12635,61 @@ type ListIntegrationDefinitionsParams struct {
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
+// ListIntegrationGrantCapabilityCandidatesParams defines parameters for ListIntegrationGrantCapabilityCandidates.
+type ListIntegrationGrantCapabilityCandidatesParams struct {
+	ConnectionRef OpaqueRef                                                   `form:"connectionRef" json:"connectionRef"`
+	ProjectRef    OpaqueRef                                                   `form:"projectRef" json:"projectRef"`
+	RecipientKind ListIntegrationGrantCapabilityCandidatesParamsRecipientKind `form:"recipientKind" json:"recipientKind"`
+	RecipientRef  OpaqueRef                                                   `form:"recipientRef" json:"recipientRef"`
+	Query         *Query                                                      `form:"query,omitempty" json:"query,omitempty"`
+	PageSize      *PageSize                                                   `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken     *PageToken                                                  `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// ListIntegrationGrantCapabilityCandidatesParamsRecipientKind defines parameters for ListIntegrationGrantCapabilityCandidates.
+type ListIntegrationGrantCapabilityCandidatesParamsRecipientKind string
+
+// ListIntegrationGrantConnectionCandidatesParams defines parameters for ListIntegrationGrantConnectionCandidates.
+type ListIntegrationGrantConnectionCandidatesParams struct {
+	Purpose       ListIntegrationGrantConnectionCandidatesParamsPurpose        `form:"purpose" json:"purpose"`
+	ProjectRef    *OpaqueRef                                                   `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	RecipientKind *ListIntegrationGrantConnectionCandidatesParamsRecipientKind `form:"recipientKind,omitempty" json:"recipientKind,omitempty"`
+	RecipientRef  *OpaqueRef                                                   `form:"recipientRef,omitempty" json:"recipientRef,omitempty"`
+	CapabilityKey *string                                                      `form:"capabilityKey,omitempty" json:"capabilityKey,omitempty"`
+	WorkflowRef   *OpaqueRef                                                   `form:"workflowRef,omitempty" json:"workflowRef,omitempty"`
+	StepKey       *string                                                      `form:"stepKey,omitempty" json:"stepKey,omitempty"`
+	Query         *Query                                                       `form:"query,omitempty" json:"query,omitempty"`
+	PageSize      *PageSize                                                    `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken     *PageToken                                                   `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// ListIntegrationGrantConnectionCandidatesParamsPurpose defines parameters for ListIntegrationGrantConnectionCandidates.
+type ListIntegrationGrantConnectionCandidatesParamsPurpose string
+
+// ListIntegrationGrantConnectionCandidatesParamsRecipientKind defines parameters for ListIntegrationGrantConnectionCandidates.
+type ListIntegrationGrantConnectionCandidatesParamsRecipientKind string
+
+// ListIntegrationGrantProjectCandidatesParams defines parameters for ListIntegrationGrantProjectCandidates.
+type ListIntegrationGrantProjectCandidatesParams struct {
+	ConnectionRef OpaqueRef  `form:"connectionRef" json:"connectionRef"`
+	Query         *Query     `form:"query,omitempty" json:"query,omitempty"`
+	PageSize      *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken     *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// ListIntegrationGrantRecipientCandidatesParams defines parameters for ListIntegrationGrantRecipientCandidates.
+type ListIntegrationGrantRecipientCandidatesParams struct {
+	RecipientKind ListIntegrationGrantRecipientCandidatesParamsRecipientKind `form:"recipientKind" json:"recipientKind"`
+	ConnectionRef OpaqueRef                                                  `form:"connectionRef" json:"connectionRef"`
+	ProjectRef    OpaqueRef                                                  `form:"projectRef" json:"projectRef"`
+	Query         *Query                                                     `form:"query,omitempty" json:"query,omitempty"`
+	PageSize      *PageSize                                                  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken     *PageToken                                                 `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// ListIntegrationGrantRecipientCandidatesParamsRecipientKind defines parameters for ListIntegrationGrantRecipientCandidates.
+type ListIntegrationGrantRecipientCandidatesParamsRecipientKind string
+
 // RevokeInteractionIdentityParams defines parameters for RevokeInteractionIdentity.
 type RevokeInteractionIdentityParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -14328,6 +14658,18 @@ type ServerInterface interface {
 
 	// (GET /api/v1/integration-definitions)
 	ListIntegrationDefinitions(w http.ResponseWriter, r *http.Request, params ListIntegrationDefinitionsParams)
+
+	// (GET /api/v1/integration-grant-candidates/capabilities)
+	ListIntegrationGrantCapabilityCandidates(w http.ResponseWriter, r *http.Request, params ListIntegrationGrantCapabilityCandidatesParams)
+
+	// (GET /api/v1/integration-grant-candidates/connections)
+	ListIntegrationGrantConnectionCandidates(w http.ResponseWriter, r *http.Request, params ListIntegrationGrantConnectionCandidatesParams)
+
+	// (GET /api/v1/integration-grant-candidates/projects)
+	ListIntegrationGrantProjectCandidates(w http.ResponseWriter, r *http.Request, params ListIntegrationGrantProjectCandidatesParams)
+
+	// (GET /api/v1/integration-grant-candidates/recipients)
+	ListIntegrationGrantRecipientCandidates(w http.ResponseWriter, r *http.Request, params ListIntegrationGrantRecipientCandidatesParams)
 
 	// (GET /api/v1/integration-invocations/{invocationRef}/email-effect-receipt)
 	GetEmailEffectReceipt(w http.ResponseWriter, r *http.Request, invocationRef IntegrationInvocationRef)
@@ -24316,6 +24658,461 @@ func (siw *ServerInterfaceWrapper) ListIntegrationDefinitions(w http.ResponseWri
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListIntegrationDefinitions(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListIntegrationGrantCapabilityCandidates operation middleware
+func (siw *ServerInterfaceWrapper) ListIntegrationGrantCapabilityCandidates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListIntegrationGrantCapabilityCandidatesParams
+
+	// ------------- Required query parameter "connectionRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "connectionRef", r.URL.Query(), &params.ConnectionRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "connectionRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "connectionRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "projectRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "projectRef", r.URL.Query(), &params.ProjectRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "projectRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "recipientKind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "recipientKind", r.URL.Query(), &params.RecipientKind, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "recipientKind"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipientKind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "recipientRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "recipientRef", r.URL.Query(), &params.RecipientRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "recipientRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipientRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIntegrationGrantCapabilityCandidates(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListIntegrationGrantConnectionCandidates operation middleware
+func (siw *ServerInterfaceWrapper) ListIntegrationGrantConnectionCandidates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListIntegrationGrantConnectionCandidatesParams
+
+	// ------------- Required query parameter "purpose" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "purpose", r.URL.Query(), &params.Purpose, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "purpose"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "purpose", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "projectRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "projectRef", r.URL.Query(), &params.ProjectRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "projectRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "recipientKind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "recipientKind", r.URL.Query(), &params.RecipientKind, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "recipientKind"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipientKind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "recipientRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "recipientRef", r.URL.Query(), &params.RecipientRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "recipientRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipientRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "capabilityKey" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "capabilityKey", r.URL.Query(), &params.CapabilityKey, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "capabilityKey"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "capabilityKey", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "workflowRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "workflowRef", r.URL.Query(), &params.WorkflowRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "workflowRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "workflowRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "stepKey" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "stepKey", r.URL.Query(), &params.StepKey, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "stepKey"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "stepKey", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIntegrationGrantConnectionCandidates(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListIntegrationGrantProjectCandidates operation middleware
+func (siw *ServerInterfaceWrapper) ListIntegrationGrantProjectCandidates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListIntegrationGrantProjectCandidatesParams
+
+	// ------------- Required query parameter "connectionRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "connectionRef", r.URL.Query(), &params.ConnectionRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "connectionRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "connectionRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIntegrationGrantProjectCandidates(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListIntegrationGrantRecipientCandidates operation middleware
+func (siw *ServerInterfaceWrapper) ListIntegrationGrantRecipientCandidates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListIntegrationGrantRecipientCandidatesParams
+
+	// ------------- Required query parameter "recipientKind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "recipientKind", r.URL.Query(), &params.RecipientKind, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "recipientKind"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "recipientKind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "connectionRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "connectionRef", r.URL.Query(), &params.ConnectionRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "connectionRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "connectionRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "projectRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "projectRef", r.URL.Query(), &params.ProjectRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "projectRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListIntegrationGrantRecipientCandidates(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -40358,6 +41155,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SaveIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidateIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-definitions", wrapper.ListIntegrationDefinitions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-grant-candidates/capabilities", wrapper.ListIntegrationGrantCapabilityCandidates)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-grant-candidates/connections", wrapper.ListIntegrationGrantConnectionCandidates)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-grant-candidates/projects", wrapper.ListIntegrationGrantProjectCandidates)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-grant-candidates/recipients", wrapper.ListIntegrationGrantRecipientCandidates)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-invocations/{invocationRef}/email-effect-receipt", wrapper.GetEmailEffectReceipt)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/interaction-identities/{identityRef}", wrapper.RevokeInteractionIdentity)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}", wrapper.GetManagedConfigurationGitWriteBack)
