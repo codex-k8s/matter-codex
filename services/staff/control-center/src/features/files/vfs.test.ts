@@ -24,10 +24,33 @@ const node: VfsNode = {
   runRef: "",
   sizeBytes: 0,
   digest: "",
+  version: 0,
+  revisionRef: "",
+  revision: 0,
+  lifecycleState: "ACTIVE",
+  scanState: "",
+  resourceKind: "",
+  selectable: false,
+  selectionReason: "DIRECTORY",
+  nextActions: [],
 };
 const page: VfsNodePage = { items: [node], total: 1, nextPageToken: "" };
 const scope = { path: "/projects", query: "" };
 describe("VFS", () => {
+  it("поиск принимает сам каталог и его потомков, но отклоняет соседний путь", () => {
+    expect(() =>
+      validateVfsPage(page, { path: node.path, query: "Проект" }),
+    ).not.toThrow();
+    expect(() =>
+      validateVfsPage(page, { path: "/projects", query: "Проект" }),
+    ).not.toThrow();
+    expect(() =>
+      validateVfsPage(page, {
+        path: "/projects/project_other",
+        query: "Проект",
+      }),
+    ).toThrow();
+  });
   it("передаёт path/projectRef/cursor владельцу, поиск использует отдельную операцию", async () => {
     calls.list.mockResolvedValue({
       data: page,
@@ -62,7 +85,12 @@ describe("VFS", () => {
     });
     expect(calls.search).toHaveBeenCalledWith(
       expect.objectContaining({
-        query: { query: "Проект", projectRef: "project_one", pageSize: 30 },
+        query: {
+          query: "Проект",
+          projectRef: "project_one",
+          pageSize: 30,
+          path: "/projects",
+        },
       }),
     );
   });
@@ -84,6 +112,14 @@ describe("VFS", () => {
       { path: "https://external.invalid" },
       { sizeBytes: -1 },
       { name: null },
+      { version: -1 },
+      { revision: 1.5 },
+      { lifecycleState: "UNKNOWN" },
+      { scanState: "UNKNOWN" },
+      { resourceKind: "TOOL" },
+      { selectable: "true" },
+      { selectionReason: "UNKNOWN" },
+      { nextActions: ["UPLOAD"] },
     ]) {
       expect(() =>
         validateVfsPage(

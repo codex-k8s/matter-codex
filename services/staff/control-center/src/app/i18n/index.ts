@@ -1,6 +1,8 @@
 import { createI18n } from "vue-i18n";
 
 import { currentLocale } from "@/shared/locale";
+import { serverMessagesFor } from "@/shared/ui/server-message-catalog";
+import { additionalPermissionMessages } from "@/shared/ui/permission-message-catalog";
 
 const ru = {
   capabilityAuthority: {
@@ -58,13 +60,7 @@ const ru = {
     },
   },
   serverMessages: {
-    INTERACTION_AUTHORITY_CHANGED:
-      "Подключение или разрешения изменены. Отправка отменена.",
-    INTERACTION_DELIVERY_GATE_TITLE: "Подтверждение доставки во внешний канал",
-    INTERACTION_DELIVERY_GATE_PROMPT:
-      "Разрешить доставку результата запуска в указанный внешний канал?",
-    INTERACTION_DELIVERY_APPROVAL_REQUIRED:
-      "Для доставки результата требуется решение владельца.",
+    unsupported: "Сообщение сервера недоступно в этой версии приложения.",
   },
   gitSource: {
     title: "Источник Git",
@@ -1514,6 +1510,14 @@ const ru = {
     inputFilesHint: "Доступны только проверенные файлы из текущего Проекта.",
     filesCapabilityRequired:
       "Сначала выдайте всем выбранным ИИ-сотрудникам возможность «Файлы».",
+    attachmentEligibility: {
+      AVAILABLE: "Вложения доступны.",
+      TARGET_UNAVAILABLE: "Выбранная цель недоступна для запуска с вложениями.",
+      RUNTIME_NOT_READY: "Среда выполнения выбранной цели пока не готова.",
+      AGENT_CAPABILITY_REQUIRED:
+        "Не всем исполнителям предоставлена возможность «Файлы».",
+      SESSION_UNAVAILABLE: "Вложения для продолжения этой сессии недоступны.",
+    },
     fileReady: "Проверен и готов",
     noInputFiles: "В Проекте пока нет проверенных файлов.",
     manageFiles: "Открыть файлы Проекта",
@@ -1652,6 +1656,17 @@ const ru = {
     previewUnavailable:
       "Для этого формата безопасный встроенный предпросмотр недоступен.",
     binding: "Доступ сотрудников",
+    bindingCount: "Связей: {count}",
+    loadedOfTotal: "Загружено {loaded} из {total}",
+    bindingTargetTotal: "Видимых сотрудников: {count}",
+    bindingReasons: {
+      AVAILABLE: "Действие доступно.",
+      ALREADY_BOUND: "Файл уже подключён.",
+      NOT_BOUND: "Файл не подключён.",
+      AGENT_CAPABILITY_REQUIRED: "Сотруднику не назначена возможность «Файлы».",
+      AGENT_ARCHIVED: "Сотрудник архивирован; новое подключение недоступно.",
+      ARTIFACT_UNAVAILABLE: "Состояние файла не допускает это действие.",
+    },
     bindingHint:
       "Выберите сотрудников, которым этот проверенный файл будет доступен как источник знаний.",
     agentFilesCapabilityRequired:
@@ -2244,6 +2259,7 @@ const ru = {
       NO_ALLOW_BINDING: "Подходящая разрешающая привязка отсутствует",
     },
     permissionsRegistry: {
+      ...additionalPermissionMessages("ru"),
       "organization.view": {
         name: "Просматривать организацию",
         description: "Читать профиль и доступные ресурсы организации.",
@@ -2709,6 +2725,8 @@ const ru = {
     renameConversation: "Переименовать диалог",
     archiveConversation: "Архивировать диалог",
     archiveConfirm: "Архивировать этот диалог?",
+    closeWithDraftConfirm:
+      "Закрыть чат с неотправленным сообщением или вложениями? Выбранные вложения потребуется добавить заново.",
     searchHistory: "Поиск диалогов",
     historyState: "Состояние диалогов",
     receipt: "Квитанция",
@@ -2911,13 +2929,7 @@ const en = {
     },
   },
   serverMessages: {
-    INTERACTION_AUTHORITY_CHANGED:
-      "The connection or permissions changed. Delivery was cancelled.",
-    INTERACTION_DELIVERY_GATE_TITLE: "External channel delivery approval",
-    INTERACTION_DELIVERY_GATE_PROMPT:
-      "Allow delivery of the run result to the specified external channel?",
-    INTERACTION_DELIVERY_APPROVAL_REQUIRED:
-      "Owner approval is required to deliver the result.",
+    unsupported: "This server message is unavailable in this app version.",
   },
   gitSource: {
     title: "Git source",
@@ -4371,6 +4383,16 @@ const en = {
       "Only validated files from the current Project are available.",
     filesCapabilityRequired:
       "Grant the Files capability to every selected AI employee first.",
+    attachmentEligibility: {
+      AVAILABLE: "Attachments are available.",
+      TARGET_UNAVAILABLE:
+        "The selected target is unavailable for a run with attachments.",
+      RUNTIME_NOT_READY: "The selected target runtime is not ready.",
+      AGENT_CAPABILITY_REQUIRED:
+        "Some participants do not have the Files capability.",
+      SESSION_UNAVAILABLE:
+        "Attachments are unavailable for continuing this session.",
+    },
     fileReady: "Validated and ready",
     noInputFiles: "This Project has no validated files yet.",
     manageFiles: "Open Project files",
@@ -4510,6 +4532,17 @@ const en = {
     previewUnavailable:
       "A safe built-in preview is unavailable for this format.",
     binding: "Employee access",
+    bindingCount: "Bindings: {count}",
+    loadedOfTotal: "Loaded {loaded} of {total}",
+    bindingTargetTotal: "Visible employees: {count}",
+    bindingReasons: {
+      AVAILABLE: "This action is available.",
+      ALREADY_BOUND: "The file is already bound.",
+      NOT_BOUND: "The file is not bound.",
+      AGENT_CAPABILITY_REQUIRED: "The employee has no Files capability.",
+      AGENT_ARCHIVED: "The employee is archived; new bindings are unavailable.",
+      ARTIFACT_UNAVAILABLE: "The file state does not allow this action.",
+    },
     bindingHint:
       "Choose the employees who can use this validated file as a knowledge source.",
     agentFilesCapabilityRequired:
@@ -5088,6 +5121,7 @@ const en = {
       NO_ALLOW_BINDING: "No matching allow-binding exists",
     },
     permissionsRegistry: {
+      ...additionalPermissionMessages("en"),
       "organization.view": {
         name: "View organization",
         description: "Read the organization profile and eligible resources.",
@@ -5554,6 +5588,8 @@ const en = {
     renameConversation: "Rename conversation",
     archiveConversation: "Archive conversation",
     archiveConfirm: "Archive this conversation?",
+    closeWithDraftConfirm:
+      "Close the chat with an unsent message or attachments? Selected attachments will need to be added again.",
     searchHistory: "Search conversations",
     historyState: "Conversation state",
     receipt: "Receipt",
@@ -5701,5 +5737,20 @@ export const i18n = createI18n({
   legacy: false,
   locale: currentLocale(),
   fallbackLocale: "ru",
-  messages: { ru, en },
+  messages: {
+    ru: {
+      ...ru,
+      serverMessages: {
+        ...serverMessagesFor("ru", ru.access.permissionsRegistry),
+        ...ru.serverMessages,
+      },
+    },
+    en: {
+      ...en,
+      serverMessages: {
+        ...serverMessagesFor("en", en.access.permissionsRegistry),
+        ...en.serverMessages,
+      },
+    },
+  },
 });

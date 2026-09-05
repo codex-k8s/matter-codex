@@ -4,6 +4,7 @@ import {
   searchVfs,
 } from "@/shared/api/generated/openapi/sdk.gen";
 import type {
+  SearchVfsData,
   VfsNode,
   VfsNodePage,
 } from "@/shared/api/generated/openapi/types.gen";
@@ -14,18 +15,29 @@ export async function loadVfsPage(options: {
   query: string;
   projectRef?: string;
   pageToken?: string;
+  lifecycleState?: SearchVfsData["query"]["lifecycleState"];
+  kinds?: SearchVfsData["query"]["kinds"];
   signal: AbortSignal;
 }): Promise<VfsNodePage> {
   const { projectRef, pageToken } = options;
   const signal = AbortSignal.any([options.signal, requestSignal()]);
   const query = options.query.trim();
-  const pagination = { projectRef, pageToken, pageSize: 30 };
+  const pagination = {
+    projectRef,
+    pageToken,
+    pageSize: 30,
+    path: options.path,
+    ...(options.lifecycleState
+      ? { lifecycleState: options.lifecycleState }
+      : {}),
+    ...(options.kinds?.length ? { kinds: options.kinds } : {}),
+  };
   const page = (
     await unwrap(
       query
         ? searchVfs({ query: { ...pagination, query }, signal })
         : listVfsNodes({
-            query: { ...pagination, path: options.path },
+            query: pagination,
             signal,
           }),
     )
@@ -80,8 +92,48 @@ export function validateVfsPage(
       typeof node.entityRef !== "string" ||
       typeof node.runRef !== "string" ||
       typeof node.digest !== "string" ||
+      !Number.isSafeInteger(node.version) ||
+      node.version < 0 ||
+      typeof node.revisionRef !== "string" ||
+      !Number.isSafeInteger(node.revision) ||
+      node.revision < 0 ||
+      !["ACTIVE", "DELETED", "ARCHIVED"].includes(node.lifecycleState) ||
+      !["", "PENDING", "SCANNING", "CLEAN", "QUARANTINED", "FAILED"].includes(
+        node.scanState,
+      ) ||
+      !["", "ARTIFACT", "SKILL_BUNDLE", "MEMORY_RECORD"].includes(
+        node.resourceKind,
+      ) ||
+      typeof node.selectable !== "boolean" ||
+      ![
+        "AVAILABLE",
+        "DIRECTORY",
+        "PERMISSION_REQUIRED",
+        "IMMUTABLE_CONTEXT",
+        "LIFECYCLE_BLOCKED",
+        "ARTIFACT_USED_BY_SKILL",
+        "ARTIFACT_NOT_ACTIVE",
+        "ARTIFACT_NOT_DELETED",
+        "ARTIFACT_HAS_BINDINGS",
+        "ACTIVE_RUN_USES_ARTIFACT",
+      ].includes(node.selectionReason) ||
+      !Array.isArray(node.nextActions) ||
+      node.nextActions.some(
+        (action) =>
+          ![
+            "DOWNLOAD",
+            "DELETE",
+            "RESTORE",
+            "PURGE",
+            "ARCHIVE",
+            "BIND",
+          ].includes(action),
+      ) ||
       (options.projectRef && options.projectRef !== node.projectRef) ||
-      (!options.query.trim() && node.parentPath !== options.path)
+      (!options.query.trim() && node.parentPath !== options.path) ||
+      (options.query.trim() &&
+        node.path !== options.path &&
+        !node.path.startsWith(`${options.path.replace(/\/$/, "")}/`))
     )
       throw new Error("Invalid VFS node or scope");
     refs.add(node.ref);

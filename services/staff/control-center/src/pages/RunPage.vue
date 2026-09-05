@@ -54,6 +54,7 @@ const realtime = useRealtimeStore();
 const route = useRoute();
 const router = useRouter();
 const translator = useI18n();
+const serverMessage = useServerMessage();
 const runRef = computed(() => String(route.params.runRef));
 const requestedNodeRef = computed(() =>
   typeof route.query.nodeRef === "string" ? route.query.nodeRef : undefined,
@@ -84,10 +85,10 @@ function safeRuntimeText(value?: string): string | undefined {
       JSON.parse(source);
       return undefined;
     } catch {
-      // A user-facing sentence may legitimately start with a bracket.
+      // Пользовательское предложение может начинаться со скобки.
     }
   }
-  const visible = source
+  const visible = serverMessage(source)
     .replace(/`?i18n:[A-Z\d_]+`?/g, "")
     .replace(opaqueRefPattern, "")
     .replace(technicalTokenPattern, "")
@@ -553,7 +554,6 @@ onBeforeUnmount(() => {
   refreshScheduler.dispose();
   if (openedStreamRef.value) realtime.closeRun(openedStreamRef.value);
 });
-const serverMessage = useServerMessage();
 </script>
 <template>
   <PageFrame

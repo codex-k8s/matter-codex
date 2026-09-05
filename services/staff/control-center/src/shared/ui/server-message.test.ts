@@ -9,6 +9,30 @@ import SafeStructuredData from "./SafeStructuredData.vue";
 import { serverMessageKey } from "./server-message";
 describe("Closed server message keys", () => {
   it.each(["ru", "en"] as const)(
+    "не раскрывает неизвестный server token в %s",
+    async (locale) => {
+      i18n.global.locale.value = locale;
+      const content = "i18n:UNKNOWN_FUTURE_SERVER_MESSAGE";
+      const app = createSSRApp({
+        render: () =>
+          h("main", [
+            h(SafeSummary, { content }),
+            h(SafeMarkdown, { content }),
+            h(SafeStructuredData, { value: { message: content } }),
+            h(SafeSummary, { content: "Owner content i18n:UNKNOWN" }),
+          ]),
+      });
+      app.use(i18n);
+      const html = await renderToString(app);
+      expect(
+        html.split(i18n.global.t("serverMessages.unsupported")),
+      ).toHaveLength(4);
+      expect(html).not.toContain(content);
+      expect(html).toContain("Owner content i18n:UNKNOWN");
+      i18n.global.locale.value = "ru";
+    },
+  );
+  it.each(["ru", "en"] as const)(
     "переводит generic result до обработки markdown в %s",
     async (locale) => {
       i18n.global.locale.value = locale;

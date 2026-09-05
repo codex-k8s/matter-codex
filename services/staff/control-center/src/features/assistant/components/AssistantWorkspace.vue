@@ -157,6 +157,13 @@ async function show(): Promise<void> {
 
 function close(): void {
   if (store.busy) return;
+  if (
+    (message.value.trim() ||
+      attachmentState.value.count > 0 ||
+      attachmentState.value.busy) &&
+    !window.confirm(t("assistant.closeWithDraftConfirm"))
+  )
+    return;
   store.cancelReads();
   open.value = false;
   persistAssistantWorkspaceOpen(false);

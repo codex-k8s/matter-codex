@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Page, type Route } from "@playwright/test";
 import type { Artifact } from "../../src/shared/api/generated/openapi/types.gen";
 import { syntheticCatalogRun } from "./catalog-run";
 export async function checkHomeResults(
@@ -8,6 +8,9 @@ export async function checkHomeResults(
 ) {
   const cursors: string[] = [];
   let exactReads = 0;
+  let initialRuns: Route | undefined;
+  let initialRunsReleased = false;
+  let catalogReads = 0;
   const artifact = (index: number): Artifact => ({
     ref: `artifact_home_${String(index)}`,
     version: 1,
@@ -27,9 +30,11 @@ export async function checkHomeResults(
   await page.route("**/api/v1/runs?**", async (route) => {
     const params = new URL(route.request().url()).searchParams;
     if (params.get("pageSize") === "100") {
-      await route.fulfill({ json: { items: [], total: 0 } });
+      if (!initialRunsReleased) initialRuns = route;
+      else await route.fulfill({ json: { items: [], total: 0 } });
       return;
     }
+    catalogReads++;
     expect(params.get("pageSize")).toBe("30");
     if (params.get("resumableSessionsOnly") === "true") {
       expect(params.getAll("states")).toEqual([]);
@@ -89,6 +94,14 @@ export async function checkHomeResults(
   await page.goto("https://kodex.test/");
   const runCard = page.locator(".home-running-section");
   const fileCard = page.locator('.home-result-catalog[data-kind="ARTIFACT"]');
+  await expect.poll(() => Boolean(initialRuns)).toBe(true);
+  await expect(runCard.getByRole("status")).toBeVisible();
+  await expect(fileCard.locator("header > span")).toHaveText("41");
+  expect(catalogReads).toBe(0);
+  await expect(runCard.locator("header > span")).toHaveCount(0);
+  if (!initialRuns) throw new Error("Initial runs request was not captured");
+  initialRunsReleased = true;
+  await initialRuns.fulfill({ json: { items: [], total: 0 } });
   await expect(runCard.locator("header > span")).toHaveText("31");
   await expect(fileCard.locator("header > span")).toHaveText("41");
   for (const card of [runCard, fileCard]) {

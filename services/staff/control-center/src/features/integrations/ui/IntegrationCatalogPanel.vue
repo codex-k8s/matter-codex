@@ -243,7 +243,8 @@ function fieldType(field: IntegrationConfigurationField): string {
                     v-if="capability.approvalRequired"
                     class="approval-fact"
                   >
-                    <ShieldCheck :size="13" aria-hidden="true" /> Human Gate
+                    <ShieldCheck :size="13" aria-hidden="true" />
+                    {{ t("workflows.humanGate") }}
                   </span>
                 </div>
                 <p>{{ capability.description }}</p>
