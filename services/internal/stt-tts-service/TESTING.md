@@ -4,8 +4,8 @@ title: Локальная проверка активации STT
 type: verification
 status: approved
 owner: developer
-version: 1.1.0
-updated: 2026-09-05
+version: 1.1.1
+updated: 2026-09-06
 ---
 
 # Проверка #1020
@@ -15,6 +15,14 @@ updated: 2026-09-05
 browser-проверка их объединённого результата не является локальным STT тестом.
 
 ## Критерий → свидетельство
+
+Регрессия #1074: `TestNormalizeRussianAllowedDifferences` и
+`TestNormalizeRussianPreservesSignificantDifferences` ограничивают сравнение
+MVP-UI-60 регистром, Unicode whitespace и конечной пунктуацией. Внутренние
+символы, начальная пунктуация, ё/е, потеря, перестановка и склейка слов не
+нормализуются в совпадение. Тесты используют искусственные строки, а сообщения
+об ошибках не печатают их содержимое. Проверена документация Context7
+`/golang/go`: `strings.Fields`, `ToLower`, `TrimRightFunc`.
 
 Продолжение MVP-UI-56 от main `8026633a9`: `GetModelCatalog` имеет отдельный
 admin authority и доступен до первой configuration/credential. Новые
