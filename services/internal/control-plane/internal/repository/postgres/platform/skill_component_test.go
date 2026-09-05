@@ -35,6 +35,13 @@ func testSkillBundleDraft(t *testing.T, ctx context.Context, repository *Reposit
 		t.Fatal(err)
 	}
 	spec := entity.SkillBundleSpecification{Name: "Documentation", Description: "Read approved documentation", Files: []entity.SkillBundleFile{{Path: "SKILL.md", ArtifactRef: artifact.Ref, ArtifactRevision: artifact.Revision, Digest: "untrusted-client-value", SizeBytes: 1}}}
+	for _, path := range []string{"references/first.md", "references/second.md"} {
+		file, err := service.UploadArtifact(ctx, owner, value.Mutation{IdempotencyKey: "skill-support-" + path}, platformrepo.ArtifactUpload{ProjectRef: project.Project.Ref, FileName: "support.md", MediaType: "text/markdown", SizeBytes: int64(len(body)), Reader: bytes.NewReader(body)})
+		if err != nil {
+			t.Fatal(err)
+		}
+		spec.Files = append(spec.Files, entity.SkillBundleFile{Path: path, ArtifactRef: file.Ref, ArtifactRevision: file.Revision})
+	}
 	invoke := func(kind command.Kind, key string, version *int64, payload command.SkillBundleInput) (command.Result, error) {
 		return service.Execute(ctx, command.Command{Kind: kind, Principal: owner, Mutation: value.Mutation{IdempotencyKey: key, ExpectedVersion: version}, Payload: payload})
 	}
@@ -44,6 +51,20 @@ func testSkillBundleDraft(t *testing.T, ctx context.Context, repository *Reposit
 	}
 	bundle := created.SkillBundle
 	testContextVFS(t, ctx, service, owner, project.Project.Ref, bundle.Ref, "SKILL", bundle.DraftRevision.Digest, true)
+	rootPath := "/projects/" + project.Project.Ref + "/skills/" + bundle.Ref
+	nodes, total, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ResourceRef: rootPath})
+	if err != nil || total != 2 || len(nodes) != 2 {
+		t.Fatalf("skill files and distinct supporting directory: total=%d err=%v", total, err)
+	}
+	for _, node := range nodes {
+		if node.Name == "SKILL.md" && (node.EntityRef != artifact.Ref || node.Selectable || node.SelectionReason != "IMMUTABLE_CONTEXT" || node.Revision != artifact.Revision) {
+			t.Fatal("skill manifest file lost exact read-only source")
+		}
+	}
+	nodes, total, _, err = service.ListVFSNodes(ctx, owner, query.Filter{ResourceRef: rootPath + "/references"})
+	if err != nil || total != 2 || len(nodes) != 2 || nodes[0].Ref == nodes[1].Ref {
+		t.Fatalf("supporting files exact page: total=%d err=%v", total, err)
+	}
 	if bundle.CurrentRevision != nil || bundle.DraftRevision == nil || bundle.DraftRevision.ScanState != "PENDING" {
 		t.Fatal("draft acquired implicit publication or scan")
 	}
@@ -54,7 +75,7 @@ func testSkillBundleDraft(t *testing.T, ctx context.Context, repository *Reposit
 	if err != nil || impact.Permitted || !containsString(impact.Blockers, "ARTIFACT_USED_BY_SKILL") {
 		t.Fatalf("skill artifact retention impact: permitted=%t blockers=%v err=%v", impact.Permitted, impact.Blockers, err)
 	}
-	files, fileTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ProjectRef: project.Project.Ref, ResourceRef: "/projects/" + project.Project.Ref + "/files"})
+	files, fileTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ProjectRef: project.Project.Ref, ResourceRef: "/projects/" + project.Project.Ref + "/files", Query: "SKILL.md"})
 	if err != nil || fileTotal != 1 || len(files) != 1 || files[0].EntityRef != artifact.Ref || files[0].Selectable || files[0].SelectionReason != "ARTIFACT_USED_BY_SKILL" || containsString(files[0].NextActions, "DELETE") {
 		t.Fatalf("VFS offered deletion of retained skill source: total=%d err=%v", fileTotal, err)
 	}
