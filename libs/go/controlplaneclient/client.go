@@ -149,7 +149,7 @@ func Dial(ctx context.Context, config Config) (*Client, error) {
 	if config.UnaryClientInterceptor != nil {
 		interceptors = append(interceptors, config.UnaryClientInterceptor)
 	}
-	protected, err := grpc.NewClient(config.Target, grpc.WithTransportCredentials(transport), grpc.WithChainUnaryInterceptor(interceptors...), grpc.WithChainStreamInterceptor(authorityclient.IssuerStreamClientInterceptor(issuer.Issuer(), operations, client)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maximumProtectedResponseBytes), grpc.MaxCallSendMsgSize(17<<20)))
+	protected, err := grpc.NewClient(config.Target, grpc.WithTransportCredentials(transport), grpc.WithChainUnaryInterceptor(interceptors...), grpc.WithChainStreamInterceptor(authorityclient.IssuerStreamClientInterceptor(issuer.Issuer(), operations, client, controlplanev1.RuntimeWorkService_StreamExecutionArtifact_FullMethodName)), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maximumProtectedResponseBytes), grpc.MaxCallSendMsgSize(17<<20)))
 	if err != nil {
 		_ = issuer.Close()
 		_ = raw.Close()
