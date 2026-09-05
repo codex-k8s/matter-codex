@@ -3652,6 +3652,30 @@ paths:
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
           content: { application/json: { schema: { $ref: '#/components/schemas/ManagedConfigurationResult' } } }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans:
+    post:
+      tags: [Administration]
+      operationId: prepareRoleImageImpactPlan
+      parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/ConfigurationRevisionRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '201':
+          description: Неизменяемый план применения допущенного образа
+          content: { application/json: { schema: { $ref: '#/components/schemas/RoleImageImpactPlan' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/role-image-impact-plans/{planRef}:
+    get:
+      tags: [Administration]
+      operationId: getRoleImageImpactPlan
+      parameters:
+        - { name: planRef, in: path, required: true, schema: { $ref: '#/components/schemas/OpaqueRef' } }
+        - { name: query, in: query, schema: { type: string, maxLength: 200 } }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: План и текущие результаты выбранных потребителей
+          content: { application/json: { schema: { $ref: '#/components/schemas/RoleImageImpactPage' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings:
     post:
       tags: [Administration]
@@ -3659,12 +3683,12 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/ConfigurationRevisionRef' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }, { $ref: '#/components/parameters/IfMatch' }]
       requestBody:
         required: true
-        content: { application/json: { schema: { $ref: '#/components/schemas/ManagedConfigurationRebindInput' } } }
+        content: { application/json: { schema: { $ref: '#/components/schemas/RoleImageRebindInput' } } }
       responses:
         '200':
           description: Авторитетная конфигурация и ревизия
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
-          content: { application/json: { schema: { $ref: '#/components/schemas/ManagedConfigurationResult' } } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/RoleImageRebindResult' } } }
         default: { $ref: '#/components/responses/Problem' }
   /api/v1/integration-definition-configurations/drafts:
     post:
@@ -4975,6 +4999,69 @@ components:
         ref: { type: string, minLength: 1, maxLength: 160 }
         revisionRef: { $ref: '#/components/schemas/OpaqueRef' }
         version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    RoleImageRebindInput:
+      type: object
+      additionalProperties: false
+      required: [planRef, impactDigest, selectedItemRefs]
+      properties:
+        planRef: { $ref: '#/components/schemas/OpaqueRef' }
+        impactDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        selectedItemRefs: { type: array, maxItems: 1000, uniqueItems: true, items: { $ref: '#/components/schemas/OpaqueRef' } }
+    RoleImageRebindResult:
+      type: object
+      additionalProperties: false
+      required: [configuration, revision, plan]
+      properties:
+        configuration: { $ref: '#/components/schemas/ManagedConfiguration' }
+        revision: { $ref: '#/components/schemas/ManagedConfigurationRevision' }
+        plan: { $ref: '#/components/schemas/RoleImageImpactPlan' }
+    RoleImageImpactPlan:
+      type: object
+      additionalProperties: false
+      required: [ref, version, configurationRef, configurationVersion, revisionRef, revisionDigest, recipeRef, recipeGeneration, buildRef, artifactRef, artifactDigest, admissionPolicyDigest, digest, total, state, createdAt, expiresAt]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        configurationRef: { $ref: '#/components/schemas/OpaqueRef' }
+        configurationVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        revisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        revisionDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        recipeRef: { $ref: '#/components/schemas/OpaqueRef' }
+        recipeGeneration: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        buildRef: { $ref: '#/components/schemas/OpaqueRef' }
+        artifactRef: { $ref: '#/components/schemas/OpaqueRef' }
+        artifactDigest: { type: string, pattern: '^sha256:[a-f0-9]{64}$' }
+        admissionPolicyDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        total: { type: integer, format: int64, minimum: 0, maximum: 1000 }
+        state: { type: string, enum: [PREPARED, APPLIED, EXPIRED] }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        expiresAt: { $ref: '#/components/schemas/Timestamp' }
+    RoleImageImpactItem:
+      type: object
+      additionalProperties: false
+      required: [ref, environmentRef, environmentVersion, sourceVersionRef, sourceVersionDigest, projectRef, outcome]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        environmentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        environmentVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        sourceVersionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        sourceVersionDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        consumer: { $ref: '#/components/schemas/RuntimeEnvironmentConsumer' }
+        outcome: { type: string, enum: [PENDING, APPLIED, CONFLICT, FORBIDDEN, NOT_SELECTED] }
+        resultEnvironmentVersionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        resultBindingRef: { $ref: '#/components/schemas/OpaqueRef' }
+        resultBindingVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    RoleImageImpactPage:
+      type: object
+      additionalProperties: false
+      required: [plan, items, total]
+      properties:
+        plan: { $ref: '#/components/schemas/RoleImageImpactPlan' }
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/RoleImageImpactItem' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 1000 }
+        nextPageToken: { type: string, maxLength: 512 }
     ManagedConfigurationRebindInput:
       type: object
       additionalProperties: false

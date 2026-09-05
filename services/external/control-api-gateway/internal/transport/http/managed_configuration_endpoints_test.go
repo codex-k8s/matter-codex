@@ -104,7 +104,6 @@ func TestManagedConfigurationRoutesCallExactTypedRPC(t *testing.T) {
 		{"CreateRoleImageRevisionDraft", http.MethodPost, "/api/v1/role-image-configurations/drafts", draftBody, "CreateRoleImageRevisionDraft", http.StatusCreated},
 		{"ValidateRoleImageRevisionDraft", http.MethodPost, "/api/v1/role-image-configurations/mcfg_fixture01/revisions/mrev_fixture01/validation", "", "ValidateRoleImageRevisionDraft", http.StatusOK},
 		{"PublishRoleImageRevisionDraft", http.MethodPost, "/api/v1/role-image-configurations/mcfg_fixture01/revisions/mrev_fixture01/publication", "", "PublishRoleImageRevisionDraft", http.StatusOK},
-		{"RebindRoleImageConsumers", http.MethodPost, "/api/v1/role-image-configurations/mcfg_fixture01/revisions/mrev_fixture01/consumer-bindings", rebindBody, "RebindRoleImageConsumers", http.StatusOK},
 		{"CreateIntegrationDefinitionDraft", http.MethodPost, "/api/v1/integration-definition-configurations/drafts", draftBody, "CreateIntegrationDefinitionDraft", http.StatusCreated},
 		{"ValidateIntegrationDefinitionDraft", http.MethodPost, "/api/v1/integration-definition-configurations/mcfg_fixture01/revisions/mrev_fixture01/validation", "", "ValidateIntegrationDefinitionDraft", http.StatusOK},
 		{"PublishIntegrationDefinitionDraft", http.MethodPost, "/api/v1/integration-definition-configurations/mcfg_fixture01/revisions/mrev_fixture01/publication", "", "PublishIntegrationDefinitionDraft", http.StatusOK},

@@ -355,6 +355,59 @@ export type ManagedConfigurationConsumer = {
     version: number;
 };
 
+export type RoleImageRebindInput = {
+    planRef: OpaqueRef;
+    impactDigest: string;
+    selectedItemRefs: Array<OpaqueRef>;
+};
+
+export type RoleImageRebindResult = {
+    configuration: ManagedConfiguration;
+    revision: ManagedConfigurationRevision;
+    plan: RoleImageImpactPlan;
+};
+
+export type RoleImageImpactPlan = {
+    ref: OpaqueRef;
+    version: number;
+    configurationRef: OpaqueRef;
+    configurationVersion: number;
+    revisionRef: OpaqueRef;
+    revisionDigest: string;
+    recipeRef: OpaqueRef;
+    recipeGeneration: number;
+    buildRef: OpaqueRef;
+    artifactRef: OpaqueRef;
+    artifactDigest: string;
+    admissionPolicyDigest: string;
+    digest: string;
+    total: number;
+    state: 'PREPARED' | 'APPLIED' | 'EXPIRED';
+    createdAt: Timestamp;
+    expiresAt: Timestamp;
+};
+
+export type RoleImageImpactItem = {
+    ref: OpaqueRef;
+    environmentRef: OpaqueRef;
+    environmentVersion: number;
+    sourceVersionRef: OpaqueRef;
+    sourceVersionDigest: string;
+    projectRef: OpaqueRef;
+    consumer?: RuntimeEnvironmentConsumer;
+    outcome: 'PENDING' | 'APPLIED' | 'CONFLICT' | 'FORBIDDEN' | 'NOT_SELECTED';
+    resultEnvironmentVersionRef?: OpaqueRef;
+    resultBindingRef?: OpaqueRef;
+    resultBindingVersion?: number;
+};
+
+export type RoleImageImpactPage = {
+    plan: RoleImageImpactPlan;
+    items: Array<RoleImageImpactItem>;
+    total: number;
+    nextPageToken?: string;
+};
+
 export type ManagedConfigurationRebindInput = {
     impactDigest: string;
     consumers: Array<ManagedConfigurationConsumer>;
@@ -10322,8 +10375,72 @@ export type PublishRoleImageRevisionDraftResponses = {
 
 export type PublishRoleImageRevisionDraftResponse = PublishRoleImageRevisionDraftResponses[keyof PublishRoleImageRevisionDraftResponses];
 
+export type PrepareRoleImageImpactPlanData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+        revisionRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans';
+};
+
+export type PrepareRoleImageImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareRoleImageImpactPlanError = PrepareRoleImageImpactPlanErrors[keyof PrepareRoleImageImpactPlanErrors];
+
+export type PrepareRoleImageImpactPlanResponses = {
+    /**
+     * Неизменяемый план применения допущенного образа
+     */
+    201: RoleImageImpactPlan;
+};
+
+export type PrepareRoleImageImpactPlanResponse = PrepareRoleImageImpactPlanResponses[keyof PrepareRoleImageImpactPlanResponses];
+
+export type GetRoleImageImpactPlanData = {
+    body?: never;
+    path: {
+        planRef: OpaqueRef;
+    };
+    query?: {
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/role-image-impact-plans/{planRef}';
+};
+
+export type GetRoleImageImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetRoleImageImpactPlanError = GetRoleImageImpactPlanErrors[keyof GetRoleImageImpactPlanErrors];
+
+export type GetRoleImageImpactPlanResponses = {
+    /**
+     * План и текущие результаты выбранных потребителей
+     */
+    200: RoleImageImpactPage;
+};
+
+export type GetRoleImageImpactPlanResponse = GetRoleImageImpactPlanResponses[keyof GetRoleImageImpactPlanResponses];
+
 export type RebindRoleImageConsumersData = {
-    body: ManagedConfigurationRebindInput;
+    body: RoleImageRebindInput;
     headers: {
         'Idempotency-Key': string;
         'X-CSRF-Token': string;
@@ -10350,7 +10467,7 @@ export type RebindRoleImageConsumersResponses = {
     /**
      * Авторитетная конфигурация и ревизия
      */
-    200: ManagedConfigurationResult;
+    200: RoleImageRebindResult;
 };
 
 export type RebindRoleImageConsumersResponse = RebindRoleImageConsumersResponses[keyof RebindRoleImageConsumersResponses];

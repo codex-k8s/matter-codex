@@ -3267,6 +3267,54 @@ func (e RoleImageGitSourceInputContentFormat) Valid() bool {
 	}
 }
 
+// Defines values for RoleImageImpactItemOutcome.
+const (
+	RoleImageImpactItemOutcomeAPPLIED     RoleImageImpactItemOutcome = "APPLIED"
+	RoleImageImpactItemOutcomeCONFLICT    RoleImageImpactItemOutcome = "CONFLICT"
+	RoleImageImpactItemOutcomeFORBIDDEN   RoleImageImpactItemOutcome = "FORBIDDEN"
+	RoleImageImpactItemOutcomeNOTSELECTED RoleImageImpactItemOutcome = "NOT_SELECTED"
+	RoleImageImpactItemOutcomePENDING     RoleImageImpactItemOutcome = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the RoleImageImpactItemOutcome enum.
+func (e RoleImageImpactItemOutcome) Valid() bool {
+	switch e {
+	case RoleImageImpactItemOutcomeAPPLIED:
+		return true
+	case RoleImageImpactItemOutcomeCONFLICT:
+		return true
+	case RoleImageImpactItemOutcomeFORBIDDEN:
+		return true
+	case RoleImageImpactItemOutcomeNOTSELECTED:
+		return true
+	case RoleImageImpactItemOutcomePENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RoleImageImpactPlanState.
+const (
+	RoleImageImpactPlanStateAPPLIED  RoleImageImpactPlanState = "APPLIED"
+	RoleImageImpactPlanStateEXPIRED  RoleImageImpactPlanState = "EXPIRED"
+	RoleImageImpactPlanStatePREPARED RoleImageImpactPlanState = "PREPARED"
+)
+
+// Valid indicates whether the value is a known member of the RoleImageImpactPlanState enum.
+func (e RoleImageImpactPlanState) Valid() bool {
+	switch e {
+	case RoleImageImpactPlanStateAPPLIED:
+		return true
+	case RoleImageImpactPlanStateEXPIRED:
+		return true
+	case RoleImageImpactPlanStatePREPARED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoleImageManagedLineageManagedBy.
 const (
 	RoleImageManagedLineageManagedByGIT     RoleImageManagedLineageManagedBy = "GIT"
@@ -8541,6 +8589,56 @@ type RoleImageGitSourceInput struct {
 // RoleImageGitSourceInputContentFormat defines model for RoleImageGitSourceInput.ContentFormat.
 type RoleImageGitSourceInputContentFormat string
 
+// RoleImageImpactItem defines model for RoleImageImpactItem.
+type RoleImageImpactItem struct {
+	Consumer                    *RuntimeEnvironmentConsumer `json:"consumer,omitempty"`
+	EnvironmentRef              OpaqueRef                   `json:"environmentRef"`
+	EnvironmentVersion          int64                       `json:"environmentVersion"`
+	Outcome                     RoleImageImpactItemOutcome  `json:"outcome"`
+	ProjectRef                  OpaqueRef                   `json:"projectRef"`
+	Ref                         OpaqueRef                   `json:"ref"`
+	ResultBindingRef            *OpaqueRef                  `json:"resultBindingRef,omitempty"`
+	ResultBindingVersion        *int64                      `json:"resultBindingVersion,omitempty"`
+	ResultEnvironmentVersionRef *OpaqueRef                  `json:"resultEnvironmentVersionRef,omitempty"`
+	SourceVersionDigest         string                      `json:"sourceVersionDigest"`
+	SourceVersionRef            OpaqueRef                   `json:"sourceVersionRef"`
+}
+
+// RoleImageImpactItemOutcome defines model for RoleImageImpactItem.Outcome.
+type RoleImageImpactItemOutcome string
+
+// RoleImageImpactPage defines model for RoleImageImpactPage.
+type RoleImageImpactPage struct {
+	Items         []RoleImageImpactItem `json:"items"`
+	NextPageToken *string               `json:"nextPageToken,omitempty"`
+	Plan          RoleImageImpactPlan   `json:"plan"`
+	Total         int64                 `json:"total"`
+}
+
+// RoleImageImpactPlan defines model for RoleImageImpactPlan.
+type RoleImageImpactPlan struct {
+	AdmissionPolicyDigest string                   `json:"admissionPolicyDigest"`
+	ArtifactDigest        string                   `json:"artifactDigest"`
+	ArtifactRef           OpaqueRef                `json:"artifactRef"`
+	BuildRef              OpaqueRef                `json:"buildRef"`
+	ConfigurationRef      OpaqueRef                `json:"configurationRef"`
+	ConfigurationVersion  int64                    `json:"configurationVersion"`
+	CreatedAt             Timestamp                `json:"createdAt"`
+	Digest                string                   `json:"digest"`
+	ExpiresAt             Timestamp                `json:"expiresAt"`
+	RecipeGeneration      int64                    `json:"recipeGeneration"`
+	RecipeRef             OpaqueRef                `json:"recipeRef"`
+	Ref                   OpaqueRef                `json:"ref"`
+	RevisionDigest        string                   `json:"revisionDigest"`
+	RevisionRef           OpaqueRef                `json:"revisionRef"`
+	State                 RoleImageImpactPlanState `json:"state"`
+	Total                 int64                    `json:"total"`
+	Version               int64                    `json:"version"`
+}
+
+// RoleImageImpactPlanState defines model for RoleImageImpactPlan.State.
+type RoleImageImpactPlanState string
+
 // RoleImageManagedLineage Авторитетное происхождение рецепта; у SHIPPED baseline может отсутствовать managed revision. Отсутствие lineage не назначает UI право изменения.
 type RoleImageManagedLineage struct {
 	ConfigurationRef *OpaqueRef                       `json:"configurationRef,omitempty"`
@@ -8578,6 +8676,20 @@ type RoleImagePromotionReceipt struct {
 
 // RoleImagePromotionReceiptState defines model for RoleImagePromotionReceipt.State.
 type RoleImagePromotionReceiptState string
+
+// RoleImageRebindInput defines model for RoleImageRebindInput.
+type RoleImageRebindInput struct {
+	ImpactDigest     string      `json:"impactDigest"`
+	PlanRef          OpaqueRef   `json:"planRef"`
+	SelectedItemRefs []OpaqueRef `json:"selectedItemRefs"`
+}
+
+// RoleImageRebindResult defines model for RoleImageRebindResult.
+type RoleImageRebindResult struct {
+	Configuration ManagedConfiguration         `json:"configuration"`
+	Plan          RoleImageImpactPlan          `json:"plan"`
+	Revision      ManagedConfigurationRevision `json:"revision"`
+}
 
 // RoleImageRecipe defines model for RoleImageRecipe.
 type RoleImageRecipe struct {
@@ -11656,6 +11768,13 @@ type DiscardRoleImageRevisionDraftParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PrepareRoleImageImpactPlanParams defines parameters for PrepareRoleImageImpactPlan.
+type PrepareRoleImageImpactPlanParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // PublishRoleImageRevisionDraftParams defines parameters for PublishRoleImageRevisionDraft.
 type PublishRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -11675,6 +11794,13 @@ type ValidateRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// GetRoleImageImpactPlanParams defines parameters for GetRoleImageImpactPlan.
+type GetRoleImageImpactPlanParams struct {
+	Query     *string    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListRunsParams defines parameters for ListRuns.
@@ -12431,7 +12557,7 @@ type CreateRoleImageRevisionDraftJSONRequestBody = ManagedConfigurationDraftInpu
 type ConfigureRoleImageGitSourceJSONRequestBody = RoleImageGitSourceInput
 
 // RebindRoleImageConsumersJSONRequestBody defines body for RebindRoleImageConsumers for application/json ContentType.
-type RebindRoleImageConsumersJSONRequestBody = ManagedConfigurationRebindInput
+type RebindRoleImageConsumersJSONRequestBody = RoleImageRebindInput
 
 // SaveRoleImageRevisionDraftJSONRequestBody defines body for SaveRoleImageRevisionDraft for application/json ContentType.
 type SaveRoleImageRevisionDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
@@ -13102,6 +13228,9 @@ type ServerInterface interface {
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/discard)
 	DiscardRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params DiscardRoleImageRevisionDraftParams)
 
+	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans)
+	PrepareRoleImageImpactPlan(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PrepareRoleImageImpactPlanParams)
+
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/publication)
 	PublishRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PublishRoleImageRevisionDraftParams)
 
@@ -13110,6 +13239,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/validation)
 	ValidateRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params ValidateRoleImageRevisionDraftParams)
+
+	// (GET /api/v1/role-image-impact-plans/{planRef})
+	GetRoleImageImpactPlan(w http.ResponseWriter, r *http.Request, planRef OpaqueRef, params GetRoleImageImpactPlanParams)
 
 	// (GET /api/v1/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, params ListRunsParams)
@@ -30078,6 +30210,121 @@ func (siw *ServerInterfaceWrapper) DiscardRoleImageRevisionDraft(w http.Response
 	handler.ServeHTTP(w, r)
 }
 
+// PrepareRoleImageImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) PrepareRoleImageImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "revisionRef" -------------
+	var revisionRef ConfigurationRevisionRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "revisionRef", r.PathValue("revisionRef"), &revisionRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "revisionRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareRoleImageImpactPlanParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareRoleImageImpactPlan(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PublishRoleImageRevisionDraft operation middleware
 func (siw *ServerInterfaceWrapper) PublishRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request) {
 
@@ -30414,6 +30661,80 @@ func (siw *ServerInterfaceWrapper) ValidateRoleImageRevisionDraft(w http.Respons
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ValidateRoleImageRevisionDraft(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRoleImageImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) GetRoleImageImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "planRef" -------------
+	var planRef OpaqueRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "planRef", r.PathValue("planRef"), &planRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "planRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRoleImageImpactPlanParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRoleImageImpactPlan(w, r, planRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -37527,9 +37848,11 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source/refresh", wrapper.RefreshRoleImageGitSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindRoleImageConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardRoleImageRevisionDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans", wrapper.PrepareRoleImageImpactPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SaveRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidateRoleImageRevisionDraft)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/role-image-impact-plans/{planRef}", wrapper.GetRoleImageImpactPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs", wrapper.ListRuns)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs", wrapper.CreateRun)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs/{runRef}", wrapper.GetRun)

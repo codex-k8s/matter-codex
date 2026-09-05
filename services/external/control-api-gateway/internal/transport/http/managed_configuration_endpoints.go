@@ -1,6 +1,7 @@
 package httptransport
 
 import (
+	"fmt"
 	"net/http"
 	"unicode/utf8"
 
@@ -145,13 +146,21 @@ func (server *Server) PublishRoleImageRevisionDraft(w http.ResponseWriter, r *ht
 }
 
 func (server *Server) RebindRoleImageConsumers(w http.ResponseWriter, r *http.Request, configurationRef generated.ConfigurationRef, revisionRef generated.ConfigurationRevisionRef, p generated.RebindRoleImageConsumersParams) {
-	body, ok := decodeJSON[generated.ManagedConfigurationRebindInput](w, r)
+	body, ok := decodeJSON[generated.RoleImageRebindInput](w, r)
 	if !ok {
 		return
 	}
-	consumers, ok := managedConsumerInput(w, body)
-	if !ok {
+	if !fileTargetRef(configurationRef) || !fileTargetRef(revisionRef) || !fileTargetRef(body.PlanRef) || !validManagedDigest(body.ImpactDigest) || body.SelectedItemRefs == nil || len(body.SelectedItemRefs) > 1000 {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
 		return
+	}
+	seen := map[string]bool{}
+	for _, ref := range body.SelectedItemRefs {
+		if !fileTargetRef(ref) || seen[ref] {
+			writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+			return
+		}
+		seen[ref] = true
 	}
 	mutation, ok := requireMutation(w, p.IdempotencyKey, p.IfMatch)
 	if !ok {
@@ -159,13 +168,21 @@ func (server *Server) RebindRoleImageConsumers(w http.ResponseWriter, r *http.Re
 	}
 	result, err := server.control.Command.RebindRoleImageConsumers(r.Context(), &controlplanev1.RebindRoleImageConsumersRequest{
 		Mutation: mutation, ConfigurationRef: configurationRef, RevisionRef: revisionRef,
-		ImpactDigest: body.ImpactDigest, Consumers: consumers,
+		ImpactDigest: body.ImpactDigest, PlanRef: body.PlanRef, SelectedItemRefs: body.SelectedItemRefs,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
 	}
-	writeManagedResult(w, http.StatusOK, result)
+	plan, valid := roleImageImpactPlanView(result.GetPlan())
+	configuration, configurationErr := managedConfigurationView(result.GetConfiguration())
+	revision, revisionErr := managedRevisionView(result.GetRevision())
+	if !valid || configurationErr != nil || revisionErr != nil || plan.Ref != body.PlanRef || plan.Digest != body.ImpactDigest || plan.State != "APPLIED" || plan.ConfigurationRef != configurationRef || plan.RevisionRef != revisionRef || plan.ConfigurationVersion != mutation.GetExpectedVersion() || configuration.Ref != configurationRef || configuration.Version <= plan.ConfigurationVersion || revision.Ref != revisionRef || revision.Digest != plan.RevisionDigest || configuration.Kind != "ROLE_IMAGE" || revision.State != "PUBLISHED" {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	w.Header().Set("ETag", fmt.Sprintf("\"%d\"", configuration.Version))
+	writeJSON(w, http.StatusOK, generated.RoleImageRebindResult{Configuration: configuration, Revision: revision, Plan: plan})
 }
 
 func (server *Server) CreateIntegrationDefinitionDraft(w http.ResponseWriter, r *http.Request, p generated.CreateIntegrationDefinitionDraftParams) {
