@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.12.0
+version: 1.13.0
 updated: 2026-09-06
 ---
 
@@ -82,7 +82,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `29607deede87f906c46a90ff23ed2dc5f76e3ff3` включены следующие
+На `bc6d9e99cb478ea7848ca263ce27a0128da0ad31` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
@@ -94,7 +94,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
 | HTTP/SDK #1045, PR #1066 | `e66ab918d48b37f5354c9d8ebe526a53312e7076` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Четыре typed integration candidates72 endpoint проверяют GRANT/USE, exact prefix/context/pins, reason/boolean/schema и pagination. |
 | PWA #1022, PR #1067 | `d21add2dd9e69d61d146f65e90eb7f9f060940fb` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage, Files67 owner binding targets. Добавлены RoleImage643/revision644 impact, Instructions70 publication и binding645, explicit selected references и восстановление исходного immutable intent после неизвестного результата. Полные641/72 и Git write-back UI, актуализация raw E2E продолжаются. |
-| STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
+| STT #1020, PR #1070 | `a54db5b325f1f39142119cd92c3479df2049d9ed` | Administrative adapter catalog до configuration/credentials, policy60, согласованные limits и актуальная STT model profile revision. #1074 устраняет false PASS при удалении внутренних символов из transcript: только регистр, Unicode whitespace и конечная пунктуация. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
 | Agent-runner #1026, PR #1058 | `5613b045c4d63956de96819d8e42fc7b2c13b8d9` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Native effects и Usage сохраняются при post-execution failure. #1072 согласует canary/publish/reset/prompt межпроцессным bounded lock; #1073 сохраняет расход пяти failure branches и callback retry. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
 | Integration-gateway #1028, PR #1064 | `b889673f04bd431788ac7553e1a80b033852e431` | SourceWork и исполняемый Git write-back: one-parent proposal commit, exact empty lease, separate branch/PR receipts, UNKNOWN read-only recovery, GitHub PR/GitLab MR readback; Git runtime/tmpfs/non-root и оба render. Live provider proof ещё NOT RUN. |
@@ -629,6 +629,17 @@ fresh eligibility, forged/stale receipts, неизвестные результ�
 завышенного/неверного Content-Length до чтения body. Log
 `stt-http-exact.log` хранится в приватном evidence-каталоге.
 Прямой OpenAI, protected deployed HTTP и реальный browser — **NOT RUN**.
+
+Исправление #1074 включено exact STT unit SHA
+`a54db5b325f1f39142119cd92c3479df2049d9ed`: targeted normalizer race1.018s,
+full STT race/vet/build, service contract и security-negative — **PASS**.
+Тестовый provider credential исключён из env; live и новый Docker build
+не запускались. На integrated code
+`bc6d9e99cb478ea7848ca263ce27a0128da0ad31` HTTP matcher использует те же
+Unicode White_Space/Punctuation границы; HTTP9/9 — **PASS**, включая
+чередование конечной пунктуации и пробелов. Внутренние символы, ведущая
+пунктуация и форматирующий BOM не удаляются. Этот код не подменяет настоящий
+provider match локальным преобразованием ошибочно распознанных слов.
 
 ## Образы и пакеты
 
