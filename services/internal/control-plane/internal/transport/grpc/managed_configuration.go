@@ -58,7 +58,9 @@ func (server *Server) managedMutation(ctx context.Context, method string, kind c
 }
 
 func (server *Server) CreatePromptTemplateDraft(ctx context.Context, request *controlplanev1.CreatePromptTemplateDraftRequest) (*controlplanev1.CreatePromptTemplateDraftResponse, error) {
-	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_CreatePromptTemplateDraft_FullMethodName, command.CreatePromptTemplateDraft, request.GetMutation(), managedDraftInput(request))
+	input := managedDraftInput(request)
+	input.PromptScope = castPromptScopeInput(request.GetPromptScope())
+	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_CreatePromptTemplateDraft_FullMethodName, command.CreatePromptTemplateDraft, request.GetMutation(), input)
 	return &controlplanev1.CreatePromptTemplateDraftResponse{Configuration: configuration, Revision: revision}, err
 }
 func (server *Server) ValidatePromptTemplateDraft(ctx context.Context, request *controlplanev1.ValidatePromptTemplateDraftRequest) (*controlplanev1.ValidatePromptTemplateDraftResponse, error) {
@@ -240,10 +242,28 @@ func castManagedRevision(value *entity.ManagedConfigurationRevision) *controlpla
 		return nil
 	}
 	return &controlplanev1.ManagedConfigurationRevision{Ref: value.Ref, Revision: value.Revision,
+		PromptScope:   castPromptScope(value.PromptScope),
 		State:         managedRevisionStateProto(value.State),
 		ContentFormat: value.ContentFormat, Content: value.Content, Digest: value.Digest,
 		ValidationDiagnostics: append([]string(nil), value.ValidationDiagnostics...), ParentRevisionRef: value.ParentRevisionRef,
 		CreatedAt: timestamp(value.CreatedAt), ValidatedAt: optionalTimestamp(value.ValidatedAt), PublishedAt: optionalTimestamp(value.PublishedAt)}
+}
+
+func castPromptScopeInput(input *controlplanev1.PromptTemplateScopeInput) *command.PromptTemplateScopeInput {
+	if input == nil {
+		return nil
+	}
+	return &command.PromptTemplateScopeInput{TargetKind: input.GetTargetKind(), TargetRef: input.GetTargetRef(), AgentRef: input.GetAgentRef(),
+		WorkflowRevisionRef: input.GetWorkflowRevisionRef(), WorkflowStageKey: input.GetWorkflowStageKey(), ExpectedContextDigest: input.GetExpectedContextDigest(),
+		TemplateKind: strings.TrimPrefix(input.GetTemplateKind().String(), "PROMPT_TEMPLATE_KIND_")}
+}
+
+func castPromptScope(input *entity.PromptTemplateScope) *controlplanev1.PromptTemplateScope {
+	if input == nil {
+		return nil
+	}
+	return &controlplanev1.PromptTemplateScope{TargetKind: input.TargetKind, TargetRef: input.TargetRef, ContextPin: castPromptContextPin(input.ContextPin),
+		TemplateKind: controlplanev1.PromptTemplateKind(controlplanev1.PromptTemplateKind_value["PROMPT_TEMPLATE_KIND_"+input.TemplateKind])}
 }
 
 func managedRevisionStateProto(state string) controlplanev1.ManagedConfigurationState {

@@ -9,6 +9,7 @@ import (
 func (server *Server) SavePromptTemplateDraft(ctx context.Context, request *controlplanev1.SavePromptTemplateDraftRequest) (*controlplanev1.SavePromptTemplateDraftResponse, error) {
 	input := managedRevisionInput(request)
 	input.ContentFormat, input.Content = request.GetContentFormat(), request.GetContent()
+	input.PromptScope = castPromptScopeInput(request.GetPromptScope())
 	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_SavePromptTemplateDraft_FullMethodName, command.SavePromptTemplateDraft, request.GetMutation(), input)
 	return &controlplanev1.SavePromptTemplateDraftResponse{Configuration: configuration, Revision: revision}, err
 }

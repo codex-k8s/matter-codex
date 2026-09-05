@@ -112,6 +112,8 @@ func (repository *Repository) changeRuntimeEnvironmentDraft(ctx context.Context,
 			return commandOutcome{}, errs.ErrConflict
 		}
 		var environment *entity.RuntimeEnvironmentSet
+		var impactRow revisionImpactRow
+		var impactItems []entity.RevisionImpactItem
 		switch input.Kind {
 		case command.SaveRuntimeEnvironmentDraft:
 			if len(asJSON(payload.Specification)) > 256<<10 {
@@ -136,6 +138,10 @@ func (repository *Repository) changeRuntimeEnvironmentDraft(ctx context.Context,
 				}
 				if draft.State != "VALID" || digest != draft.ValidationDigest {
 					return commandOutcome{}, errs.ErrConflict
+				}
+				impactRow, impactItems, err = repository.environmentDraftImpactForPublish(ctx, tx, current, draft, payload)
+				if err != nil {
+					return commandOutcome{}, err
 				}
 				publication := input
 				publication.Kind = command.CreateRuntimeEnvironment
@@ -168,7 +174,15 @@ func (repository *Repository) changeRuntimeEnvironmentDraft(ctx context.Context,
 			return commandOutcome{}, mapWriteError(err)
 		}
 		draft.Version++
-		return environmentDraftOutcome(current, draft, environment, mustProjectID(ctx, tx, current.organizationID, draft.ProjectRef)), nil
+		result := environmentDraftOutcome(current, draft, environment, mustProjectID(ctx, tx, current.organizationID, draft.ProjectRef))
+		if environment != nil {
+			plan, applyErr := repository.applyEnvironmentDraftImpact(ctx, tx, current, input, impactRow, impactItems, *environment)
+			if applyErr != nil {
+				return commandOutcome{}, applyErr
+			}
+			result.result.RevisionImpactPlan = &plan
+		}
+		return result, nil
 	}
 	return environmentDraftOutcome(current, draft, nil, mustProjectID(ctx, tx, current.organizationID, draft.ProjectRef)), nil
 }

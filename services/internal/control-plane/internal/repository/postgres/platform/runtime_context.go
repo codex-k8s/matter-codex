@@ -18,6 +18,12 @@ var queryRuntimeContextSkills string
 //go:embed sql/runtime_context_memories.sql
 var queryRuntimeContextMemories string
 
+//go:embed sql/prompt_context_skills.sql
+var queryPromptContextSkills string
+
+//go:embed sql/prompt_context_memories.sql
+var queryPromptContextMemories string
+
 func runtimeContextSessionID(sessionID, previousDigest, currentDigest string) string {
 	if previousDigest == "" || currentDigest == "" || previousDigest != currentDigest {
 		return ""
@@ -31,19 +37,32 @@ func runtimeContextProvenance(p entity.ContextProvenance) runtimecontract.Runtim
 }
 
 func (repository *Repository) runtimeContextSnapshot(ctx context.Context, tx pgx.Tx, current scope, runRef, projectRef, agentRef string) (runtimecontract.RuntimeContextSnapshot, error) {
+	if projectRef != "" {
+		if err := tx.QueryRow(ctx, querySTTRuntimeActor, current.organizationID, runRef).Scan(
+			&current.actorID, &current.actorRef, &current.actorName, &current.organizationRef); err != nil {
+			return runtimecontract.RuntimeContextSnapshot{}, errs.ErrConflict
+		}
+	}
+	return repository.runtimeContextSnapshotForActorMode(ctx, tx, current, projectRef, agentRef, true)
+}
+
+func (repository *Repository) runtimeContextSnapshotForActor(ctx context.Context, tx pgx.Tx, current scope, projectRef, agentRef string) (runtimecontract.RuntimeContextSnapshot, error) {
+	return repository.runtimeContextSnapshotForActorMode(ctx, tx, current, projectRef, agentRef, false)
+}
+
+func (repository *Repository) runtimeContextSnapshotForActorMode(ctx context.Context, tx pgx.Tx, current scope, projectRef, agentRef string, lock bool) (runtimecontract.RuntimeContextSnapshot, error) {
+	skillsQuery, memoriesQuery := queryPromptContextSkills, queryPromptContextMemories
+	if lock {
+		skillsQuery, memoriesQuery = queryRuntimeContextSkills, queryRuntimeContextMemories
+	}
 	result := runtimecontract.RuntimeContextSnapshot{Schema: runtimecontract.RuntimeContextSchema,
 		OrganizationRef: current.organizationRef, ProjectRef: projectRef, AgentRef: agentRef,
 		Skills: []runtimecontract.RuntimeSkillBundle{}, Memories: []runtimecontract.RuntimeMemoryRecord{}}
 	now := time.Now().UTC()
 	if projectRef != "" {
-		actorScope := current
-		if err := tx.QueryRow(ctx, querySTTRuntimeActor, current.organizationID, runRef).Scan(
-			&actorScope.actorID, &actorScope.actorRef, &actorScope.actorName, &actorScope.organizationRef); err != nil {
-			return result, errs.ErrConflict
-		}
-		args := pgx.StrictNamedArgs{"organization_id": current.organizationID, "actor_id": actorScope.actorID,
+		args := pgx.StrictNamedArgs{"organization_id": current.organizationID, "actor_id": current.actorID,
 			"agent_ref": agentRef, "project_ref": projectRef, "evaluated_at": now}
-		rows, err := tx.Query(ctx, queryRuntimeContextSkills, args)
+		rows, err := tx.Query(ctx, skillsQuery, args)
 		if err != nil {
 			return result, errs.ErrUnavailable
 		}
@@ -69,7 +88,7 @@ func (repository *Repository) runtimeContextSnapshot(ctx context.Context, tx pgx
 		if rows.Err() != nil || len(result.Skills) > runtimecontract.MaximumContextSkills {
 			return result, errs.ErrConflict
 		}
-		rows, err = tx.Query(ctx, queryRuntimeContextMemories, args)
+		rows, err = tx.Query(ctx, memoriesQuery, args)
 		if err != nil {
 			return result, errs.ErrUnavailable
 		}

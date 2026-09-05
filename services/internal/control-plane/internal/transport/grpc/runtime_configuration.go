@@ -89,15 +89,16 @@ func (server *Server) ListTemplateVariables(ctx context.Context, request *contro
 		return nil, err
 	}
 	filter := query.Filter{ProjectRef: request.GetProjectRef(), Query: request.GetQuery(), Page: page(request.GetPage())}
-	if request.GetAgentRef() != "" || request.GetRuntimeRevisionRef() != "" {
-		filter.TemplateContext = &query.TemplateVariableContext{AgentRef: request.GetAgentRef(), RuntimeRevisionRef: request.GetRuntimeRevisionRef()}
+	if request.GetAgentRef() != "" || request.GetRuntimeRevisionRef() != "" || request.GetTargetKind() != "" || request.GetTargetRef() != "" || request.GetContext() != nil || request.GetExpectedContextDigest() != "" {
+		filter.TemplateContext = &query.TemplateVariableContext{AgentRef: request.GetAgentRef(), RuntimeRevisionRef: request.GetRuntimeRevisionRef(),
+			TargetKind: request.GetTargetKind(), TargetRef: request.GetTargetRef(), ExpectedContextDigest: request.GetExpectedContextDigest(), Preview: castPromptPreviewContext(request.GetContext())}
 	}
-	items, total, next, err := server.service.ListTemplateVariables(ctx, p, filter)
+	result, err := server.service.ListPromptContextVariables(ctx, p, filter)
 	if err != nil {
 		return nil, transportError(err)
 	}
-	response := &controlplanev1.ListTemplateVariablesResponse{Total: total, Page: &controlplanev1.PageInfo{NextPageToken: next}}
-	for _, item := range items {
+	response := &controlplanev1.ListTemplateVariablesResponse{Total: result.Total, Page: &controlplanev1.PageInfo{NextPageToken: result.NextPageToken}, ContextPin: castPromptContextPin(result.ContextPin)}
+	for _, item := range result.Variables {
 		variable := &controlplanev1.TemplateVariable{Name: item.Name, ValueType: item.Type,
 			Description: item.Description, Example: item.Example, Source: item.Source, Collection: item.Collection,
 			ItemValueType: item.ItemType, RangeExample: item.RangeExample, Available: item.Available,

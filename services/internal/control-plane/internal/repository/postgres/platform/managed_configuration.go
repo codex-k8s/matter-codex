@@ -159,6 +159,12 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 			return commandOutcome{}, lockErr
 		}
 		_, diagnostics, validationErr := revisionservice.Validate(kind, locked.ContentFormat, locked.Content)
+		if kind == revisionservice.KindPromptTemplate {
+			diagnostics, validationErr = repository.validatePromptScopeTx(ctx, tx, current, locked.ManagedConfigurationRevision)
+			if validationErr != nil && !errors.Is(validationErr, errs.ErrInvalid) && !errors.Is(validationErr, revisionservice.ErrInvalid) {
+				return commandOutcome{}, validationErr
+			}
+		}
 		if kind == revisionservice.KindRoleImage {
 			validationErr = repository.validateSourceRoleImage(configuration, locked.ContentFormat, locked.Content)
 			if errors.Is(validationErr, errs.ErrUnavailable) {
@@ -203,6 +209,11 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		if kind == revisionservice.KindSystemSTT && locked.ContentFormat != "JSON" {
 			return commandOutcome{}, errs.ErrInvalid
 		}
+		if kind == revisionservice.KindPromptTemplate {
+			if _, err := repository.validatePromptScopeTx(ctx, tx, current, locked.ManagedConfigurationRevision); err != nil {
+				return commandOutcome{}, err
+			}
+		}
 		if kind == revisionservice.KindEmailMailbox {
 			if _, err := repository.validateEmailMailboxRevision(ctx, tx, current, configuration, locked.ManagedConfigurationRevision); err != nil {
 				return commandOutcome{}, errs.ErrInvalid
@@ -245,13 +256,23 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 			if !managedConsumerAllowed(kind, consumer) {
 				return commandOutcome{}, errs.ErrInvalid
 			}
+			if kind == revisionservice.KindPromptTemplate && (consumer.Kind == "AGENT" || consumer.Kind == "AGENT_CONTINUATION") {
+				if err := repository.validateAgentPromptContextTx(ctx, tx, current, consumer.Ref, locked.Content, consumer.Kind == "AGENT_CONTINUATION"); err != nil {
+					return commandOutcome{}, err
+				}
+			}
+			if kind == revisionservice.KindPromptTemplate && consumer.Kind == "WORKFLOW" {
+				if err := repository.validateWorkflowPromptContextTx(ctx, tx, current, consumer.Ref, locked.Content); err != nil {
+					return commandOutcome{}, err
+				}
+			}
 			switch consumer.Kind {
-			case "AGENT_CONTINUATION":
+			case "AGENT", "AGENT_CONTINUATION":
 				permission, target, resolveErr := repository.resolveRuntimeConfigurationTarget(ctx, tx, current, "agent.manage", consumer.Ref)
 				if resolveErr != nil || repository.requireAccess(ctx, tx, current, permission, target) != nil {
 					return commandOutcome{}, errs.ErrNotFound
 				}
-			case "AGENT", "WORKFLOW", "SCHEDULE":
+			case "WORKFLOW", "SCHEDULE":
 				permission := strings.ToLower(consumer.Kind) + ".manage"
 				if err := repository.requireAccess(ctx, tx, current, permission, entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: consumer.Kind, ResourceRef: consumer.Ref}); err != nil {
 					return commandOutcome{}, errs.ErrNotFound
@@ -353,6 +374,19 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 			configuration.GitSource = &result
 		}
 	}
+	if kind == revisionservice.KindPromptTemplate {
+		if (action == "CREATE" || action == "SAVE") && revision != nil {
+			if err := repository.savePromptScopeTx(ctx, tx, current, configuration.ProjectRef, revision, payload.PromptScope); err != nil {
+				return commandOutcome{}, err
+			}
+		}
+		if err := repository.hydratePromptScopeTx(ctx, tx, current, revision); err != nil {
+			return commandOutcome{}, err
+		}
+		if err := repository.hydratePromptScopeTx(ctx, tx, current, configuration.CurrentRevision); err != nil {
+			return commandOutcome{}, err
+		}
+	}
 	return managedOutcome(configuration, revision), nil
 }
 
@@ -411,6 +445,11 @@ func (repository *Repository) lockManagedRevision(ctx context.Context, tx pgx.Tx
 			return lockedManagedRevision{}, errs.ErrNotFound
 		}
 		return lockedManagedRevision{}, errs.ErrUnavailable
+	}
+	if set.Kind == revisionservice.KindPromptTemplate {
+		if err := repository.hydratePromptScopeTx(ctx, tx, current, &item.ManagedConfigurationRevision); err != nil {
+			return lockedManagedRevision{}, err
+		}
 	}
 	return lockedManagedRevision{ManagedConfigurationRevision: item.ManagedConfigurationRevision, RefID: item.internalID}, nil
 }
@@ -642,6 +681,17 @@ func (repository *Repository) ListManagedConfigurationHistory(ctx context.Contex
 			item.Content = ""
 		}
 		items = append(items, item.ManagedConfigurationRevision)
+	}
+	if rows.Err() != nil {
+		return entity.ManagedConfigurationSet{}, nil, 0, "", errs.ErrUnavailable
+	}
+	rows.Close()
+	if set.Kind == revisionservice.KindPromptTemplate {
+		for i := range items {
+			if err := repository.hydratePromptScopeTx(ctx, tx, current, &items[i]); err != nil {
+				return entity.ManagedConfigurationSet{}, nil, 0, "", err
+			}
+		}
 	}
 	next := ""
 	if len(items) > int(limit) {

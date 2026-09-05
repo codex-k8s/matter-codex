@@ -65,4 +65,106 @@ func testPromptContextPreview(t *testing.T, ctx context.Context, repository *Rep
 	if _, err := service.PreviewPromptTemplateWithContext(ctx, owner, "Agent", "WORKFLOW_STAGE", created.Workflow.Ref, false, stageContext, ""); !errors.Is(err, errs.ErrInvalid) {
 		t.Fatalf("foreign stage agent accepted: %v", err)
 	}
+	staleScope := testPromptDeclaredScope(t, ctx, service, owner, agent)
+	testPromptVariableContextPin(t, ctx, repository, service, owner, agent.Ref)
+	version := staleScope.ManagedConfiguration.Version
+	_, err = service.Execute(ctx, command.Command{Kind: command.ValidatePromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-stale", ExpectedVersion: &version},
+		Payload: command.ManagedConfigurationInput{ConfigurationRef: staleScope.ManagedConfiguration.Ref, RevisionRef: staleScope.ManagedRevision.Ref}})
+	if !errors.Is(err, errs.ErrVersionMismatch) {
+		t.Fatalf("stale declared scope was accepted: %v", err)
+	}
+}
+
+func testPromptDeclaredScope(t *testing.T, ctx context.Context, service *platformservice.Service, owner value.Principal, agent entity.Agent) command.Result {
+	t.Helper()
+	draft, err := service.Execute(ctx, command.Command{Kind: command.CreatePromptTemplateDraft, Principal: owner,
+		Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-draft"}, Payload: command.ManagedConfigurationInput{ProjectRef: agent.ProjectRef, Name: "Contextual instructions", ContentFormat: "TEXT", Content: `Instructions for {{.agent.name}}. {{slot "PURPOSE"}}`,
+			PromptScope: &command.PromptTemplateScopeInput{TargetKind: "AGENT", TargetRef: agent.Ref, TemplateKind: "INSTRUCTIONS"}}})
+	if err != nil || draft.ManagedRevision == nil || draft.ManagedRevision.PromptScope == nil {
+		t.Fatalf("create declared prompt scope: %v", err)
+	}
+	version := draft.ManagedConfiguration.Version
+	validated, err := service.Execute(ctx, command.Command{Kind: command.ValidatePromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-validate", ExpectedVersion: &version},
+		Payload: command.ManagedConfigurationInput{ConfigurationRef: draft.ManagedConfiguration.Ref, RevisionRef: draft.ManagedRevision.Ref}})
+	if err != nil || validated.ManagedRevision == nil || validated.ManagedRevision.State != "VALID" || validated.ManagedRevision.PromptScope == nil {
+		t.Fatalf("validate declared prompt scope: %v", err)
+	}
+	version = validated.ManagedConfiguration.Version
+	published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-publish", ExpectedVersion: &version},
+		Payload: command.ManagedConfigurationInput{ConfigurationRef: draft.ManagedConfiguration.Ref, RevisionRef: draft.ManagedRevision.Ref}})
+	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.PromptScope == nil || published.ManagedRevision.PromptScope.ContextPin.Digest != draft.ManagedRevision.PromptScope.ContextPin.Digest {
+		t.Fatalf("publish changed declared scope: %v", err)
+	}
+	version = published.ManagedConfiguration.Version
+	saved, err := service.Execute(ctx, command.Command{Kind: command.CreatePromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-new-draft", ExpectedVersion: &version},
+		Payload: command.ManagedConfigurationInput{ConfigurationRef: published.ManagedConfiguration.Ref, ProjectRef: agent.ProjectRef, Name: "Contextual instructions", ContentFormat: "TEXT", Content: "Updated instructions with declared context.",
+			PromptScope: &command.PromptTemplateScopeInput{TargetKind: "AGENT", TargetRef: agent.Ref, TemplateKind: "INSTRUCTIONS"}}})
+	if err != nil || saved.ManagedRevision == nil {
+		t.Fatalf("save fresh declared scope: %v", err)
+	}
+	for _, test := range []struct{ key, content, state, kind string }{
+		{"files", `{{.project.files_count}}`, "INVALID", "INSTRUCTIONS"},
+		{"late", `Run {{.run.ref}}`, "VALID", "INSTRUCTIONS"},
+		{"continuation", `Continue {{.turn.ref}}`, "VALID", "CONTINUATION"},
+	} {
+		created, err := service.Execute(ctx, command.Command{Kind: command.CreatePromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scope-availability-" + test.key}, Payload: command.ManagedConfigurationInput{ProjectRef: agent.ProjectRef, Name: "Scope " + test.key, ContentFormat: "TEXT", Content: test.content, PromptScope: &command.PromptTemplateScopeInput{TargetKind: "AGENT", TargetRef: agent.Ref, TemplateKind: test.kind}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		payload := command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}
+		checked, err := service.Execute(ctx, command.Command{Kind: command.ValidatePromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scope-check-" + test.key, ExpectedVersion: &created.ManagedConfiguration.Version}, Payload: payload})
+		if err != nil || checked.ManagedRevision == nil || checked.ManagedRevision.State != test.state || len(checked.ManagedRevision.ValidationDiagnostics) == 0 {
+			t.Fatalf("scope availability %s: state=%v err=%v", test.key, checked.ManagedRevision, err)
+		}
+		published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scope-publish-" + test.key, ExpectedVersion: &checked.ManagedConfiguration.Version}, Payload: payload})
+		if test.state == "INVALID" {
+			if !errors.Is(err, errs.ErrConflict) {
+				t.Fatalf("unavailable scope published: %v", err)
+			}
+		} else if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
+			t.Fatalf("valid late runtime scope did not publish: %v", err)
+		}
+	}
+	return saved
+}
+
+func testPromptVariableContextPin(t *testing.T, ctx context.Context, repository *Repository, service *platformservice.Service, owner value.Principal, agentRef string) {
+	t.Helper()
+	filter := query.Filter{Page: query.Page{Size: 1}, TemplateContext: &query.TemplateVariableContext{TargetKind: "AGENT", TargetRef: agentRef}}
+	first, err := service.ListPromptContextVariables(ctx, owner, filter)
+	if err != nil || len(first.Variables) != 1 || first.Total < 30 || first.ContextPin.Digest == "" || first.NextPageToken == "" {
+		t.Fatalf("context catalog: %v", err)
+	}
+	filter.Page.Token = first.NextPageToken
+	second, err := service.ListPromptContextVariables(ctx, owner, filter)
+	if err != nil || len(second.Variables) != 1 || second.Variables[0].Name == first.Variables[0].Name || second.Total != first.Total || second.ContextPin.Digest != first.ContextPin.Digest {
+		t.Fatalf("context catalog next page: %v", err)
+	}
+	filter.Query = "files"
+	if _, err := service.ListPromptContextVariables(ctx, owner, filter); !errors.Is(err, errs.ErrInvalid) {
+		t.Fatalf("changed query reused cursor: %v", err)
+	}
+	filter.Page = query.Page{Size: 100}
+	files, err := service.ListPromptContextVariables(ctx, owner, filter)
+	if err != nil || len(files.Variables) == 0 {
+		t.Fatalf("file catalog: %v", err)
+	}
+	for _, item := range files.Variables {
+		if item.Available {
+			t.Fatalf("unselected file family available: %s", item.Name)
+		}
+	}
+	filter.Query = ""
+	filter.Page = query.Page{Size: 1, Token: first.NextPageToken}
+	if _, err := repository.pool.Exec(ctx, `UPDATE control_plane.agents SET version=version+1 WHERE ref=$1`, agentRef); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.ListPromptContextVariables(ctx, owner, filter); !errors.Is(err, errs.ErrInvalid) {
+		t.Fatalf("changed agent reused catalog cursor: %v", err)
+	}
+	filter.Page.Token = ""
+	filter.TemplateContext.ExpectedContextDigest = first.ContextPin.Digest
+	if _, err := service.ListPromptContextVariables(ctx, owner, filter); !errors.Is(err, errs.ErrVersionMismatch) {
+		t.Fatalf("changed agent reused explicit pin: %v", err)
+	}
 }

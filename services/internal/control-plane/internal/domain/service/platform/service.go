@@ -362,6 +362,26 @@ func (service *Service) ListTemplateVariables(ctx context.Context, p value.Princ
 	filter.Query = strings.TrimSpace(filter.Query)
 	return service.repository.ListTemplateVariables(ctx, p, filter)
 }
+
+func (service *Service) ListPromptContextVariables(ctx context.Context, p value.Principal, filter query.Filter) (entity.PromptVariableCatalog, error) {
+	p, err := service.principal(ctx, p)
+	if err != nil {
+		return entity.PromptVariableCatalog{}, err
+	}
+	return service.repository.ListPromptContextVariables(ctx, p, filter)
+}
+
+func (service *Service) ValidatePromptTemplateWithContext(ctx context.Context, p value.Principal, text, kind, ref string, input query.PromptPreviewContext, expected string) (promptservice.Materialization, error) {
+	if kind == "" && ref == "" && expected == "" && input.AgentRef == "" && input.WorkflowRevisionRef == "" && input.WorkflowStageKey == "" && input.AttachmentSetRef == "" && input.Task == "" && input.ExpectedAgentVersion == 0 && input.ExpectedWorkflowVersion == 0 && len(input.Input) == 0 {
+		diagnostics, err := service.ValidatePromptTemplate(ctx, p, text)
+		return promptservice.Materialization{Complete: len(diagnostics) == 0, Diagnostics: diagnostics}, err
+	}
+	result, err := service.PreviewPromptTemplateWithContext(ctx, p, text, kind, ref, false, input, expected)
+	if errors.Is(err, errs.ErrInvalid) && len(result.Diagnostics) != 0 {
+		return result, nil
+	}
+	return result, err
+}
 func (service *Service) ListProviderDefinitions(ctx context.Context, p value.Principal, filter query.Filter) ([]entity.ProviderDefinition, string, error) {
 	p, err := service.principal(ctx, p)
 	if err != nil {
@@ -398,7 +418,7 @@ func (service *Service) PreviewPromptTemplateWithContext(ctx context.Context, p 
 	if targetKind == "SYNTHETIC" || targetKind == "RUN" || targetKind == "SESSION" {
 		if previewContext.AgentRef != "" || previewContext.WorkflowRevisionRef != "" || previewContext.WorkflowStageKey != "" ||
 			previewContext.ExpectedAgentVersion != 0 || previewContext.ExpectedWorkflowVersion != 0 ||
-			len(previewContext.Input) != 0 || previewContext.AttachmentSetRef != "" {
+			len(previewContext.Input) != 0 || previewContext.AttachmentSetRef != "" || previewContext.Task != "" {
 			return promptservice.Materialization{}, errs.ErrInvalid
 		}
 	}
@@ -420,7 +440,7 @@ func (service *Service) PreviewPromptTemplateWithContext(ctx context.Context, p 
 		}
 		authorizationTarget = entity.AccessScope{Kind: "RESOURCE_INSTANCE", ProjectRef: snapshot.ProjectRef,
 			ResourceKind: targetKind, ResourceRef: targetRef}
-	case promptservice.TargetAgent, promptservice.TargetWorkflowStage:
+	case promptservice.TargetAgent, promptservice.TargetWorkflowStage, promptservice.TargetSessionContinuation:
 		snapshot, err = service.repository.GetPromptPreviewContextSnapshot(ctx, p, targetKind, targetRef, previewContext)
 		if err != nil {
 			return promptservice.Materialization{}, err
@@ -428,6 +448,9 @@ func (service *Service) PreviewPromptTemplateWithContext(ctx context.Context, p 
 		resourceKind := targetKind
 		if targetKind == promptservice.TargetWorkflowStage {
 			resourceKind = "WORKFLOW"
+		}
+		if targetKind == promptservice.TargetSessionContinuation {
+			resourceKind = "SESSION"
 		}
 		authorizationTarget = entity.AccessScope{Kind: "RESOURCE_INSTANCE", ProjectRef: snapshot.ProjectRef, ResourceKind: resourceKind, ResourceRef: targetRef}
 	default:
@@ -1226,7 +1249,7 @@ func knownCommand(kind command.Kind) bool {
 	case command.CreateMemoryRecord, command.ReviseMemoryRecord, command.ArchiveMemoryRecord, command.RestoreMemoryRecord, command.PurgeMemoryRecord:
 		return true
 	case command.CreateRuntimeEnvironmentDraft, command.SaveRuntimeEnvironmentDraft, command.ValidateRuntimeEnvironmentDraft,
-		command.PublishRuntimeEnvironmentDraft, command.DiscardRuntimeEnvironmentDraft, command.RebindRuntimeEnvironment, command.RebindRuntimeSecret, command.BindInteractionIdentity, command.RevokeInteractionIdentity:
+		command.PrepareEnvironmentDraftImpact, command.PublishRuntimeEnvironmentDraft, command.DiscardRuntimeEnvironmentDraft, command.RebindRuntimeEnvironment, command.RebindRuntimeSecret, command.BindInteractionIdentity, command.RevokeInteractionIdentity:
 		return true
 	case command.CompleteOnboarding, command.CreateProject, command.UpdateProject,
 		command.AddPlatformMembership, command.ChangePlatformMembership, command.RemovePlatformMembership,

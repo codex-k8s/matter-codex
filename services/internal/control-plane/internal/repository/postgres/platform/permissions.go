@@ -69,6 +69,9 @@ func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, c
 	if err := repository.requireAccess(ctx, tx, current, permission, target); err != nil {
 		return errs.ErrNotFound
 	}
+	if input.Kind == command.PrepareEnvironmentDraftImpact || input.Kind == command.PublishRuntimeEnvironmentDraft {
+		return repository.authorizeEnvironmentDraftImpact(ctx, tx, current, input)
+	}
 	if input.Kind == command.ChangeArtifactBinding {
 		payload, ok := input.Payload.(command.ArtifactBindingInput)
 		if !ok {

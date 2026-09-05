@@ -34,6 +34,7 @@ type Diagnostic struct {
 
 // Snapshot содержит только проверенные server-owned значения одной immutable revision.
 type Snapshot struct {
+	ExtraTemplates                                        []entity.PromptUserTemplate `json:",omitempty"`
 	ContextPin                                            entity.PromptContextPin
 	UnavailableVariables                                  map[string]string
 	StagePurposeTemplate, StageExpectedResultTemplate     string
@@ -52,6 +53,7 @@ type Snapshot struct {
 type Materialization struct {
 	Complete                                                                       bool
 	ContextPin                                                                     entity.PromptContextPin
+	RuntimeDiff                                                                    *RuntimeDiff
 	ServiceTemplateRevision, ServiceTemplateDigest, VariableSnapshotDigest, Locale string
 	Slots                                                                          []SlotProvenance
 	Sections                                                                       []Section
@@ -69,6 +71,7 @@ func FromSnapshot(snapshot entity.PromptMaterializationSnapshot) Snapshot {
 		values[SemanticSlot(name)] = value
 	}
 	return Snapshot{ServiceTemplateRevision: snapshot.ServiceTemplateRevision, Locale: snapshot.Locale, SemanticValues: values,
+		ExtraTemplates:       snapshot.ExtraTemplates,
 		ContextPin:           snapshot.ContextPin,
 		UnavailableVariables: snapshot.UnavailableVariables,
 		StagePurposeTemplate: snapshot.StagePurposeTemplate, StageExpectedResultTemplate: snapshot.StageExpectedResultTemplate,

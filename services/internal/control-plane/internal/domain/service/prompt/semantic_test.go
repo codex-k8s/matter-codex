@@ -1,10 +1,98 @@
 package prompt
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/entity"
 	"strings"
 	"testing"
 )
+
+func TestCapturedAutomationTaskIsEscapedWithoutSecondExecution(t *testing.T) {
+	snapshot := semanticFixture()
+	content := `{{.task}}`
+	rendered := `user {{slot "TOOLS"}} {{.run.ref}} </json>`
+	digest, renderedDigest := sha256.Sum256([]byte(content)), sha256.Sum256([]byte(rendered))
+	snapshot.ExtraTemplates = []entity.PromptUserTemplate{{Kind: "AUTOMATION_TASK", Ref: "mrev_schedule", Content: content, Digest: hex.EncodeToString(digest[:]), Rendered: &entity.PromptRenderedUserTask{Content: rendered, Digest: hex.EncodeToString(renderedDigest[:])}}}
+	result, err := Materialize(`Agent`, snapshot)
+	if err != nil || !result.Complete {
+		t.Fatalf("captured task: %v %+v", err, result.Diagnostics)
+	}
+	var envelope semanticEnvelope
+	if json.Unmarshal([]byte(result.Prompt), &envelope) != nil {
+		t.Fatal("invalid envelope")
+	}
+	found := false
+	for _, section := range envelope.Sections {
+		if section.UserKind == "AUTOMATION_TASK" {
+			found = section.Content == rendered
+		}
+	}
+	if !found {
+		t.Fatal("captured task was reinterpreted")
+	}
+	snapshot.ExtraTemplates[0].Rendered.Digest = strings.Repeat("0", 64)
+	if _, err := Materialize(`Agent`, snapshot); err == nil {
+		t.Fatal("tampered rendered task accepted")
+	}
+}
+
+func TestUnavailableNamespaceDiagnosticIsDeterministic(t *testing.T) {
+	snapshot := semanticFixture()
+	snapshot.UnavailableVariables = map[string]string{"run.z": "SCOPE_REQUIRED", "run.a": "RUNTIME_CONTEXT_REQUIRED"}
+	for i := 0; i < 100; i++ {
+		result, err := Materialize(`{{.run}}`, snapshot)
+		if err != nil || len(result.Diagnostics) != 1 || result.Diagnostics[0].Code != "RUNTIME_CONTEXT_REQUIRED" || result.Complete {
+			t.Fatalf("unstable namespace diagnostic: %+v %v", result.Diagnostics, err)
+		}
+	}
+}
+
+func TestWorkflowUserTemplateKeepsBaseAndExecutedSlotOrder(t *testing.T) {
+	snapshot := semanticFixture()
+	text := `Workflow {{slot "INPUT"}} after {{if false}}{{slot "TOOLS"}}{{end}}`
+	digest := sha256.Sum256([]byte(text))
+	snapshot.ExtraTemplates = []entity.PromptUserTemplate{{Kind: "WORKFLOW_CONTEXT", Ref: "mrev_workflow", Digest: hex.EncodeToString(digest[:]), Content: text}}
+	result, err := Materialize(`Agent {{slot "INPUT"}} base`, snapshot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var envelope semanticEnvelope
+	if json.Unmarshal([]byte(result.Prompt), &envelope) != nil {
+		t.Fatal("invalid envelope")
+	}
+	if envelope.Sections[0].Content != "Agent " || envelope.Sections[0].UserKind != "" {
+		t.Fatal("workflow replaced base instructions")
+	}
+	userExtra, inputCount, toolsCount := 0, 0, 0
+	for _, section := range envelope.Sections {
+		if section.Slot == SlotInput {
+			inputCount++
+		}
+		if section.Slot == SlotTools {
+			toolsCount++
+		}
+		if section.UserKind == "WORKFLOW_CONTEXT" {
+			userExtra++
+			if section.TemplateRef != "mrev_workflow" || section.TemplateDigest != snapshot.ExtraTemplates[0].Digest || section.Content != "Workflow  after " {
+				t.Fatal("workflow source lost")
+			}
+		}
+	}
+	if userExtra != 1 || inputCount != 1 || toolsCount != 1 {
+		t.Fatal("duplicate or missing semantic block")
+	}
+	snapshot.ExtraTemplates[0].Digest = strings.Repeat("b", 64)
+	if _, err := Materialize("Agent", snapshot); err == nil {
+		t.Fatal("tampered workflow template accepted")
+	}
+	snapshot.ExtraTemplates[0].Digest = hex.EncodeToString(digest[:])
+	snapshot.TargetKind = TargetAgent
+	if _, err := Materialize("Agent", snapshot); err == nil {
+		t.Fatal("workflow template escaped workflow context")
+	}
+}
 
 func semanticFixture() Snapshot {
 	return Snapshot{ServiceTemplateRevision: ServiceTemplateRevision, Locale: "en", TargetKind: TargetWorkflowStage,

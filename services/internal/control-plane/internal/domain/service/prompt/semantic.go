@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"io"
 	"reflect"
 	"slices"
 	"strings"
@@ -40,9 +41,12 @@ type SlotProvenance struct {
 }
 
 type Section struct {
-	Source  string       `json:"source"`
-	Slot    SemanticSlot `json:"slot,omitempty"`
-	Content string       `json:"content"`
+	UserKind       string       `json:"userKind,omitempty"`
+	TemplateRef    string       `json:"templateRef,omitempty"`
+	TemplateDigest string       `json:"templateDigest,omitempty"`
+	Source         string       `json:"source"`
+	Slot           SemanticSlot `json:"slot,omitempty"`
+	Content        string       `json:"content"`
 }
 
 type semanticEnvelope struct {
@@ -149,13 +153,14 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 	var output boundedPromptBuffer
 	sections := make([]Section, 0, len(required)+1)
 	userOffset := 0
+	var activeUserKind, activeTemplateRef, activeTemplateDigest string
 	flushUser := func() {
 		if output.Len() > userOffset {
-			sections = append(sections, Section{Source: "USER_TEMPLATE", Content: output.String()[userOffset:]})
+			sections = append(sections, Section{Source: "USER_TEMPLATE", Content: output.String()[userOffset:], UserKind: activeUserKind, TemplateRef: activeTemplateRef, TemplateDigest: activeTemplateDigest})
 			userOffset = output.Len()
 		}
 	}
-	parsed.Funcs(template.FuncMap{"slot": func(name string) (string, error) {
+	slotFunctions := template.FuncMap{"slot": func(name string) (string, error) {
 		slot := SemanticSlot(name)
 		if !slices.Contains(required, slot) {
 			return "", ErrInvalid
@@ -170,11 +175,47 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 		flushUser()
 		sections = append(sections, Section{Source: "PLATFORM", Slot: slot, Content: values[slot]})
 		return "", nil
-	}})
+	}}
+	parsed.Funcs(slotFunctions)
 	if err := parsed.Execute(&output, data); err != nil {
 		return invalid("PROMPT_TEMPLATE_EXECUTION_INVALID", "Prompt template cannot be executed with this snapshot")
 	}
 	flushUser()
+	if len(snapshot.ExtraTemplates) > 2 {
+		return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+	}
+	seenKinds := map[string]bool{}
+	for _, extra := range snapshot.ExtraTemplates {
+		if extra.Kind == "WORKFLOW_CONTEXT" && snapshot.TargetKind != TargetWorkflowStage {
+			return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+		}
+		if (extra.Kind != "WORKFLOW_CONTEXT" && extra.Kind != "AUTOMATION_TASK") || seenKinds[extra.Kind] || extra.Ref == "" || !validDigest(extra.Digest) || len(extra.Content) > 100000 {
+			return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+		}
+		seenKinds[extra.Kind] = true
+		digest := sha256.Sum256([]byte(extra.Content))
+		if hex.EncodeToString(digest[:]) != extra.Digest || len(Validate(extra.Content, Catalog())) != 0 {
+			return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+		}
+		if extra.Rendered != nil {
+			renderedDigest := sha256.Sum256([]byte(extra.Rendered.Content))
+			if extra.Kind != "AUTOMATION_TASK" || extra.Rendered.Content == "" || len(extra.Rendered.Content) > 65536 || extra.Rendered.Digest != hex.EncodeToString(renderedDigest[:]) {
+				return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+			}
+			sections = append(sections, Section{Source: "USER_TEMPLATE", UserKind: extra.Kind, TemplateRef: extra.Ref, TemplateDigest: extra.Digest, Content: extra.Rendered.Content})
+			continue
+		}
+		extraParsed, err := parseTemplate(extra.Content)
+		if err != nil {
+			return invalid("PROMPT_TEMPLATE_SYNTAX_INVALID", "Prompt template syntax is invalid")
+		}
+		activeUserKind, activeTemplateRef, activeTemplateDigest = extra.Kind, extra.Ref, extra.Digest
+		extraParsed.Funcs(slotFunctions)
+		if err := extraParsed.Execute(&output, data); err != nil {
+			return invalid("PROMPT_TEMPLATE_EXECUTION_INVALID", "Prompt template cannot be executed with this snapshot")
+		}
+		flushUser()
+	}
 	// Повторное выполнение с замаскированными значениями меняет условия веток.
 	// Projection сохраняет фактический состав, а пользовательский текст скрывает
 	// целиком до отдельной проверки permission на полный материализованный текст.
@@ -190,7 +231,8 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 		if section.Source == "PLATFORM" {
 			content = "[" + string(section.Slot) + "]"
 		}
-		safeSections = append(safeSections, Section{Source: section.Source, Slot: section.Slot, Content: content})
+		section.Content = content
+		safeSections = append(safeSections, section)
 	}
 	encoded, err := json.Marshal(semanticEnvelope{Revision: ServiceTemplateRevision, Locale: locale, Sections: sections})
 	if err != nil || len(encoded) > 256<<10 {
@@ -220,7 +262,21 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 		TemplateRef: snapshot.TemplateRef, TemplateDigest: snapshot.TemplateDigest, EffectiveCapabilities: effective,
 		ServiceTemplateRevision: ServiceTemplateRevision, ServiceTemplateDigest: serviceDigest, VariableSnapshotDigest: variableDigest,
 		Locale: locale, Slots: provenance, Sections: safeSections, FullSections: sections}
+	if snapshot.TargetKind == TargetSessionContinuation && snapshot.SessionContinuation != "" {
+		var diff RuntimeDiff
+		decoder := json.NewDecoder(strings.NewReader(snapshot.SessionContinuation))
+		decoder.DisallowUnknownFields()
+		if decoder.Decode(&diff) != nil || decoder.Decode(new(any)) != io.EOF || ValidateRuntimeDiff(diff) != nil {
+			return invalid("PROMPT_SNAPSHOT_INVALID", "Prompt snapshot is incomplete")
+		}
+		result.RuntimeDiff = &diff
+	}
 	references := templateVariableReferences(parsed.Tree.Root)
+	for _, extra := range snapshot.ExtraTemplates {
+		if template, err := parseTemplate(extra.Content); err == nil {
+			references = append(references, templateVariableReferences(template.Tree.Root)...)
+		}
+	}
 	for _, text := range []string{snapshot.StagePurposeTemplate, snapshot.StageExpectedResultTemplate} {
 		if text != "" {
 			parsed, err := parseTemplate(text)
@@ -231,8 +287,14 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 	}
 	slices.Sort(references)
 	references = slices.Compact(references)
+	unavailableNames := make([]string, 0, len(snapshot.UnavailableVariables))
+	for name := range snapshot.UnavailableVariables {
+		unavailableNames = append(unavailableNames, name)
+	}
+	slices.Sort(unavailableNames)
 	for _, name := range references {
-		for unavailable, reason := range snapshot.UnavailableVariables {
+		for _, unavailable := range unavailableNames {
+			reason := snapshot.UnavailableVariables[unavailable]
 			if name == unavailable || strings.HasPrefix(unavailable, name+".") {
 				result.Diagnostics = append(result.Diagnostics, Diagnostic{Severity: "ERROR", Code: reason, Message: "Prompt variable requires an available runtime context", Line: 1, Column: 1, VariableName: name})
 				break
@@ -241,6 +303,12 @@ func materializeSemantic(text string, snapshot Snapshot) (Materialization, error
 	}
 	if len(result.Diagnostics) > 0 {
 		result.Complete = false
+	}
+	if snapshot.UnavailableVariables["input.files"] == "PERMISSION_REQUIRED" {
+		result.Diagnostics = append(result.Diagnostics, Diagnostic{Severity: "ERROR", Code: "PERMISSION_REQUIRED", Message: "Selected file context requires read permission", VariableName: "input.files"})
+		result.Complete = false
+	}
+	if !result.Complete {
 		result.Prompt = ""
 		result.Digest = ""
 		result.FullSections = nil

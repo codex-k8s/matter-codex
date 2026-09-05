@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -229,7 +230,7 @@ func (repository *Repository) ListTemplateVariables(ctx context.Context, princip
 }
 
 func templateVariableCatalog() []entity.TemplateVariable {
-	return []entity.TemplateVariable{
+	items := []entity.TemplateVariable{
 		{Name: "agent.name", Type: "string", Description: "Server-owned имя текущего ИИ-сотрудника", Example: "{{ .agent.name }}", Source: "AGENT"},
 		{Name: "agent.ref", Type: "reference", Description: "Ссылка текущего ИИ-сотрудника", Example: "{{ .agent.ref }}", Source: "AGENT"},
 		{Name: "automation.ref", Type: "reference", Description: "Ссылка текущей Automation", Example: "{{ .automation.ref }}", Source: "AUTOMATION"},
@@ -278,6 +279,21 @@ func templateVariableCatalog() []entity.TemplateVariable {
 		{Name: "workflow.ref", Type: "reference", Description: "Ссылка текущего Workflow", Example: "{{ .workflow.ref }}", Source: "WORKFLOW"},
 		{Name: "workflow.stage.key", Type: "string", Description: "Ключ exact этапа Workflow", Example: "{{ .workflow.stage.key }}", Source: "WORKFLOW"},
 	}
+	for _, item := range []struct{ name, description, source string }{
+		{"workflow.name", "Имя выбранного Процесса", "WORKFLOW"}, {"workflow.purpose", "Назначение выбранного Процесса", "WORKFLOW"},
+		{"step.key", "Ключ выбранного этапа", "WORKFLOW"}, {"step.name", "Имя выбранного этапа", "WORKFLOW"},
+		{"step.purpose", "Материализованное назначение этапа", "WORKFLOW"}, {"step.expected_result", "Материализованный ожидаемый результат этапа", "WORKFLOW"},
+		{"integrations.summary", "Сводка точных доступных integration grants", "RUNTIME"},
+		{"runtime.environment.ref", "Ссылка выбранной immutable версии окружения", "RUNTIME"},
+		{"runtime.environment.image.reference", "Ссылка образа выбранного окружения", "RUNTIME"}, {"runtime.environment.image.digest", "Digest образа выбранного окружения", "RUNTIME"},
+	} {
+		items = append(items, entity.TemplateVariable{Name: item.name, Type: "string", Description: item.description, Example: "{{ ." + item.name + " }}", Source: item.source})
+	}
+	items = append(items, entity.TemplateVariable{Name: "input.values", Type: "object", Description: "Типизированные входные данные выбранного запуска", Example: "{{ .input.values }}", Source: "INPUT"},
+		entity.TemplateVariable{Name: "integrations.items", Type: "collection", Collection: true, ItemType: "integration_descriptor", Description: "Точные разрешённые integration grants", Example: "{{ range .integrations.items }}{{ .name }}{{ end }}", RangeExample: "{{ range .integrations.items }}{{ .name }}{{ end }}", Source: "RUNTIME",
+			ItemFields: []entity.TemplateVariableField{{Name: "ref", Type: "reference", Description: "Ссылка разрешённого grant"}, {Name: "version", Type: "integer", Description: "Версия grant"}, {Name: "name", Type: "string", Description: "Название возможности"}, {Name: "description", Type: "string", Description: "Описание возможности"}, {Name: "capability", Type: "string", Description: "Ключ возможности"}}})
+	sort.Slice(items, func(i, j int) bool { return items[i].Name < items[j].Name })
+	return items
 }
 
 func promptFileCollection(name, description, source string) entity.TemplateVariable {
