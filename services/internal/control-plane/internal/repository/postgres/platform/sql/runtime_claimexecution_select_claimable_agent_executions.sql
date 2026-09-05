@@ -662,6 +662,9 @@ JOIN LATERAL (
         SELECT instruction.ref, instruction.digest, instruction.content,
                instruction.version_number::bigint, 2
         FROM control_plane.instruction_versions instruction
+        JOIN control_plane.agent_instruction_bindings active_instruction
+          ON active_instruction.instruction_id=instruction.id AND active_instruction.agent_id=a.id
+         AND active_instruction.organization_id=a.organization_id
         WHERE instruction.agent_id = a.id
           AND instruction.state = 'PUBLISHED'
     ) source

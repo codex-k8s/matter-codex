@@ -250,6 +250,8 @@ service PlatformCommandService {
   rpc RebindRoleImageConsumers(RebindRoleImageConsumersRequest) returns (RebindRoleImageConsumersResponse);
   rpc PrepareRoleImageImpactPlan(PrepareRoleImageImpactPlanRequest) returns (PrepareRoleImageImpactPlanResponse);
   rpc PrepareEnvironmentDraftImpact(PrepareEnvironmentDraftImpactRequest) returns (PrepareEnvironmentDraftImpactResponse);
+  rpc PrepareInstructionsImpact(PrepareInstructionsImpactRequest) returns (PrepareInstructionsImpactResponse);
+  rpc PreparePromptTemplateImpact(PreparePromptTemplateImpactRequest) returns (PreparePromptTemplateImpactResponse);
   rpc CreateIntegrationDefinitionDraft(CreateIntegrationDefinitionDraftRequest) returns (CreateIntegrationDefinitionDraftResponse);
   rpc ValidateIntegrationDefinitionDraft(ValidateIntegrationDefinitionDraftRequest) returns (ValidateIntegrationDefinitionDraftResponse);
   rpc PublishIntegrationDefinitionDraft(PublishIntegrationDefinitionDraftRequest) returns (PublishIntegrationDefinitionDraftResponse);
@@ -339,6 +341,9 @@ service RuntimeWorkService {
   // immutable revision, выбранную binding конкретного RuntimeEnvironment.
   rpc GetRuntimeEnvironmentRoleImageConfiguration(GetRuntimeEnvironmentRoleImageConfigurationRequest) returns (GetRuntimeEnvironmentRoleImageConfigurationResponse);
   rpc ReadExecutionArtifact(ReadExecutionArtifactRequest) returns (ReadExecutionArtifactResponse);
+  // Единственный initial request связан с canonical Proto digest; body идёт
+  // bounded chunks после owner resolution exact input/Skill/catalog grant.
+  rpc StreamExecutionArtifact(StreamExecutionArtifactRequest) returns (stream StreamExecutionArtifactResponse);
   rpc SearchExecutionFiles(SearchExecutionFilesRequest) returns (SearchExecutionFilesResponse);
   rpc GetExecutionFileMetadata(GetExecutionFileMetadataRequest) returns (GetExecutionFileMetadataResponse);
   rpc PreviewExecutionFile(PreviewExecutionFileRequest) returns (PreviewExecutionFileResponse);
@@ -843,6 +848,14 @@ message Agent {
   string role_definition_ref = 20;
   string role_definition_name = 21;
   AgentAvatar avatar = 22;
+  AgentInstructionsBinding instruction_binding = 23;
+}
+
+message AgentInstructionsBinding {
+  string ref = 1;
+  int64 version = 2;
+  string revision_ref = 3;
+  bool effective = 4;
 }
 
 message AgentAvatar {
@@ -1968,9 +1981,12 @@ message ValidateInstructionDraftResponse {
 message PublishInstructionDraftRequest {
   MutationContext mutation = 1;
   string agent_ref = 2;
+  string plan_ref = 3;
+  repeated string selected_item_refs = 4;
 }
 message PublishInstructionDraftResponse {
   Agent agent = 1;
+  RevisionImpactPlan plan = 2;
 }
 message RollbackInstructionsRequest {
   MutationContext mutation = 1;
@@ -2185,6 +2201,7 @@ message ListArtifactsRequest {
   ArtifactType type = 6;
   ArtifactScanState scan_state = 7;
   ArtifactSource source_kind = 8;
+  repeated ArtifactSource source_kinds = 9;
 }
 message ListArtifactsResponse {
   repeated Artifact artifacts = 1;
@@ -3071,6 +3088,23 @@ message ReadExecutionArtifactRequest {
 message ReadExecutionArtifactResponse {
   Artifact artifact = 1;
   bytes content = 2;
+}
+message StreamExecutionArtifactRequest {
+  string lease_ref = 1;
+  string fence = 2;
+  int64 generation = 3;
+  string artifact_ref = 4;
+}
+message StreamExecutionArtifactResponse {
+  oneof part {
+    Artifact metadata = 1;
+    bytes chunk = 2;
+    RuntimeArtifactTransferComplete complete = 3;
+  }
+}
+message RuntimeArtifactTransferComplete {
+  int64 size_bytes = 1;
+  string digest = 2;
 }
 message RenewExecutionRequest {
   string lease_ref = 1;
@@ -5507,10 +5541,13 @@ message PublishPromptTemplateDraftRequest {
   MutationContext mutation = 1;
   string configuration_ref = 2;
   string revision_ref = 3;
+  string plan_ref = 4;
+  repeated string selected_item_refs = 5;
 }
 message PublishPromptTemplateDraftResponse {
   ManagedConfigurationSet configuration = 1;
   ManagedConfigurationRevision revision = 2;
+  RevisionImpactPlan plan = 3;
 }
 message RebindPromptTemplateConsumersRequest {
   MutationContext mutation = 1;
@@ -5676,6 +5713,17 @@ message PrepareEnvironmentDraftImpactRequest {
   string draft_ref = 2;
 }
 message PrepareEnvironmentDraftImpactResponse { RevisionImpactPlan plan = 1; }
+message PrepareInstructionsImpactRequest {
+  MutationContext mutation = 1;
+  string agent_ref = 2;
+}
+message PrepareInstructionsImpactResponse { RevisionImpactPlan plan = 1; }
+message PreparePromptTemplateImpactRequest {
+  MutationContext mutation = 1;
+  string configuration_ref = 2;
+  string revision_ref = 3;
+}
+message PreparePromptTemplateImpactResponse { RevisionImpactPlan plan = 1; }
 message GetRevisionImpactPlanRequest {
   string plan_ref = 1;
   string query = 2;

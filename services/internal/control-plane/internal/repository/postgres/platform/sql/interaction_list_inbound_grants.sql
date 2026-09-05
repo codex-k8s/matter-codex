@@ -17,7 +17,9 @@ JOIN LATERAL (
       AND a.enabled
       AND a.state = 'READY'
       AND EXISTS (SELECT 1 FROM control_plane.instruction_versions instruction
-          WHERE instruction.agent_id=a.id AND instruction.state='PUBLISHED')
+          JOIN control_plane.agent_instruction_bindings binding ON binding.instruction_id=instruction.id
+          WHERE binding.agent_id=a.id AND binding.organization_id=a.organization_id
+            AND instruction.agent_id=a.id AND instruction.state='PUBLISHED')
     UNION ALL
     SELECT w.project_id
     FROM control_plane.workflows w

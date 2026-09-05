@@ -255,6 +255,8 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		return repository.changeRuntimeEnvironmentDraft(ctx, tx, scope, input)
 	case command.PrepareEnvironmentDraftImpact:
 		return repository.prepareEnvironmentDraftImpact(ctx, tx, scope, input)
+	case command.PrepareInstructionsImpact:
+		return repository.prepareInstructionsImpact(ctx, tx, scope, input)
 	case command.RebindRuntimeEnvironment:
 		return repository.rebindRuntimeEnvironment(ctx, tx, scope, input)
 	case command.RebindRuntimeSecret:
@@ -349,7 +351,7 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		command.SaveSystemSTTConfigurationDraft,
 		command.DiscardSystemSTTConfigurationDraft,
 		command.CreateRoleImageRevisionDraft, command.ValidateRoleImageRevision,
-		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan,
+		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan, command.PreparePromptTemplateImpact,
 		command.CreateIntegrationDefinition, command.ValidateIntegrationDefinition,
 		command.PublishIntegrationDefinition, command.RebindIntegrationDefinition,
 		command.CreateSystemSTTDraft, command.ValidateSystemSTTDraft,
@@ -786,6 +788,11 @@ func (repository *Repository) createAgent(ctx context.Context, tx pgx.Tx, scope 
 	if _, err = tx.Exec(ctx, queryCommandsCreateagentInsertInstructionVersionsRefAgentIdState, instructionRef, scope.organizationID, agentID, input.Instructions, hex.EncodeToString(digest[:]), scope.actorID, publishedAt); err != nil {
 		return commandOutcome{}, errs.ErrUnavailable
 	}
+	bindingRef, bindingVersion, err := assignInstructionBinding(ctx, tx, scope.organizationID, agentID, instructionRef)
+	if err != nil {
+		return commandOutcome{}, err
+	}
+	item.InstructionBinding = &entity.AgentInstructionsBinding{Ref: bindingRef, Version: bindingVersion, RevisionRef: instructionRef, Effective: true}
 	item.ProjectRef = input.ProjectRef
 	item.RoleDefinitionRef = roleRef
 	item.RoleDefinitionName = roleName
@@ -949,6 +956,7 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 	if input.Mutation.ExpectedVersion == nil || *input.Mutation.ExpectedVersion != agentVersion {
 		return commandOutcome{}, errs.ErrVersionMismatch
 	}
+	var impactPlan *entity.RevisionImpactPlan
 	switch input.Kind {
 	case command.CreateInstructions:
 		if strings.TrimSpace(payload.Instructions) == "" {
@@ -992,6 +1000,10 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 			return commandOutcome{}, errs.ErrUnavailable
 		}
 	case command.PublishInstructions:
+		impact, items, err := repository.instructionPlanForPublish(ctx, tx, scope, payload, agentVersion)
+		if err != nil {
+			return commandOutcome{}, err
+		}
 		var draftRef, draftContent string
 		if err := tx.QueryRow(ctx, queryCommandsChangeinstructionsSelectCurrentDraft, agentID).Scan(&draftRef, &draftContent); err != nil {
 			return commandOutcome{}, errs.ErrNotFound
@@ -1006,6 +1018,22 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 		if tag.RowsAffected() != 1 {
 			return commandOutcome{}, errs.ErrConflict
 		}
+		for i := range items {
+			item := &items[i]
+			if item.Outcome != "PENDING" {
+				continue
+			}
+			bindingRef, bindingVersion, err := assignInstructionBinding(ctx, tx, scope.organizationID, agentID, draftRef)
+			if err != nil {
+				return commandOutcome{}, err
+			}
+			item.Outcome, item.ResultRevisionRef, item.ResultBindingRef, item.ResultBindingVersion, item.ResultConsumerVersion = "APPLIED", draftRef, bindingRef, bindingVersion, agentVersion+1
+		}
+		plan, err := finishRevisionImpact(ctx, tx, impact, items, draftRef)
+		if err != nil {
+			return commandOutcome{}, err
+		}
+		impactPlan = &plan
 	case command.RollbackInstructions:
 		var content string
 		if err := tx.QueryRow(ctx, queryCommandsChangeinstructionsSelectInstructionVersionsAgentIdRefState, agentID, payload.Instructions).Scan(&content); errors.Is(err, pgx.ErrNoRows) {
@@ -1023,12 +1051,19 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 		if _, err := tx.Exec(ctx, queryCommandsChangeinstructionsInsertRollbackVersion, ref, scope.organizationID, agentID, number, content, hex.EncodeToString(digest[:]), payload.Instructions, scope.actorID); err != nil {
 			return commandOutcome{}, mapWriteError(err)
 		}
+		if _, _, err := assignInstructionBinding(ctx, tx, scope.organizationID, agentID, ref); err != nil {
+			return commandOutcome{}, err
+		}
 	}
 	if _, err := tx.Exec(ctx, queryCommandsChangeinstructionsUpdateAgentsVersionUpdatedAt, agentID); err != nil {
 		return commandOutcome{}, errs.ErrUnavailable
 	}
 	agent := entity.Agent{Ref: payload.Ref, ProjectRef: projectRef, Version: agentVersion + 1}
-	return commandOutcome{result: command.Result{Agent: &agent}, projectID: projectID, projectRef: projectRef, resourceKind: "INSTRUCTIONS", resourceRef: payload.Ref, summary: "i18n:AGENT_INSTRUCTIONS_UPDATED", platformEvent: "INSTRUCTIONS_PUBLISHED"}, nil
+	event := ""
+	if input.Kind == command.PublishInstructions || input.Kind == command.RollbackInstructions {
+		event = "INSTRUCTIONS_PUBLISHED"
+	}
+	return commandOutcome{result: command.Result{Agent: &agent, RevisionImpactPlan: impactPlan}, projectID: projectID, projectRef: projectRef, resourceKind: "INSTRUCTIONS", resourceRef: payload.Ref, summary: "i18n:AGENT_INSTRUCTIONS_UPDATED", platformEvent: event}, nil
 }
 
 func (repository *Repository) changeAgentBinding(ctx context.Context, tx pgx.Tx, scope scope, input command.Command) (commandOutcome, error) {

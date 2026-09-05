@@ -237,7 +237,7 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 			grpcserver.StreamErrorBoundary(grpcserver.ErrorObserverFunc(func(_ context.Context, method string, code codes.Code, _ error) {
 				slog.Error("unexpected gRPC stream failure", "method", method, "code", code.String())
 			})),
-			authorityclient.VerifierStreamServerInterceptor(authority.Verifier()),
+			authorityclient.VerifierStreamServerInterceptor(authority.Verifier(), controlplanev1.RuntimeWorkService_StreamExecutionArtifact_FullMethodName),
 			grpcserver.RejectMalformedStream,
 		),
 	)

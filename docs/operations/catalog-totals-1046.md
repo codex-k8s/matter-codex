@@ -36,6 +36,15 @@ Query — буквальная подстрока без wildcard semantics, м�
 Run states — закрытое множество уникальных состояний; порядок states
 канонизируется. Неизвестные и UNSPECIFIED значения отклоняются.
 
+Группы источников Files используют ListArtifacts.source_kinds: до пяти
+уникальных значений CONTROL_CENTER, AGENT_RESULT, INTEGRATION_RESULT,
+KNOWLEDGE_SOURCE, INTERACTION_ATTACHMENT. Одиночный source_kind и массив
+в одном запросе запрещены. Пустой массив не ограничивает source; непустой
+даёт объединение источников в одном SQL count/page, без browser fanout.
+Порядок массива нормализуется до cursor digest, дубликаты/unknown/UNSPECIFIED
+закрыто отклоняются. Endpoint/RPC/authority/read-only lifecycle остаются
+прежними; новая policy или миграция не требуются.
+
 Порядок страниц остаётся ref ASC. Cursor связывает organization, actor,
 authority project, вид и полный нормализованный фильтр. Смена фильтра или actor
 возвращает InvalidArgument. Total отражает снимок конкретного запроса:
@@ -61,3 +70,9 @@ render — PASS. Первый полный Bootstrap после переноса
 Бюджет расширенной последовательной тестовой матрицы увеличен до 60 s;
 production deadline и локальные ограничения отдельных сценариев не меняются.
 Повтор полного Bootstrap после изменения бюджета пока NOT RUN.
+
+Последующий объединённый owner70/stream71/source_kinds прошёл полный
+Bootstrap28.794s. Проверены общий total/page группы, перестановка значений
+при продолжении cursor, запрет смены набора и ошибочных фильтров. Repository
+и transport race1.751/1.702s, полный vet/build, SQL/Proto replay/policy71/ABI
+PASS. HTTP/PWA группового фильтра на этом checkpoint ещё NOT RUN.

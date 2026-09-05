@@ -16,7 +16,7 @@ import (
 func bindScheduleTemplateFixture(t *testing.T, ctx context.Context, service *platformservice.Service, owner value.Principal, projectRef, scheduleRef, key, content string) string {
 	t.Helper()
 	execute := func(kind command.Kind, version *int64, payload command.ManagedConfigurationInput) command.Result {
-		result, err := service.Execute(ctx, command.Command{Kind: kind, Principal: owner, Mutation: value.Mutation{IdempotencyKey: key + "-" + string(kind), ExpectedVersion: version}, Payload: payload})
+		result, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: kind, Principal: owner, Mutation: value.Mutation{IdempotencyKey: key + "-" + string(kind), ExpectedVersion: version}, Payload: payload})
 		if err != nil {
 			t.Fatalf("schedule template %s: %v", kind, err)
 		}

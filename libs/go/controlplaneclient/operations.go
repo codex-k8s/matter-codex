@@ -37,6 +37,8 @@ func ControlAPIGatewayOperations() map[string]string {
 	return map[string]string{
 		"platform.command.role-image-impact-plans.prepare":           controlplanev1.PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName,
 		"platform.command.environment-draft-impact.prepare":          controlplanev1.PlatformCommandService_PrepareEnvironmentDraftImpact_FullMethodName,
+		"platform.command.instructions-impact.prepare":               controlplanev1.PlatformCommandService_PrepareInstructionsImpact_FullMethodName,
+		"platform.command.prompt-template-impact.prepare":            controlplanev1.PlatformCommandService_PreparePromptTemplateImpact_FullMethodName,
 		"platform.query.revision-impact-plans.get":                   controlplanev1.PlatformQueryService_GetRevisionImpactPlan_FullMethodName,
 		"platform.query.role-image-impact-plans.get":                 controlplanev1.PlatformQueryService_GetRoleImageImpactPlan_FullMethodName,
 		"platform.command.role-image-writebacks.prepare":             controlplanev1.PlatformCommandService_PrepareRoleImageGitWriteBack_FullMethodName,
@@ -375,6 +377,7 @@ func RuntimeOperations() map[string]string {
 		"platform.runtime.execution.claim":                    controlplanev1.RuntimeWorkService_ClaimExecution_FullMethodName,
 		"platform.runtime.role-image-configuration.get":       controlplanev1.RuntimeWorkService_GetRuntimeEnvironmentRoleImageConfiguration_FullMethodName,
 		"platform.runtime.execution.artifact.read":            controlplanev1.RuntimeWorkService_ReadExecutionArtifact_FullMethodName,
+		"platform.runtime.execution.artifact.stream":          controlplanev1.RuntimeWorkService_StreamExecutionArtifact_FullMethodName,
 		"platform.runtime.files.search":                       controlplanev1.RuntimeWorkService_SearchExecutionFiles_FullMethodName,
 		"platform.runtime.files.metadata":                     controlplanev1.RuntimeWorkService_GetExecutionFileMetadata_FullMethodName,
 		"platform.runtime.files.preview":                      controlplanev1.RuntimeWorkService_PreviewExecutionFile_FullMethodName,

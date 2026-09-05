@@ -58,6 +58,7 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		return commandOutcome{}, errs.ErrVersionMismatch
 	}
 	var revision *entity.ManagedConfigurationRevision
+	var publicationPlan *entity.RevisionImpactPlan
 	if action == "DETACH" {
 		if err := repository.cancelConfigurationWriteBacks(ctx, tx, current, configuration.Ref, ""); err != nil {
 			return commandOutcome{}, err
@@ -67,6 +68,8 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		return commandOutcome{}, errs.ErrConflict
 	}
 	switch action {
+	case "PREPARE_PROMPT_IMPACT":
+		return repository.preparePromptTemplateImpact(ctx, tx, current, configuration, input)
 	case "PREPARE_IMPACT":
 		return repository.prepareRoleImageImpact(ctx, tx, current, configuration, input)
 	case "SAVE", "DISCARD":
@@ -206,6 +209,14 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		if lockErr != nil || locked.State != "VALID" {
 			return commandOutcome{}, errs.ErrConflict
 		}
+		var impact revisionImpactRow
+		var impactItems []entity.RevisionImpactItem
+		if kind == revisionservice.KindPromptTemplate {
+			impact, impactItems, err = repository.promptPlanForPublish(ctx, tx, current, configuration, locked, payload)
+			if err != nil {
+				return commandOutcome{}, err
+			}
+		}
 		if kind == revisionservice.KindSystemSTT && locked.ContentFormat != "JSON" {
 			return commandOutcome{}, errs.ErrInvalid
 		}
@@ -237,6 +248,14 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		}
 		revision, configuration.Version, configuration.UpdatedAt = &item.ManagedConfigurationRevision, setVersion, updatedAt
 		configuration.CurrentRevision, configuration.currentRevisionID = revision, locked.RefID
+		if kind == revisionservice.KindPromptTemplate {
+			var plan entity.RevisionImpactPlan
+			configuration, plan, err = repository.applyPromptImpact(ctx, tx, current, configuration, input, impact, impactItems)
+			if err != nil {
+				return commandOutcome{}, err
+			}
+			publicationPlan = &plan
+		}
 	case "REBIND":
 		if kind == revisionservice.KindRoleImage {
 			return repository.applyRoleImageImpact(ctx, tx, current, configuration, input)
@@ -387,7 +406,9 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 			return commandOutcome{}, err
 		}
 	}
-	return managedOutcome(configuration, revision), nil
+	outcome := managedOutcome(configuration, revision)
+	outcome.result.RevisionImpactPlan = publicationPlan
+	return outcome, nil
 }
 
 type lockedManagedRevision struct {
@@ -500,6 +521,7 @@ func (repository *Repository) copyManagedConfiguration(ctx context.Context, tx p
 
 func managedCommand(kind command.Kind) (string, string) {
 	mapping := map[command.Kind][2]string{
+		command.PreparePromptTemplateImpact:        {revisionservice.KindPromptTemplate, "PREPARE_PROMPT_IMPACT"},
 		command.PrepareRoleImageImpactPlan:         {revisionservice.KindRoleImage, "PREPARE_IMPACT"},
 		command.CreateEmailMailboxDraft:            {revisionservice.KindEmailMailbox, "CREATE"},
 		command.SaveEmailMailboxDraft:              {revisionservice.KindEmailMailbox, "SAVE"},

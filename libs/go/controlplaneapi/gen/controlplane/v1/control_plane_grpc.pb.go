@@ -3571,6 +3571,8 @@ const (
 	PlatformCommandService_RebindRoleImageConsumers_FullMethodName                 = "/controlplane.v1.PlatformCommandService/RebindRoleImageConsumers"
 	PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName               = "/controlplane.v1.PlatformCommandService/PrepareRoleImageImpactPlan"
 	PlatformCommandService_PrepareEnvironmentDraftImpact_FullMethodName            = "/controlplane.v1.PlatformCommandService/PrepareEnvironmentDraftImpact"
+	PlatformCommandService_PrepareInstructionsImpact_FullMethodName                = "/controlplane.v1.PlatformCommandService/PrepareInstructionsImpact"
+	PlatformCommandService_PreparePromptTemplateImpact_FullMethodName              = "/controlplane.v1.PlatformCommandService/PreparePromptTemplateImpact"
 	PlatformCommandService_CreateIntegrationDefinitionDraft_FullMethodName         = "/controlplane.v1.PlatformCommandService/CreateIntegrationDefinitionDraft"
 	PlatformCommandService_ValidateIntegrationDefinitionDraft_FullMethodName       = "/controlplane.v1.PlatformCommandService/ValidateIntegrationDefinitionDraft"
 	PlatformCommandService_PublishIntegrationDefinitionDraft_FullMethodName        = "/controlplane.v1.PlatformCommandService/PublishIntegrationDefinitionDraft"
@@ -3741,6 +3743,8 @@ type PlatformCommandServiceClient interface {
 	RebindRoleImageConsumers(ctx context.Context, in *RebindRoleImageConsumersRequest, opts ...grpc.CallOption) (*RebindRoleImageConsumersResponse, error)
 	PrepareRoleImageImpactPlan(ctx context.Context, in *PrepareRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*PrepareRoleImageImpactPlanResponse, error)
 	PrepareEnvironmentDraftImpact(ctx context.Context, in *PrepareEnvironmentDraftImpactRequest, opts ...grpc.CallOption) (*PrepareEnvironmentDraftImpactResponse, error)
+	PrepareInstructionsImpact(ctx context.Context, in *PrepareInstructionsImpactRequest, opts ...grpc.CallOption) (*PrepareInstructionsImpactResponse, error)
+	PreparePromptTemplateImpact(ctx context.Context, in *PreparePromptTemplateImpactRequest, opts ...grpc.CallOption) (*PreparePromptTemplateImpactResponse, error)
 	CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(ctx context.Context, in *ValidateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(ctx context.Context, in *PublishIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5188,6 +5192,26 @@ func (c *platformCommandServiceClient) PrepareEnvironmentDraftImpact(ctx context
 	return out, nil
 }
 
+func (c *platformCommandServiceClient) PrepareInstructionsImpact(ctx context.Context, in *PrepareInstructionsImpactRequest, opts ...grpc.CallOption) (*PrepareInstructionsImpactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareInstructionsImpactResponse)
+	err := c.cc.Invoke(ctx, PlatformCommandService_PrepareInstructionsImpact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformCommandServiceClient) PreparePromptTemplateImpact(ctx context.Context, in *PreparePromptTemplateImpactRequest, opts ...grpc.CallOption) (*PreparePromptTemplateImpactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreparePromptTemplateImpactResponse)
+	err := c.cc.Invoke(ctx, PlatformCommandService_PreparePromptTemplateImpact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformCommandServiceClient) CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateIntegrationDefinitionDraftResponse)
@@ -5527,6 +5551,8 @@ type PlatformCommandServiceServer interface {
 	RebindRoleImageConsumers(context.Context, *RebindRoleImageConsumersRequest) (*RebindRoleImageConsumersResponse, error)
 	PrepareRoleImageImpactPlan(context.Context, *PrepareRoleImageImpactPlanRequest) (*PrepareRoleImageImpactPlanResponse, error)
 	PrepareEnvironmentDraftImpact(context.Context, *PrepareEnvironmentDraftImpactRequest) (*PrepareEnvironmentDraftImpactResponse, error)
+	PrepareInstructionsImpact(context.Context, *PrepareInstructionsImpactRequest) (*PrepareInstructionsImpactResponse, error)
+	PreparePromptTemplateImpact(context.Context, *PreparePromptTemplateImpactRequest) (*PreparePromptTemplateImpactResponse, error)
 	CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(context.Context, *ValidateIntegrationDefinitionDraftRequest) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(context.Context, *PublishIntegrationDefinitionDraftRequest) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5975,6 +6001,12 @@ func (UnimplementedPlatformCommandServiceServer) PrepareRoleImageImpactPlan(cont
 }
 func (UnimplementedPlatformCommandServiceServer) PrepareEnvironmentDraftImpact(context.Context, *PrepareEnvironmentDraftImpactRequest) (*PrepareEnvironmentDraftImpactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PrepareEnvironmentDraftImpact not implemented")
+}
+func (UnimplementedPlatformCommandServiceServer) PrepareInstructionsImpact(context.Context, *PrepareInstructionsImpactRequest) (*PrepareInstructionsImpactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareInstructionsImpact not implemented")
+}
+func (UnimplementedPlatformCommandServiceServer) PreparePromptTemplateImpact(context.Context, *PreparePromptTemplateImpactRequest) (*PreparePromptTemplateImpactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PreparePromptTemplateImpact not implemented")
 }
 func (UnimplementedPlatformCommandServiceServer) CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateIntegrationDefinitionDraft not implemented")
@@ -8535,6 +8567,42 @@ func _PlatformCommandService_PrepareEnvironmentDraftImpact_Handler(srv interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformCommandService_PrepareInstructionsImpact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareInstructionsImpactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformCommandServiceServer).PrepareInstructionsImpact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformCommandService_PrepareInstructionsImpact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformCommandServiceServer).PrepareInstructionsImpact(ctx, req.(*PrepareInstructionsImpactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformCommandService_PreparePromptTemplateImpact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreparePromptTemplateImpactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformCommandServiceServer).PreparePromptTemplateImpact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformCommandService_PreparePromptTemplateImpact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformCommandServiceServer).PreparePromptTemplateImpact(ctx, req.(*PreparePromptTemplateImpactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformCommandService_CreateIntegrationDefinitionDraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateIntegrationDefinitionDraftRequest)
 	if err := dec(in); err != nil {
@@ -9427,6 +9495,14 @@ var PlatformCommandService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PrepareEnvironmentDraftImpact",
 			Handler:    _PlatformCommandService_PrepareEnvironmentDraftImpact_Handler,
+		},
+		{
+			MethodName: "PrepareInstructionsImpact",
+			Handler:    _PlatformCommandService_PrepareInstructionsImpact_Handler,
+		},
+		{
+			MethodName: "PreparePromptTemplateImpact",
+			Handler:    _PlatformCommandService_PreparePromptTemplateImpact_Handler,
 		},
 		{
 			MethodName: "CreateIntegrationDefinitionDraft",
@@ -11323,6 +11399,7 @@ const (
 	RuntimeWorkService_ClaimExecution_FullMethodName                                  = "/controlplane.v1.RuntimeWorkService/ClaimExecution"
 	RuntimeWorkService_GetRuntimeEnvironmentRoleImageConfiguration_FullMethodName     = "/controlplane.v1.RuntimeWorkService/GetRuntimeEnvironmentRoleImageConfiguration"
 	RuntimeWorkService_ReadExecutionArtifact_FullMethodName                           = "/controlplane.v1.RuntimeWorkService/ReadExecutionArtifact"
+	RuntimeWorkService_StreamExecutionArtifact_FullMethodName                         = "/controlplane.v1.RuntimeWorkService/StreamExecutionArtifact"
 	RuntimeWorkService_SearchExecutionFiles_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/SearchExecutionFiles"
 	RuntimeWorkService_GetExecutionFileMetadata_FullMethodName                        = "/controlplane.v1.RuntimeWorkService/GetExecutionFileMetadata"
 	RuntimeWorkService_PreviewExecutionFile_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/PreviewExecutionFile"
@@ -11364,6 +11441,9 @@ type RuntimeWorkServiceClient interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(ctx context.Context, in *GetRuntimeEnvironmentRoleImageConfigurationRequest, opts ...grpc.CallOption) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(ctx context.Context, in *ReadExecutionArtifactRequest, opts ...grpc.CallOption) (*ReadExecutionArtifactResponse, error)
+	// Единственный initial request связан с canonical Proto digest; body идёт
+	// bounded chunks после owner resolution exact input/Skill/catalog grant.
+	StreamExecutionArtifact(ctx context.Context, in *StreamExecutionArtifactRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamExecutionArtifactResponse], error)
 	SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error)
 	GetExecutionFileMetadata(ctx context.Context, in *GetExecutionFileMetadataRequest, opts ...grpc.CallOption) (*GetExecutionFileMetadataResponse, error)
 	PreviewExecutionFile(ctx context.Context, in *PreviewExecutionFileRequest, opts ...grpc.CallOption) (*PreviewExecutionFileResponse, error)
@@ -11471,6 +11551,25 @@ func (c *runtimeWorkServiceClient) ReadExecutionArtifact(ctx context.Context, in
 	}
 	return out, nil
 }
+
+func (c *runtimeWorkServiceClient) StreamExecutionArtifact(ctx context.Context, in *StreamExecutionArtifactRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamExecutionArtifactResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &RuntimeWorkService_ServiceDesc.Streams[0], RuntimeWorkService_StreamExecutionArtifact_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamExecutionArtifactRequest, StreamExecutionArtifactResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RuntimeWorkService_StreamExecutionArtifactClient = grpc.ServerStreamingClient[StreamExecutionArtifactResponse]
 
 func (c *runtimeWorkServiceClient) SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -11745,6 +11844,9 @@ type RuntimeWorkServiceServer interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(context.Context, *GetRuntimeEnvironmentRoleImageConfigurationRequest) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error)
+	// Единственный initial request связан с canonical Proto digest; body идёт
+	// bounded chunks после owner resolution exact input/Skill/catalog grant.
+	StreamExecutionArtifact(*StreamExecutionArtifactRequest, grpc.ServerStreamingServer[StreamExecutionArtifactResponse]) error
 	SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error)
 	GetExecutionFileMetadata(context.Context, *GetExecutionFileMetadataRequest) (*GetExecutionFileMetadataResponse, error)
 	PreviewExecutionFile(context.Context, *PreviewExecutionFileRequest) (*PreviewExecutionFileResponse, error)
@@ -11803,6 +11905,9 @@ func (UnimplementedRuntimeWorkServiceServer) GetRuntimeEnvironmentRoleImageConfi
 }
 func (UnimplementedRuntimeWorkServiceServer) ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReadExecutionArtifact not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) StreamExecutionArtifact(*StreamExecutionArtifactRequest, grpc.ServerStreamingServer[StreamExecutionArtifactResponse]) error {
+	return status.Error(codes.Unimplemented, "method StreamExecutionArtifact not implemented")
 }
 func (UnimplementedRuntimeWorkServiceServer) SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchExecutionFiles not implemented")
@@ -12028,6 +12133,17 @@ func _RuntimeWorkService_ReadExecutionArtifact_Handler(srv interface{}, ctx cont
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _RuntimeWorkService_StreamExecutionArtifact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamExecutionArtifactRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RuntimeWorkServiceServer).StreamExecutionArtifact(m, &grpc.GenericServerStream[StreamExecutionArtifactRequest, StreamExecutionArtifactResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RuntimeWorkService_StreamExecutionArtifactServer = grpc.ServerStreamingServer[StreamExecutionArtifactResponse]
 
 func _RuntimeWorkService_SearchExecutionFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchExecutionFilesRequest)
@@ -12637,7 +12753,13 @@ var RuntimeWorkService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RuntimeWorkService_CompleteIntegrationInvocation_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamExecutionArtifact",
+			Handler:       _RuntimeWorkService_StreamExecutionArtifact_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "controlplane/v1/control_plane.proto",
 }
 

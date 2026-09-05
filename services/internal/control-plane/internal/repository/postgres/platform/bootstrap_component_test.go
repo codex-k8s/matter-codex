@@ -222,6 +222,7 @@ func TestBootstrapComponent(t *testing.T) {
 	t.Run("instruction draft save replaces the mutable draft", func(t *testing.T) {
 		testInstructionDraftSave(t, ctx, repository)
 	})
+	t.Run("prompt prepublication applies selected exact bindings", func(t *testing.T) { testPromptImpactLifecycle(t, ctx, repository) })
 	t.Run("system assistant proposes and applies typed plan", func(t *testing.T) {
 		prepareObservedWarmFixture(t, ctx, repository)
 		testSystemAssistantTypedPlan(t, ctx, repository)
@@ -373,7 +374,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 		t.Fatalf("validate managed prompt: result=%#v err=%v", validated, err)
 	}
 	version = validated.ManagedConfiguration.Version
-	published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	published, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-prompt-publish", ExpectedVersion: &version},
 		Payload:  command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
@@ -443,7 +444,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 		t.Fatalf("validate corrected managed prompt: result=%#v err=%v", correctedValidated, err)
 	}
 	correctedVersion = correctedValidated.ManagedConfiguration.Version
-	correctedPublished, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	correctedPublished, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-prompt-publish-corrected", ExpectedVersion: &correctedVersion},
 		Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref,
 			RevisionRef: correctedDraft.ManagedRevision.Ref}})
@@ -767,7 +768,7 @@ LIMIT 1`, ownerScope.organizationID).Scan(&environmentRef, &environmentProjectRe
 		t.Fatalf("validate detached configuration: %v", err)
 	}
 	detachedVersion = detachedValidated.ManagedConfiguration.Version
-	detachedPublished, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	detachedPublished, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-detached-publish", ExpectedVersion: &detachedVersion},
 		Payload:  command.ManagedConfigurationInput{ConfigurationRef: "mcfg_gitprompt01", RevisionRef: detached.ManagedRevision.Ref}})
 	if err != nil || detachedPublished.ManagedRevision == nil || detachedPublished.ManagedRevision.State != "PUBLISHED" {
@@ -2669,6 +2670,7 @@ func testInstructionDraftSave(t *testing.T, ctx context.Context, repository *Rep
 	if count != 1 || state != "DRAFT" || content != "Second mutable instruction draft replaces the first content." {
 		t.Fatalf("unexpected instruction draft readback: count=%d state=%s content=%q", count, state, content)
 	}
+	testInstructionBindingLifecycle(t, ctx, repository, service, owner, agent.Ref)
 }
 
 func testProviderCredentialLegacyRepair(t *testing.T, ctx context.Context, repository *Repository, pool *pgxpool.Pool) {
@@ -5652,6 +5654,31 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	})
 	if err != nil || secondTotal != 2 || len(secondPage) != 1 || secondPage[0].Ref != secondRef || finalPageToken != "" {
 		t.Fatalf("second artifact cursor page is unstable: artifacts=%#v next=%q err=%v", secondPage, finalPageToken, err)
+	}
+	group := query.Filter{ProjectRef: project.Project.Ref, SourceKinds: []string{"INTEGRATION_RESULT", "CONTROL_CENTER"}, Page: query.Page{Size: 1}}
+	groupFirst, groupTotal, groupCursor, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupFirst) != 1 || groupCursor == "" {
+		t.Fatalf("artifact source group count/page: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER", "INTEGRATION_RESULT"}
+	group.Page.Token = groupCursor
+	groupSecond, groupTotal, groupEnd, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupSecond) != 1 || groupSecond[0].Ref == groupFirst[0].Ref || groupEnd != "" {
+		t.Fatalf("artifact source group canonical cursor: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER"}
+	if _, _, _, groupErr = service.ListArtifacts(ctx, owner, group); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+		t.Fatalf("artifact source group cursor accepted changed filter: %v", groupErr)
+	}
+	for _, invalid := range []query.Filter{
+		{SourceKind: "CONTROL_CENTER", SourceKinds: []string{"CONTROL_CENTER"}},
+		{SourceKinds: []string{"CONTROL_CENTER", "CONTROL_CENTER"}},
+		{SourceKinds: []string{"UNKNOWN"}},
+		{SourceKinds: []string{""}},
+	} {
+		if _, _, _, groupErr = service.ListArtifacts(ctx, owner, invalid); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+			t.Fatalf("artifact source group invalid filter accepted: %v", groupErr)
+		}
 	}
 	if _, _, _, err := service.ListArtifacts(ctx, owner, query.Filter{
 		ProjectRef: project.Project.Ref, ArtifactType: "EXECUTABLE", Page: query.Page{Size: 1},
