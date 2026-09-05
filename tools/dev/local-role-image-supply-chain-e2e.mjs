@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import {
   boundedResponseBody,
   verifyWorkspaceAcceptance,
+  verifyWorkspaceQuota,
   workspaceAcceptanceTask,
+  workspaceQuotaTask,
 } from "./runtime-workspace-acceptance.mjs";
 import {
   chmodSync,
@@ -21,8 +23,17 @@ function fail(message) {
 }
 
 const phase = process.argv[2] ?? "";
-if (!new Set(["prepare", "launch", "verify-workspace"]).has(phase)) {
-  fail("phase must be prepare, launch or verify-workspace");
+if (
+  !new Set([
+    "prepare",
+    "launch",
+    "capture-runtime",
+    "verify-workspace",
+    "launch-quota",
+    "verify-quota",
+  ]).has(phase)
+) {
+  fail("phase is unsupported");
 }
 
 const baseURL = new URL(process.env.KODEX_ROLE_IMAGE_E2E_BASE_URL ?? "");
@@ -532,8 +543,104 @@ async function launch() {
     ...state,
     status: "launched",
     runRef,
+    activeRunRef: runRef,
     workspaceNonce: nonce,
     launchedAt: new Date().toISOString(),
+  });
+}
+
+async function captureRuntime() {
+  privateRegularFile(statePath, 1 << 20);
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  if (
+    state.version !== 1 ||
+    !["launched", "quota-launched"].includes(state.status)
+  )
+    fail("launched runtime state is absent");
+  const runRef = boundedString(state.activeRunRef, "active run ref");
+  for (;;) {
+    const run = await request(
+      "GET",
+      `/api/v1/runs/${encodeURIComponent(runRef)}`,
+      { expectedStatus: 200 },
+    );
+    if (
+      run.ref !== runRef ||
+      run.projectRef !== state.projectRef ||
+      run.target?.ref !== state.agentRef
+    )
+      fail("active runtime owner differs");
+    if (run.state !== "QUEUED") {
+      if (!["RUNNING", "SUCCEEDED", "FAILED"].includes(run.state))
+        fail("active runtime state is unexpected");
+      const revision = (
+        await request(
+          "GET",
+          `/api/v1/runs/${encodeURIComponent(runRef)}/runtime-revision-diff`,
+          { expectedStatus: 200 },
+        )
+      ).current;
+      if (
+        !revision ||
+        revision.runRef !== runRef ||
+        revision.sessionRef !== run.sessionRef ||
+        revision.attempt !== run.attempt ||
+        !Number.isSafeInteger(run.attempt) ||
+        run.attempt < 1
+      )
+        fail("active runtime revision differs");
+      const shortHash = (value) =>
+        createHash("sha256")
+          .update(boundedString(value, "runtime binding ref"))
+          .digest("hex")
+          .slice(0, 16);
+      writeState({
+        ...state,
+        runtimeBinding: {
+          runRef,
+          revisionDigest: exactSHA256(
+            revision.revisionDigest,
+            "runtime revision digest",
+          ),
+          projectHash: shortHash(run.projectRef),
+          sessionHash: shortHash(run.sessionRef),
+          attempt: run.attempt,
+        },
+      });
+      return;
+    }
+    if (Date.now() >= phaseDeadline) fail("runtime binding deadline exceeded");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+}
+
+async function launchQuota() {
+  privateRegularFile(statePath, 1 << 20);
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  if (
+    state.version !== 1 ||
+    state.status !== "workspace-passed" ||
+    state.workspaceEvidence?.checks?.nativeAgentShell !== "PASS"
+  )
+    fail("positive workspace control is absent");
+  const run = await request("POST", "/api/v1/runs", {
+    expectedStatus: 201,
+    body: {
+      projectRef: state.projectRef,
+      targetRef: state.agentRef,
+      targetType: "AGENT",
+      title: `${prefix} workspace quota negative`,
+      task: workspaceQuotaTask(randomBytes(16).toString("hex")),
+    },
+  });
+  const quotaRunRef = boundedString(run.run?.ref, "quota run ref");
+  if (quotaRunRef === state.runRef) fail("quota run reused positive control");
+  const { runtimeBinding: _binding, ...previous } = state;
+  writeState({
+    ...previous,
+    status: "quota-launched",
+    quotaRunRef,
+    activeRunRef: quotaRunRef,
   });
 }
 
@@ -592,8 +699,42 @@ async function verifyWorkspace() {
   const { workspaceNonce: _nonce, ...safeState } = state;
   writeState({
     ...safeState,
-    status: "passed",
+    status: "workspace-passed",
     workspaceEvidence: evidence,
+    workspaceFinishedAt: new Date().toISOString(),
+  });
+}
+
+async function verifyQuota() {
+  privateRegularFile(statePath, 1 << 20);
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  if (state.version !== 1 || state.status !== "quota-observed")
+    fail("quota runtime observation is absent");
+  const runRef = boundedString(state.quotaRunRef, "quota run ref");
+  for (;;) {
+    const run = await request(
+      "GET",
+      `/api/v1/runs/${encodeURIComponent(runRef)}`,
+      { expectedStatus: 200 },
+    );
+    if (run.state === "FAILED") break;
+    if (!["QUEUED", "RUNNING"].includes(run.state))
+      fail("quota run did not fail");
+    if (Date.now() >= phaseDeadline) fail("quota run deadline exceeded");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  const quotaEvidence = await verifyWorkspaceQuota({
+    getJSON: (path) => request("GET", path, { expectedStatus: 200 }),
+    runRef,
+    projectRef: state.projectRef,
+    agentRef: state.agentRef,
+    observation: state.quotaObservation,
+  });
+  writeState({
+    ...state,
+    status: "passed",
+    quotaEvidence,
+    workspaceEvidence: { ...state.workspaceEvidence, quota: "PASS" },
     finishedAt: new Date().toISOString(),
   });
 }
@@ -601,6 +742,9 @@ async function verifyWorkspace() {
 try {
   if (phase === "prepare") await prepare();
   else if (phase === "launch") await launch();
+  else if (phase === "capture-runtime") await captureRuntime();
+  else if (phase === "launch-quota") await launchQuota();
+  else if (phase === "verify-quota") await verifyQuota();
   else await verifyWorkspace();
 } catch (error) {
   console.error(

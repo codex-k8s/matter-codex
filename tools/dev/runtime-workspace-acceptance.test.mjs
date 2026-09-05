@@ -4,17 +4,21 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
+  statSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import test from "node:test";
 import {
   boundedResponseBody,
   verifyWorkspaceAcceptance,
+  verifyWorkspaceQuota,
   workspaceProbeSource,
+  workspaceQuotaProbeSource,
 } from "./runtime-workspace-acceptance.mjs";
 
 const nonce = "a".repeat(32);
@@ -160,6 +164,272 @@ test("Сопоставляет настоящий результат, owner meta
   assert.equal(evidence.artifacts.length, 3);
   assert.equal(evidence.quota, "NOT RUN");
   assert.ok(!JSON.stringify(evidence).includes(nonce));
+});
+
+function quotaFixture() {
+  const data = fixture();
+  data.run.state = "FAILED";
+  data.run.safeErrorCode = "RUNTIME_WORKSPACE_INVALID";
+  data.run.artifactRefs = [];
+  data.parameters.observation = {
+    reason: "QUOTA_EXCEEDED",
+    runRef: data.run.ref,
+    revisionDigest: data.revision.revisionDigest,
+    attempt: data.run.attempt,
+    podName: "runtime-fixture",
+    podUID: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  };
+  return data;
+}
+
+test("Quota требует одновременно owner terminal, actual canary и native execution", async () => {
+  const data = quotaFixture();
+  const evidence = await verifyWorkspaceQuota(data.parameters);
+  assert.equal(evidence.quota, "PASS");
+  assert.equal(evidence.reason, "QUOTA_EXCEEDED");
+  assert.equal(evidence.resultArtifactsAbsent, "PASS");
+});
+
+for (const [name, mutate] of Object.entries({
+  "не quota отказ": (f) => {
+    f.parameters.observation.reason = "RUNTIME_IO_ERROR";
+  },
+  "нет canary": (f) => {
+    delete f.parameters.observation;
+  },
+  "чужой canary Run": (f) => {
+    f.parameters.observation.runRef = "run_other";
+  },
+  "старая canary revision": (f) => {
+    f.parameters.observation.revisionDigest = "d".repeat(64);
+  },
+  "старая attempt": (f) => {
+    f.parameters.observation.attempt = 1;
+  },
+  "нет Pod UID": (f) => {
+    f.parameters.observation.podUID = "";
+  },
+  "provider failure": (f) => {
+    f.run.safeErrorCode = "RUNTIME_PROVIDER_UNAVAILABLE";
+  },
+  "ошибочный SUCCESS": (f) => {
+    f.run.state = "SUCCEEDED";
+  },
+  "чужой проект": (f) => {
+    f.run.projectRef = "prj_other";
+  },
+  "чужой агент": (f) => {
+    f.run.target.ref = "agt_other";
+  },
+  "чужая session revision": (f) => {
+    f.revision.sessionRef = "ses_other";
+  },
+  "артефакт при отказе": (f) => {
+    f.run.artifactRefs = ["art_unexpected"];
+  },
+  "отказ до выполнения": (f) => {
+    f.events.items[0].toolCall.state = "FAILED";
+  },
+}))
+  test(`Quota отклоняет: ${name}`, async () => {
+    const data = quotaFixture();
+    mutate(data);
+    await assert.rejects(
+      verifyWorkspaceQuota(data.parameters),
+      /Runtime workspace acceptance failed/,
+    );
+  });
+
+test("Pod selector связывает image readback с revision/project/session/attempt и единственным UID", () => {
+  const image = `registry.invalid/runtime@sha256:${"b".repeat(64)}`;
+  const binding = {
+    revisionDigest: "a".repeat(64),
+    projectHash: "b".repeat(16),
+    sessionHash: "c".repeat(16),
+    attempt: 2,
+  };
+  const pod = {
+    metadata: {
+      uid: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      labels: {
+        "runtime.kodex.dev/managed": "true",
+        "runtime.kodex.dev/mode": "turn",
+      },
+      annotations: {
+        "runtime.kodex.dev/revision-digest": binding.revisionDigest,
+        "runtime.kodex.dev/project-hash": binding.projectHash,
+        "runtime.kodex.dev/session-hash": binding.sessionHash,
+        "runtime.kodex.dev/attempt": "2",
+      },
+    },
+    spec: {
+      initContainers: [{ name: "workspace-init", image }],
+      containers: [
+        { name: "role-runtime", image },
+        { name: "provider-runtime", image },
+      ],
+    },
+    status: {
+      initContainerStatuses: [{ name: "workspace-init", imageID: image }],
+      containerStatuses: [
+        { name: "role-runtime", imageID: image },
+        { name: "provider-runtime", imageID: image },
+      ],
+    },
+  };
+  function select(pods, before = []) {
+    const result = spawnSync(
+      "jq",
+      [
+        "-c",
+        "--argjson",
+        "before",
+        JSON.stringify(before),
+        "--arg",
+        "image",
+        image,
+        "--argjson",
+        "binding",
+        JSON.stringify(binding),
+        "-f",
+        new URL("./runtime-workspace-pod.jq", import.meta.url).pathname,
+      ],
+      {
+        input: JSON.stringify(pods),
+        encoding: "utf8",
+        timeout: 3000,
+        maxBuffer: 8192,
+      },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  }
+  assert.equal(JSON.parse(select([pod])).metadata.uid, pod.metadata.uid);
+  assert.equal(select([pod], [pod.metadata.uid]), "");
+  assert.equal(
+    select([pod, { ...pod, metadata: { ...pod.metadata, uid: "duplicate" } }]),
+    "",
+  );
+  for (const field of [
+    "revision-digest",
+    "project-hash",
+    "session-hash",
+    "attempt",
+  ]) {
+    const changed = structuredClone(pod);
+    changed.metadata.annotations[`runtime.kodex.dev/${field}`] = "wrong";
+    assert.equal(select([changed]), "", field);
+  }
+  for (const mutate of [
+    (p) => {
+      p.metadata.labels["runtime.kodex.dev/mode"] = "warm";
+    },
+    (p) => {
+      p.spec.containers[1].image = "foreign";
+    },
+    (p) => {
+      p.status.containerStatuses[1].imageID = `registry.invalid/other@sha256:${"c".repeat(64)}`;
+    },
+    (p) => {
+      p.status.containerStatuses = [];
+    },
+  ]) {
+    const changed = structuredClone(pod);
+    mutate(changed);
+    assert.equal(select([changed]), "");
+  }
+});
+
+test("Точный quota probe non-root создаёт ограниченные 10001 пустых файлов и ждёт readback", async () => {
+  assert.ok(process.getuid() > 0);
+  const root = mkdtempSync(join(tmpdir(), "kodex-quota-probe-"));
+  let child;
+  try {
+    child = spawn(
+      "bwrap",
+      [
+        "--unshare-all",
+        "--die-with-parent",
+        "--uid",
+        String(process.getuid()),
+        "--gid",
+        String(process.getgid()),
+        "--tmpfs",
+        "/",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/lib",
+        "/lib",
+        "--ro-bind",
+        "/lib64",
+        "/lib64",
+        "--ro-bind",
+        process.execPath,
+        "/node",
+        "--bind",
+        root,
+        "/workspace",
+        "--chdir",
+        "/workspace",
+        "--remount-ro",
+        "/",
+        "/node",
+        "--input-type=module",
+        "--eval",
+        workspaceQuotaProbeSource(nonce),
+      ],
+      {
+        env: { PATH: "/usr/bin:/bin", LANG: "C" },
+        stdio: ["ignore", "pipe", "ignore"],
+        detached: true,
+      },
+    );
+    const exited = new Promise((resolve) => child.once("close", resolve));
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error("quota fixture preparation timed out")),
+        8000,
+      );
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.once("exit", () => {
+        clearTimeout(timer);
+        reject(new Error("quota fixture exited before observation"));
+      });
+      child.stdout.once("data", (value) => {
+        clearTimeout(timer);
+        if (value.toString() === "Workspace quota fixture prepared\n")
+          resolve();
+        else reject(new Error("quota fixture marker is invalid"));
+      });
+    });
+    const directory = join(root, `work/mvp-quota-${nonce}`);
+    const files = readdirSync(directory);
+    assert.equal(files.length, 10001);
+    assert.equal(statSync(directory).mode & 0o2770, 0o2770);
+    assert.equal(child.exitCode, null);
+    assert.ok(
+      files.every((file) => {
+        const info = statSync(join(directory, file));
+        return info.isFile() && info.size === 0 && info.nlink === 1;
+      }),
+    );
+    process.kill(-child.pid, "SIGKILL");
+    await exited;
+  } finally {
+    if (child && child.exitCode === null && child.signalCode === null) {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch (error) {
+        if (error.code !== "ESRCH") throw error;
+      }
+    }
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 for (const [name, mutate] of Object.entries({
@@ -337,6 +607,11 @@ test("Точный выдаваемый модели probe выполняет CR
     );
     assert.equal(Object.keys(proof.checks).length, 14);
     assert.ok(Object.values(proof.checks).every((value) => value === true));
+    assert.equal(
+      statSync(join(root, ".kodex/outbox/mvp-workspace-proof.json")).mode &
+        0o777,
+      0o640,
+    );
     assert.equal(readFileSync(credential, "utf8"), "synthetic-fixture");
   } finally {
     rmSync(root, { recursive: true, force: true });

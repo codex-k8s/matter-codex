@@ -39,7 +39,10 @@ async function runWorkspaceProbe(nonce) {
   };
   require(/^[a-f0-9]{32}$/.test(nonce) && process.getuid() > 0);
   const directory = `/workspace/work/mvp-${nonce}`;
-  fs.mkdirSync(directory, { recursive: true, mode: 0o700 });
+  fs.mkdirSync("/workspace/work", { recursive: true, mode: 0o770 });
+  fs.chmodSync("/workspace/work", 0o2770);
+  fs.mkdirSync(directory, { mode: 0o770 });
+  fs.chmodSync(directory, 0o2770);
   const current = `${directory}/current.txt`;
   const replacement = `${directory}/next.txt`;
   const initial = `mvp-workspace:${nonce}:initial\n`;
@@ -52,10 +55,11 @@ async function runWorkspaceProbe(nonce) {
         fs.constants.O_EXCL |
         fs.constants.O_WRONLY |
         fs.constants.O_NOFOLLOW,
-      0o600,
+      0o640,
     );
     try {
       fs.writeFileSync(fd, content);
+      fs.fchmodSync(fd, 0o640);
       fs.fsyncSync(fd);
     } finally {
       fs.closeSync(fd);
@@ -156,6 +160,45 @@ export function workspaceAcceptanceTask(nonce) {
   );
 }
 
+// Отдельный Run превышает только число файлов: 10001 пустой regular file,
+// без заполнения диска и изменения чужих путей. Пауза нужна exact Pod readback.
+async function runWorkspaceQuotaProbe(nonce) {
+  const fs = await import("node:fs");
+  if (!/^[a-f0-9]{32}$/.test(nonce) || process.getuid() <= 0)
+    throw new Error("workspace quota probe identity is invalid");
+  const directory = `/workspace/work/mvp-quota-${nonce}`;
+  fs.mkdirSync("/workspace/work", { recursive: true, mode: 0o770 });
+  fs.chmodSync("/workspace/work", 0o2770);
+  fs.mkdirSync(directory, { mode: 0o770 });
+  fs.chmodSync(directory, 0o2770);
+  for (let index = 0; index < 10001; index += 1) {
+    const fd = fs.openSync(`${directory}/${index}`, "wx", 0o600);
+    fs.closeSync(fd);
+  }
+  if (fs.readdirSync(directory).length !== 10001)
+    throw new Error("workspace quota probe file count differs");
+  console.log("Workspace quota fixture prepared");
+  await new Promise((resolve) => setTimeout(resolve, 45000));
+}
+
+export function workspaceQuotaProbeSource(nonce) {
+  validNonce(nonce);
+  return `${runWorkspaceQuotaProbe.toString()}\nawait runWorkspaceQuotaProbe(${JSON.stringify(nonce)});\n`;
+}
+
+export function workspaceQuotaTask(nonce) {
+  return (
+    "Выполни этот точный JavaScript через Node.js shell tool как ES module. " +
+    "Установи timeout команды не меньше 120 секунд и дождись её завершения. " +
+    "Это отдельный synthetic negative acceptance квоты: 10001 пустой собственный файл. " +
+    "Ожидается последующий отказ платформы. Не удаляй файлы, не исправляй проверку, " +
+    "не читай секреты/контекст и не создавай result artifacts. После выхода команды " +
+    "ответь одной короткой фразой.\n```javascript\n" +
+    workspaceQuotaProbeSource(nonce) +
+    "```"
+  );
+}
+
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }
@@ -207,43 +250,7 @@ export async function verifyWorkspaceAcceptance({
     run.artifactRefs.length > 200
   )
     fail("successful run binding is invalid");
-  if (!Number.isSafeInteger(run.lastEventSequence) || run.lastEventSequence < 1)
-    fail("run event sequence is invalid");
-  let afterSequence = 0;
-  let shellCall = false;
-  for (
-    let page = 0;
-    page < 25 && afterSequence < run.lastEventSequence;
-    page += 1
-  ) {
-    const events = await getJSON(
-      `/api/v1/runs/${encodeURIComponent(runRef)}/events?afterSequence=${afterSequence}&limit=500`,
-    );
-    if (
-      !Array.isArray(events.items) ||
-      events.items.length < 1 ||
-      events.items.length > 500
-    )
-      fail("native execution event page is invalid");
-    for (const event of events.items) {
-      if (
-        event.runRef !== runRef ||
-        !Number.isSafeInteger(event.sequence) ||
-        event.sequence <= afterSequence
-      )
-        fail("native execution event binding differs");
-      afterSequence = event.sequence;
-      shellCall ||=
-        event.type === "TOOL_CALL_RECORDED" &&
-        event.toolCall?.tool === "CODEX_SHELL" &&
-        event.toolCall.state === "SUCCEEDED" &&
-        event.toolCall.safeParameters?.source === "AGENT" &&
-        event.toolCall.safeParameters?.cwd_scope === "WORKSPACE" &&
-        event.toolCall.safeParameters?.exit_code === "ZERO";
-    }
-  }
-  if (afterSequence < run.lastEventSequence || !shellCall)
-    fail("successful native agent shell event is absent");
+  await verifyNativeAgentShell(getJSON, run);
   const artifacts = new Map();
   for (const ref of run.artifactRefs) {
     const artifact = await getJSON(
@@ -281,6 +288,64 @@ export async function verifyWorkspaceAcceptance({
       fail("artifact content pins differ");
     artifacts.set(artifact.fileName, { artifact, bytes });
   }
+  return verifyPersistedProof({
+    getJSON,
+    artifacts,
+    run,
+    runRef,
+    projectRef,
+    nonce,
+  });
+}
+
+async function verifyNativeAgentShell(getJSON, run) {
+  if (!Number.isSafeInteger(run.lastEventSequence) || run.lastEventSequence < 1)
+    fail("run event sequence is invalid");
+  let afterSequence = 0;
+  let shellCall = false;
+  for (
+    let page = 0;
+    page < 25 && afterSequence < run.lastEventSequence;
+    page += 1
+  ) {
+    const events = await getJSON(
+      `/api/v1/runs/${encodeURIComponent(run.ref)}/events?afterSequence=${afterSequence}&limit=500`,
+    );
+    if (
+      !Array.isArray(events.items) ||
+      events.items.length < 1 ||
+      events.items.length > 500
+    )
+      fail("native execution event page is invalid");
+    for (const event of events.items) {
+      if (
+        event.runRef !== run.ref ||
+        !Number.isSafeInteger(event.sequence) ||
+        event.sequence <= afterSequence
+      )
+        fail("native execution event binding differs");
+      afterSequence = event.sequence;
+      shellCall ||=
+        event.type === "TOOL_CALL_RECORDED" &&
+        event.toolCall?.tool === "CODEX_SHELL" &&
+        event.toolCall.state === "SUCCEEDED" &&
+        event.toolCall.safeParameters?.source === "AGENT" &&
+        event.toolCall.safeParameters?.cwd_scope === "WORKSPACE" &&
+        event.toolCall.safeParameters?.exit_code === "ZERO";
+    }
+  }
+  if (afterSequence < run.lastEventSequence || !shellCall)
+    fail("successful native agent shell event is absent");
+}
+
+async function verifyPersistedProof({
+  getJSON,
+  artifacts,
+  run,
+  runRef,
+  projectRef,
+  nonce,
+}) {
   if (artifacts.size !== 3) fail("required persisted artifacts are absent");
   let proof, provenance;
   try {
@@ -339,5 +404,62 @@ export async function verifyWorkspaceAcceptance({
       digest: artifact.digest,
     })),
     quota: "NOT RUN",
+  };
+}
+
+export async function verifyWorkspaceQuota({
+  getJSON,
+  runRef,
+  projectRef,
+  agentRef,
+  observation,
+}) {
+  const run = await getJSON(`/api/v1/runs/${encodeURIComponent(runRef)}`);
+  const revision = (
+    await getJSON(
+      `/api/v1/runs/${encodeURIComponent(runRef)}/runtime-revision-diff`,
+    )
+  ).current;
+  if (
+    run.ref !== runRef ||
+    run.projectRef !== projectRef ||
+    run.target?.ref !== agentRef ||
+    run.state !== "FAILED" ||
+    run.safeErrorCode !== "RUNTIME_WORKSPACE_INVALID" ||
+    !Number.isSafeInteger(run.attempt) ||
+    run.attempt < 1 ||
+    !Array.isArray(run.artifactRefs) ||
+    run.artifactRefs.length !== 0 ||
+    !revision ||
+    revision.runRef !== runRef ||
+    revision.sessionRef !== run.sessionRef ||
+    revision.attempt !== run.attempt ||
+    !/^[a-f0-9]{64}$/.test(revision.revisionDigest)
+  )
+    fail("quota terminal run binding is invalid");
+  if (
+    !observation ||
+    observation.reason !== "QUOTA_EXCEEDED" ||
+    observation.runRef !== runRef ||
+    observation.revisionDigest !== revision.revisionDigest ||
+    observation.attempt !== run.attempt ||
+    !/^[a-z0-9][a-z0-9-]{1,252}$/.test(observation.podName) ||
+    !/^[a-f0-9-]{36}$/.test(observation.podUID)
+  )
+    fail("exact runtime quota readback is absent");
+  await verifyNativeAgentShell(getJSON, run);
+  return {
+    schema: "kodex.workspace-quota-evidence.v1",
+    runRef,
+    projectRef,
+    runtimeRevisionRef: revision.ref,
+    runtimeRevisionDigest: revision.revisionDigest,
+    attempt: revision.attempt,
+    podUID: observation.podUID,
+    reason: observation.reason,
+    terminalCode: run.safeErrorCode,
+    nativeAgentShell: "PASS",
+    resultArtifactsAbsent: "PASS",
+    quota: "PASS",
   };
 }

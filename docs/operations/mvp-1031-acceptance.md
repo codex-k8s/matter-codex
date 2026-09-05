@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.8.0
+version: 1.9.0
 updated: 2026-09-06
 ---
 
@@ -153,15 +153,43 @@ provenance сравнивается с публичной authoritative RuntimeR
 pending scan ожидается в ограниченном бюджете. Содержимое, transcript,
 credentials и сырые команды не попадают в итоговый evidence.
 
-`make test-runtime-workspace-acceptance` локально **PASS**:22 проверки,
-включая выполнение точного probe в non-root disposable mount. Также **PASS**
+После успешного workspace контроля оснастка создаёт отдельный quota Run.
+Модель создаёт 10001 пустой собственный regular file и на45 секунд оставляет
+окно для проверки. Каталоги используют общую группу runtime (2770), а
+положительные result files —0640: runner UID10001 должен читать результаты
+provider UID10002. Это не даёт доступа за пределы workspace.
+
+Инициатором остаётся owner web session с launch authority. POST Run создаёт
+новые Session/attempt/RuntimeRevision; публичный revision-diff фиксирует
+точный digest и owner binding. Оператор оснастки выбирает единственный Pod
+по digest, project/session hash, attempt, promoted image и imageID. Через
+repo-owned `kubectl exec` в точном `role-runtime` запускается существующий
+защищённый `runtime-workspace-canary`; до и после сверяются Pod UID и
+annotations. Принимается только `QUOTA_EXCEEDED`, без чтения содержимого
+файлов. Другой denial, смена Pod или недоступная проверка завершают сценарий
+ошибкой. После завершения модели authoritative Run должен иметь `FAILED`,
+`RUNTIME_WORKSPACE_INVALID`, ни одного result artifact и успешное native
+shell event. Общего workspace error без exact canary недостаточно.
+
+Runner `13c092f5131e17b8f1a7be4e1657f77bc1e88cde` сохраняет уже выполненные
+native effects до post-execution quota check. На этом runner SHA **PASS**:
+полный race/vet/build и `make test-agent-runner`; live provider —**NOT RUN**.
+Два Run не повторяются при terminal failure. `passed` RoleImage записывается
+только после положительного workspace контроля и отрицательного quota
+контроля; до второго этапа `quota: NOT RUN` сохраняется. Execution volume
+удаляет обычный runtime terminal cleanup, оснастка не исправляет Pod вручную.
+
+`make test-runtime-workspace-acceptance` локально **PASS**:38 проверок,
+включая точные non-root probes, ошибочные owner/revision/attempt/Pod bindings,
+отсутствие native execution и неверный terminal. Также **PASS**
 `make test-full-local-e2e-entrypoint`, shell/Node syntax и форматирование.
-Эти проверки используют fixtures и не доказывают live provider acceptance.
-Настоящий staging запуск ещё **NOT RUN**. Отдельный live quota phase пока
-не реализован: evidence явно сохраняет `quota: NOT RUN`; это обязательный
-незавершённый пункт MVP-UI-61, который нельзя закрыть общим `passed` RoleImage.
-Контракт Node.js24 проверен через Context7 по официальной
-[документации fs](https://nodejs.org/docs/latest-v24.x/api/fs.html).
+Первый quota fixture test завершился **FAIL** по30s deadline из-за
+незавершённого дочернего процесса; изолированная process group и bounded
+cleanup исправлены, повтор38/38 прошёл. Эти проверки используют fixtures
+и не доказывают live provider acceptance; staging и настоящая квота —
+**NOT RUN**. Через Context7 проверены официальные
+[Node.js24 fs](https://nodejs.org/docs/latest-v24.x/api/fs.html) и
+[kubectl exec](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_exec/).
 
 На code SHA `17c120887754cee3813a6974ce36d59b7476f2a8` локально **PASS**:
 Go/TS SDK и Proto source generation/clean replay, policy65 codegen,
