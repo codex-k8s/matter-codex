@@ -711,6 +711,10 @@ func (repository *Repository) changeIntegrationGrant(ctx context.Context, tx pgx
 	} else if err != nil {
 		return commandOutcome{}, errs.ErrUnavailable
 	}
+	// Повтор после ожидания connection lock предшествует OCC и новому effect.
+	if err := repository.authorizeIntegrationGrant(ctx, tx, scope, payload); err != nil {
+		return commandOutcome{}, err
+	}
 	if connectionVersion != *input.Mutation.ExpectedVersion {
 		return commandOutcome{}, errs.ErrVersionMismatch
 	}

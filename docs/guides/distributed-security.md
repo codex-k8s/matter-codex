@@ -109,6 +109,14 @@ VFS и одиночный Artifact read используют те же теку�
 закреплённый immutable package; совпадение capability key у двух подключений
 не переносит разрешение между ними. Shipped schema не заменяет более узкую
 UI/Git revision. Выдача capability проверяет полномочия до OCC и receipt replay.
+Для адресного integration grant проверяются оба владельца: точное соединение
+и точный Agent/Workflow внутри Project/tenant. Selector выдачи использует тот
+же owner admission predicate для страницы и total, но не требует заранее
+созданного grant. Selector исполнения дополнительно проверяет существующий
+grant и пересечение текущих полномочий с фактическим пакетом и этапом Workflow.
+Право выдать разрешение не является доказательством возможности его исполнить.
+Общий каталог соединений применяет `integration.view` к каждой строке до
+выдачи; фильтр UI, cursor и idempotency receipt не заменяют эту проверку.
 
 ## Browser SSO и API session
 

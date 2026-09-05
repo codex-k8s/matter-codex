@@ -1688,32 +1688,45 @@ func assistantActions(role string, ready bool) []string {
 }
 
 func (repository *Repository) ListIntegrationConnections(ctx context.Context, principal value.Principal, filter query.Filter) ([]entity.IntegrationConnection, string, error) {
-	scope, err := repository.resolveScope(ctx, principal)
+	current, err := repository.resolveScope(ctx, principal)
 	if err != nil {
 		return nil, "", err
 	}
-	rows, err := repository.pool.Query(ctx, queryQueriesListintegrationconnectionsSelectIntegrationConnectionsOrganizationIdDefinitionKey, scope.organizationID, filter.Category, boundedPage(filter.Page))
-	if err != nil {
-		return nil, "", errs.ErrUnavailable
-	}
-	defer rows.Close()
-	manageConnection, manageGrants, err := connectionAuthority(ctx, repository.pool, scope)
-	if err != nil {
-		return nil, "", err
-	}
-	var result []entity.IntegrationConnection
-	for rows.Next() {
-		item, scanErr := scanConnection(rows)
-		if scanErr != nil {
-			return nil, "", scanErr
+	if filter.DefinitionKey != "" {
+		if filter.Category != "" && filter.Category != filter.DefinitionKey {
+			return nil, "", errs.ErrInvalid
 		}
-		if err := attachConnection(ctx, repository.pool, scope, &item); err != nil {
-			return nil, "", errs.ErrUnavailable
-		}
-		item.NextActions = connectionActions(item, manageConnection, manageGrants)
-		result = append(result, item)
+		filter.Category = filter.DefinitionKey
+		filter.DefinitionKey = ""
 	}
-	return result, "", rows.Err()
+	return authorizedCatalog(ctx, repository, current, "INTEGRATION", filter,
+		func(ctx context.Context, tx pgx.Tx, after string, limit int32) ([]entity.IntegrationConnection, error) {
+			rows, err := tx.Query(ctx, queryQueriesListintegrationconnectionsSelectIntegrationConnectionsOrganizationIdDefinitionKey,
+				current.organizationID, filter.Category, limit, filter.Query, after)
+			if err != nil {
+				return nil, errs.ErrUnavailable
+			}
+			defer rows.Close()
+			items := []entity.IntegrationConnection{}
+			for rows.Next() {
+				item, err := scanConnection(rows)
+				if err != nil {
+					return nil, err
+				}
+				items = append(items, item)
+			}
+			return items, rows.Err()
+		},
+		func(item entity.IntegrationConnection) entity.AccessScope {
+			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "INTEGRATION", ResourceRef: item.Ref}
+		},
+		func(tx pgx.Tx, item *entity.IntegrationConnection, allowed func(string) bool) error {
+			if err := attachConnection(ctx, tx, current, item); err != nil {
+				return err
+			}
+			item.NextActions = connectionActions(*item, allowed("integration.manage"), allowed("integration.manage"))
+			return nil
+		})
 }
 
 func scanConnection(row rowScanner) (entity.IntegrationConnection, error) {
@@ -1780,22 +1793,19 @@ func connectionActions(item entity.IntegrationConnection, manageConnection, mana
 	return actions
 }
 
-func connectionAuthority(ctx context.Context, querier connectionQuerier, scope scope) (bool, bool, error) {
-	if scope.role == "OWNER" || scope.role == "ADMINISTRATOR" {
-		return true, true, nil
-	}
-	var manageGrants bool
-	if err := querier.QueryRow(ctx, queryQueriesConnectionauthoritySelectMembershipsOrganizationIdSubjectId, scope.organizationID, scope.actorID).Scan(&manageGrants); err != nil {
+func connectionAuthority(ctx context.Context, querier connectionQuerier, scope scope, ref string) (bool, bool, error) {
+	var manage bool
+	if err := querier.QueryRow(ctx, queryIntegrationConnectionAuthority, scope.organizationID, scope.actorID, ref).Scan(&manage); err != nil {
 		return false, false, errs.ErrUnavailable
 	}
-	return false, manageGrants, nil
+	return manage, manage, nil
 }
 
 func attachConnection(ctx context.Context, querier connectionQuerier, scope scope, item *entity.IntegrationConnection) error {
 	if err := projectConnectionPackage(ctx, querier, scope, item); err != nil {
 		return err
 	}
-	rows, err := querier.Query(ctx, queryQueriesAttachconnectionSelectIntegrationGrantsOrganizationIdConnectionIdRef, scope.organizationID, item.Ref, scope.role, scope.actorID)
+	rows, err := querier.Query(ctx, queryQueriesAttachconnectionSelectIntegrationGrantsOrganizationIdConnectionIdRef, scope.organizationID, item.Ref, scope.actorID)
 	if err != nil {
 		return err
 	}
@@ -1826,7 +1836,7 @@ func readConnection(ctx context.Context, querier connectionQuerier, scope scope,
 	if err := attachConnection(ctx, querier, scope, &item); err != nil {
 		return entity.IntegrationConnection{}, errs.ErrUnavailable
 	}
-	manageConnection, manageGrants, err := connectionAuthority(ctx, querier, scope)
+	manageConnection, manageGrants, err := connectionAuthority(ctx, querier, scope, ref)
 	if err != nil {
 		return entity.IntegrationConnection{}, err
 	}

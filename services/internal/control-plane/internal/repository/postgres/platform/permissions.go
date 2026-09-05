@@ -12,6 +12,12 @@ import (
 
 func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, current scope, input command.Command) error {
 	switch input.Kind {
+	case command.ChangeIntegrationGrant:
+		payload, ok := input.Payload.(command.IntegrationGrantInput)
+		if !ok {
+			return errs.ErrInvalid
+		}
+		return repository.authorizeIntegrationGrant(ctx, tx, current, payload)
 	case command.PrepareRoleImageImpactPlan, command.RebindRoleImage:
 		return repository.authorizeRoleImageImpact(ctx, tx, current, input)
 	case command.PrepareRoleImageGitWriteBack, command.PrepareIntegrationDefinitionGitWriteBack, command.ApproveManagedConfigurationGitWriteBack, command.RejectManagedConfigurationGitWriteBack, command.CancelManagedConfigurationGitWriteBack:
