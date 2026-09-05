@@ -2145,6 +2145,7 @@ func (e ManagedConfigurationManagedBy) Valid() bool {
 // Defines values for ManagedConfigurationConsumerKind.
 const (
 	ManagedConfigurationConsumerKindAGENT                 ManagedConfigurationConsumerKind = "AGENT"
+	ManagedConfigurationConsumerKindAGENTCONTINUATION     ManagedConfigurationConsumerKind = "AGENT_CONTINUATION"
 	ManagedConfigurationConsumerKindINTEGRATIONCONNECTION ManagedConfigurationConsumerKind = "INTEGRATION_CONNECTION"
 	ManagedConfigurationConsumerKindRUNTIMEENVIRONMENT    ManagedConfigurationConsumerKind = "RUNTIME_ENVIRONMENT"
 	ManagedConfigurationConsumerKindSCHEDULE              ManagedConfigurationConsumerKind = "SCHEDULE"
@@ -2156,6 +2157,8 @@ const (
 func (e ManagedConfigurationConsumerKind) Valid() bool {
 	switch e {
 	case ManagedConfigurationConsumerKindAGENT:
+		return true
+	case ManagedConfigurationConsumerKindAGENTCONTINUATION:
 		return true
 	case ManagedConfigurationConsumerKindINTEGRATIONCONNECTION:
 		return true
@@ -3015,6 +3018,186 @@ func (e ProjectMembershipCreateInputPermissions) Valid() bool {
 	}
 }
 
+// Defines values for PromptPreviewSectionUserKind.
+const (
+	AUTOMATIONTASK  PromptPreviewSectionUserKind = "AUTOMATION_TASK"
+	BASETEMPLATE    PromptPreviewSectionUserKind = "BASE_TEMPLATE"
+	WORKFLOWCONTEXT PromptPreviewSectionUserKind = "WORKFLOW_CONTEXT"
+)
+
+// Valid indicates whether the value is a known member of the PromptPreviewSectionUserKind enum.
+func (e PromptPreviewSectionUserKind) Valid() bool {
+	switch e {
+	case AUTOMATIONTASK:
+		return true
+	case BASETEMPLATE:
+		return true
+	case WORKFLOWCONTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptPreviewTargetKind.
+const (
+	PromptPreviewTargetKindAGENT               PromptPreviewTargetKind = "AGENT"
+	PromptPreviewTargetKindRUN                 PromptPreviewTargetKind = "RUN"
+	PromptPreviewTargetKindSESSION             PromptPreviewTargetKind = "SESSION"
+	PromptPreviewTargetKindSESSIONCONTINUATION PromptPreviewTargetKind = "SESSION_CONTINUATION"
+	PromptPreviewTargetKindSYNTHETIC           PromptPreviewTargetKind = "SYNTHETIC"
+	PromptPreviewTargetKindWORKFLOWSTAGE       PromptPreviewTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptPreviewTargetKind enum.
+func (e PromptPreviewTargetKind) Valid() bool {
+	switch e {
+	case PromptPreviewTargetKindAGENT:
+		return true
+	case PromptPreviewTargetKindRUN:
+		return true
+	case PromptPreviewTargetKindSESSION:
+		return true
+	case PromptPreviewTargetKindSESSIONCONTINUATION:
+		return true
+	case PromptPreviewTargetKindSYNTHETIC:
+		return true
+	case PromptPreviewTargetKindWORKFLOWSTAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptRuntimeChangeAction.
+const (
+	USECURRENTCONTEXT PromptRuntimeChangeAction = "USE_CURRENT_CONTEXT"
+)
+
+// Valid indicates whether the value is a known member of the PromptRuntimeChangeAction enum.
+func (e PromptRuntimeChangeAction) Valid() bool {
+	switch e {
+	case USECURRENTCONTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptRuntimeChangeComponent.
+const (
+	PromptRuntimeChangeComponentCAPABILITIES PromptRuntimeChangeComponent = "CAPABILITIES"
+	PromptRuntimeChangeComponentENVIRONMENT  PromptRuntimeChangeComponent = "ENVIRONMENT"
+	PromptRuntimeChangeComponentFILES        PromptRuntimeChangeComponent = "FILES"
+	PromptRuntimeChangeComponentIMAGE        PromptRuntimeChangeComponent = "IMAGE"
+	PromptRuntimeChangeComponentINSTRUCTIONS PromptRuntimeChangeComponent = "INSTRUCTIONS"
+	PromptRuntimeChangeComponentINTEGRATIONS PromptRuntimeChangeComponent = "INTEGRATIONS"
+	PromptRuntimeChangeComponentMCP          PromptRuntimeChangeComponent = "MCP"
+	PromptRuntimeChangeComponentMEMORY       PromptRuntimeChangeComponent = "MEMORY"
+	PromptRuntimeChangeComponentMODEL        PromptRuntimeChangeComponent = "MODEL"
+	PromptRuntimeChangeComponentPOLICY       PromptRuntimeChangeComponent = "POLICY"
+	PromptRuntimeChangeComponentREASONING    PromptRuntimeChangeComponent = "REASONING"
+	PromptRuntimeChangeComponentSKILLS       PromptRuntimeChangeComponent = "SKILLS"
+	PromptRuntimeChangeComponentTOOLS        PromptRuntimeChangeComponent = "TOOLS"
+)
+
+// Valid indicates whether the value is a known member of the PromptRuntimeChangeComponent enum.
+func (e PromptRuntimeChangeComponent) Valid() bool {
+	switch e {
+	case PromptRuntimeChangeComponentCAPABILITIES:
+		return true
+	case PromptRuntimeChangeComponentENVIRONMENT:
+		return true
+	case PromptRuntimeChangeComponentFILES:
+		return true
+	case PromptRuntimeChangeComponentIMAGE:
+		return true
+	case PromptRuntimeChangeComponentINSTRUCTIONS:
+		return true
+	case PromptRuntimeChangeComponentINTEGRATIONS:
+		return true
+	case PromptRuntimeChangeComponentMCP:
+		return true
+	case PromptRuntimeChangeComponentMEMORY:
+		return true
+	case PromptRuntimeChangeComponentMODEL:
+		return true
+	case PromptRuntimeChangeComponentPOLICY:
+		return true
+	case PromptRuntimeChangeComponentREASONING:
+		return true
+	case PromptRuntimeChangeComponentSKILLS:
+		return true
+	case PromptRuntimeChangeComponentTOOLS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptSectionSource.
+const (
+	PromptSectionSourcePLATFORM     PromptSectionSource = "PLATFORM"
+	PromptSectionSourceUSERTEMPLATE PromptSectionSource = "USER_TEMPLATE"
+)
+
+// Valid indicates whether the value is a known member of the PromptSectionSource enum.
+func (e PromptSectionSource) Valid() bool {
+	switch e {
+	case PromptSectionSourcePLATFORM:
+		return true
+	case PromptSectionSourceUSERTEMPLATE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptSemanticSlot.
+const (
+	PromptSemanticSlotCONSTRAINTS           PromptSemanticSlot = "CONSTRAINTS"
+	PromptSemanticSlotEFFECTIVECAPABILITIES PromptSemanticSlot = "EFFECTIVE_CAPABILITIES"
+	PromptSemanticSlotEXPECTEDRESULT        PromptSemanticSlot = "EXPECTED_RESULT"
+	PromptSemanticSlotFILES                 PromptSemanticSlot = "FILES"
+	PromptSemanticSlotINPUT                 PromptSemanticSlot = "INPUT"
+	PromptSemanticSlotINTEGRATIONS          PromptSemanticSlot = "INTEGRATIONS"
+	PromptSemanticSlotPURPOSE               PromptSemanticSlot = "PURPOSE"
+	PromptSemanticSlotRUNTIMECHANGES        PromptSemanticSlot = "RUNTIME_CHANGES"
+	PromptSemanticSlotSTAGE                 PromptSemanticSlot = "STAGE"
+	PromptSemanticSlotTOOLS                 PromptSemanticSlot = "TOOLS"
+	PromptSemanticSlotWORKFLOW              PromptSemanticSlot = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the PromptSemanticSlot enum.
+func (e PromptSemanticSlot) Valid() bool {
+	switch e {
+	case PromptSemanticSlotCONSTRAINTS:
+		return true
+	case PromptSemanticSlotEFFECTIVECAPABILITIES:
+		return true
+	case PromptSemanticSlotEXPECTEDRESULT:
+		return true
+	case PromptSemanticSlotFILES:
+		return true
+	case PromptSemanticSlotINPUT:
+		return true
+	case PromptSemanticSlotINTEGRATIONS:
+		return true
+	case PromptSemanticSlotPURPOSE:
+		return true
+	case PromptSemanticSlotRUNTIMECHANGES:
+		return true
+	case PromptSemanticSlotSTAGE:
+		return true
+	case PromptSemanticSlotTOOLS:
+		return true
+	case PromptSemanticSlotWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PromptTemplateDiagnosticSeverity.
 const (
 	PromptTemplateDiagnosticSeverityERROR   PromptTemplateDiagnosticSeverity = "ERROR"
@@ -3033,21 +3216,93 @@ func (e PromptTemplateDiagnosticSeverity) Valid() bool {
 	}
 }
 
-// Defines values for PromptTemplatePreviewInputTargetKind.
+// Defines values for PromptTemplateScopeTargetKind.
 const (
-	PromptTemplatePreviewInputTargetKindRUN       PromptTemplatePreviewInputTargetKind = "RUN"
-	PromptTemplatePreviewInputTargetKindSESSION   PromptTemplatePreviewInputTargetKind = "SESSION"
-	PromptTemplatePreviewInputTargetKindSYNTHETIC PromptTemplatePreviewInputTargetKind = "SYNTHETIC"
+	PromptTemplateScopeTargetKindAGENT         PromptTemplateScopeTargetKind = "AGENT"
+	PromptTemplateScopeTargetKindWORKFLOWSTAGE PromptTemplateScopeTargetKind = "WORKFLOW_STAGE"
 )
 
-// Valid indicates whether the value is a known member of the PromptTemplatePreviewInputTargetKind enum.
-func (e PromptTemplatePreviewInputTargetKind) Valid() bool {
+// Valid indicates whether the value is a known member of the PromptTemplateScopeTargetKind enum.
+func (e PromptTemplateScopeTargetKind) Valid() bool {
 	switch e {
-	case PromptTemplatePreviewInputTargetKindRUN:
+	case PromptTemplateScopeTargetKindAGENT:
 		return true
-	case PromptTemplatePreviewInputTargetKindSESSION:
+	case PromptTemplateScopeTargetKindWORKFLOWSTAGE:
 		return true
-	case PromptTemplatePreviewInputTargetKindSYNTHETIC:
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeTemplateKind.
+const (
+	PromptTemplateScopeTemplateKindCONTINUATION PromptTemplateScopeTemplateKind = "CONTINUATION"
+	PromptTemplateScopeTemplateKindINSTRUCTIONS PromptTemplateScopeTemplateKind = "INSTRUCTIONS"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeTemplateKind enum.
+func (e PromptTemplateScopeTemplateKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeTemplateKindCONTINUATION:
+		return true
+	case PromptTemplateScopeTemplateKindINSTRUCTIONS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeInputTargetKind.
+const (
+	PromptTemplateScopeInputTargetKindAGENT         PromptTemplateScopeInputTargetKind = "AGENT"
+	PromptTemplateScopeInputTargetKindWORKFLOWSTAGE PromptTemplateScopeInputTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeInputTargetKind enum.
+func (e PromptTemplateScopeInputTargetKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeInputTargetKindAGENT:
+		return true
+	case PromptTemplateScopeInputTargetKindWORKFLOWSTAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeInputTemplateKind.
+const (
+	PromptTemplateScopeInputTemplateKindCONTINUATION PromptTemplateScopeInputTemplateKind = "CONTINUATION"
+	PromptTemplateScopeInputTemplateKindINSTRUCTIONS PromptTemplateScopeInputTemplateKind = "INSTRUCTIONS"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeInputTemplateKind enum.
+func (e PromptTemplateScopeInputTemplateKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeInputTemplateKindCONTINUATION:
+		return true
+	case PromptTemplateScopeInputTemplateKindINSTRUCTIONS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptVariableCatalogInputTargetKind.
+const (
+	PromptVariableCatalogInputTargetKindAGENT               PromptVariableCatalogInputTargetKind = "AGENT"
+	PromptVariableCatalogInputTargetKindSESSIONCONTINUATION PromptVariableCatalogInputTargetKind = "SESSION_CONTINUATION"
+	PromptVariableCatalogInputTargetKindWORKFLOWSTAGE       PromptVariableCatalogInputTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptVariableCatalogInputTargetKind enum.
+func (e PromptVariableCatalogInputTargetKind) Valid() bool {
+	switch e {
+	case PromptVariableCatalogInputTargetKindAGENT:
+		return true
+	case PromptVariableCatalogInputTargetKindSESSIONCONTINUATION:
+		return true
+	case PromptVariableCatalogInputTargetKindWORKFLOWSTAGE:
 		return true
 	default:
 		return false
@@ -5498,14 +5753,15 @@ func (e SystemSTTSpecificationPermissionKey) Valid() bool {
 
 // Defines values for TemplateVariableItemValueType.
 const (
-	TemplateVariableItemValueTypeBOOLEAN        TemplateVariableItemValueType = "BOOLEAN"
-	TemplateVariableItemValueTypeFILEDESCRIPTOR TemplateVariableItemValueType = "FILE_DESCRIPTOR"
-	TemplateVariableItemValueTypeINTEGER        TemplateVariableItemValueType = "INTEGER"
-	TemplateVariableItemValueTypeOBJECT         TemplateVariableItemValueType = "OBJECT"
-	TemplateVariableItemValueTypeOPAQUEREF      TemplateVariableItemValueType = "OPAQUE_REF"
-	TemplateVariableItemValueTypeSTRING         TemplateVariableItemValueType = "STRING"
-	TemplateVariableItemValueTypeTIMESTAMP      TemplateVariableItemValueType = "TIMESTAMP"
-	TemplateVariableItemValueTypeTOOLDESCRIPTOR TemplateVariableItemValueType = "TOOL_DESCRIPTOR"
+	TemplateVariableItemValueTypeBOOLEAN               TemplateVariableItemValueType = "BOOLEAN"
+	TemplateVariableItemValueTypeFILEDESCRIPTOR        TemplateVariableItemValueType = "FILE_DESCRIPTOR"
+	TemplateVariableItemValueTypeINTEGER               TemplateVariableItemValueType = "INTEGER"
+	TemplateVariableItemValueTypeINTEGRATIONDESCRIPTOR TemplateVariableItemValueType = "INTEGRATION_DESCRIPTOR"
+	TemplateVariableItemValueTypeOBJECT                TemplateVariableItemValueType = "OBJECT"
+	TemplateVariableItemValueTypeOPAQUEREF             TemplateVariableItemValueType = "OPAQUE_REF"
+	TemplateVariableItemValueTypeSTRING                TemplateVariableItemValueType = "STRING"
+	TemplateVariableItemValueTypeTIMESTAMP             TemplateVariableItemValueType = "TIMESTAMP"
+	TemplateVariableItemValueTypeTOOLDESCRIPTOR        TemplateVariableItemValueType = "TOOL_DESCRIPTOR"
 )
 
 // Valid indicates whether the value is a known member of the TemplateVariableItemValueType enum.
@@ -5516,6 +5772,8 @@ func (e TemplateVariableItemValueType) Valid() bool {
 	case TemplateVariableItemValueTypeFILEDESCRIPTOR:
 		return true
 	case TemplateVariableItemValueTypeINTEGER:
+		return true
+	case TemplateVariableItemValueTypeINTEGRATIONDESCRIPTOR:
 		return true
 	case TemplateVariableItemValueTypeOBJECT:
 		return true
@@ -5638,7 +5896,9 @@ func (e TemplateVariableValueType) Valid() bool {
 const (
 	TemplateVariableAvailabilityReasonAGENTCONTEXTREQUIRED   TemplateVariableAvailabilityReason = "AGENT_CONTEXT_REQUIRED"
 	TemplateVariableAvailabilityReasonAVAILABLE              TemplateVariableAvailabilityReason = "AVAILABLE"
+	TemplateVariableAvailabilityReasonCAPABILITYREQUIRED     TemplateVariableAvailabilityReason = "CAPABILITY_REQUIRED"
 	TemplateVariableAvailabilityReasonNOTMATERIALIZED        TemplateVariableAvailabilityReason = "NOT_MATERIALIZED"
+	TemplateVariableAvailabilityReasonPERMISSIONREQUIRED     TemplateVariableAvailabilityReason = "PERMISSION_REQUIRED"
 	TemplateVariableAvailabilityReasonPROJECTCONTEXTREQUIRED TemplateVariableAvailabilityReason = "PROJECT_CONTEXT_REQUIRED"
 	TemplateVariableAvailabilityReasonRUNTIMECONTEXTREQUIRED TemplateVariableAvailabilityReason = "RUNTIME_CONTEXT_REQUIRED"
 )
@@ -5650,7 +5910,11 @@ func (e TemplateVariableAvailabilityReason) Valid() bool {
 		return true
 	case TemplateVariableAvailabilityReasonAVAILABLE:
 		return true
+	case TemplateVariableAvailabilityReasonCAPABILITYREQUIRED:
+		return true
 	case TemplateVariableAvailabilityReasonNOTMATERIALIZED:
+		return true
+	case TemplateVariableAvailabilityReasonPERMISSIONREQUIRED:
 		return true
 	case TemplateVariableAvailabilityReasonPROJECTCONTEXTREQUIRED:
 		return true
@@ -8191,6 +8455,7 @@ type ManagedConfigurationDraftInput struct {
 	ContentFormat    ManagedConfigurationDraftInputContentFormat `json:"contentFormat"`
 	Name             string                                      `json:"name"`
 	ProjectRef       *OpaqueRef                                  `json:"projectRef,omitempty"`
+	PromptScope      *PromptTemplateScopeInput                   `json:"promptScope,omitempty"`
 }
 
 // ManagedConfigurationDraftInputContentFormat defines model for ManagedConfigurationDraftInput.ContentFormat.
@@ -8201,6 +8466,7 @@ type ManagedConfigurationDraftSaveInput struct {
 	// Content Неполный текст допустим; ограничение 256 KiB применяется к UTF-8 байтам. Пустая строка разрешена, отсутствие поля и null запрещены.
 	Content       *string                                         `json:"content"`
 	ContentFormat ManagedConfigurationDraftSaveInputContentFormat `json:"contentFormat"`
+	PromptScope   *PromptTemplateScopeInput                       `json:"promptScope,omitempty"`
 }
 
 // ManagedConfigurationDraftSaveInputContentFormat defines model for ManagedConfigurationDraftSaveInput.ContentFormat.
@@ -8277,6 +8543,7 @@ type ManagedConfigurationRevision struct {
 	CreatedAt             Timestamp                                 `json:"createdAt"`
 	Digest                string                                    `json:"digest"`
 	ParentRevisionRef     *OpaqueRef                                `json:"parentRevisionRef,omitempty"`
+	PromptScope           *PromptTemplateScope                      `json:"promptScope,omitempty"`
 	PublishedAt           *Timestamp                                `json:"publishedAt,omitempty"`
 	Ref                   OpaqueRef                                 `json:"ref"`
 	Revision              int64                                     `json:"revision"`
@@ -8633,13 +8900,108 @@ type ProjectPage struct {
 	NextPageToken *string      `json:"nextPageToken,omitempty"`
 }
 
+// PromptContextPin defines model for PromptContextPin.
+type PromptContextPin struct {
+	AgentRef                   *OpaqueRef `json:"agentRef,omitempty"`
+	AgentVersion               *int64     `json:"agentVersion,omitempty"`
+	AttachmentManifestDigest   *string    `json:"attachmentManifestDigest,omitempty"`
+	AttachmentSetRef           *OpaqueRef `json:"attachmentSetRef,omitempty"`
+	Digest                     string     `json:"digest"`
+	EnvironmentBindingRef      *OpaqueRef `json:"environmentBindingRef,omitempty"`
+	EnvironmentBindingVersion  *int64     `json:"environmentBindingVersion,omitempty"`
+	EnvironmentDigest          *string    `json:"environmentDigest,omitempty"`
+	EnvironmentVersionRef      *OpaqueRef `json:"environmentVersionRef,omitempty"`
+	PreviousRuntimeRevisionRef *OpaqueRef `json:"previousRuntimeRevisionRef,omitempty"`
+	RuntimeConfigurationDigest *string    `json:"runtimeConfigurationDigest,omitempty"`
+	RuntimeConfigurationRef    *OpaqueRef `json:"runtimeConfigurationRef,omitempty"`
+	WorkflowRef                *OpaqueRef `json:"workflowRef,omitempty"`
+	WorkflowRevisionRef        *OpaqueRef `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey           *string    `json:"workflowStageKey,omitempty"`
+	WorkflowVersion            *int64     `json:"workflowVersion,omitempty"`
+}
+
+// PromptPreviewContext defines model for PromptPreviewContext.
+type PromptPreviewContext struct {
+	AgentRef                *OpaqueRef              `json:"agentRef,omitempty"`
+	AttachmentSetRef        *OpaqueRef              `json:"attachmentSetRef,omitempty"`
+	ExpectedAgentVersion    *int64                  `json:"expectedAgentVersion,omitempty"`
+	ExpectedWorkflowVersion *int64                  `json:"expectedWorkflowVersion,omitempty"`
+	Input                   *map[string]interface{} `json:"input,omitempty"`
+	Task                    *string                 `json:"task,omitempty"`
+	WorkflowRevisionRef     *OpaqueRef              `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey        *string                 `json:"workflowStageKey,omitempty"`
+}
+
+// PromptPreviewSection defines model for PromptPreviewSection.
+type PromptPreviewSection struct {
+	Content        string                        `json:"content"`
+	Slot           *PromptSemanticSlot           `json:"slot,omitempty"`
+	Source         PromptSectionSource           `json:"source"`
+	TemplateDigest *string                       `json:"templateDigest,omitempty"`
+	TemplateRef    *OpaqueRef                    `json:"templateRef,omitempty"`
+	UserKind       *PromptPreviewSectionUserKind `json:"userKind,omitempty"`
+}
+
+// PromptPreviewSectionUserKind defines model for PromptPreviewSection.UserKind.
+type PromptPreviewSectionUserKind string
+
+// PromptPreviewTargetKind defines model for PromptPreviewTargetKind.
+type PromptPreviewTargetKind string
+
+// PromptRuntimeChange defines model for PromptRuntimeChange.
+type PromptRuntimeChange struct {
+	Action    PromptRuntimeChangeAction    `json:"action"`
+	Component PromptRuntimeChangeComponent `json:"component"`
+	Current   []PromptRuntimeDescriptor    `json:"current"`
+	Previous  []PromptRuntimeDescriptor    `json:"previous"`
+}
+
+// PromptRuntimeChangeAction defines model for PromptRuntimeChange.Action.
+type PromptRuntimeChangeAction string
+
+// PromptRuntimeChangeComponent defines model for PromptRuntimeChange.Component.
+type PromptRuntimeChangeComponent string
+
+// PromptRuntimeDescriptor defines model for PromptRuntimeDescriptor.
+type PromptRuntimeDescriptor struct {
+	Digest  *string `json:"digest,omitempty"`
+	Ref     *string `json:"ref,omitempty"`
+	Value   *string `json:"value,omitempty"`
+	Version *int64  `json:"version,omitempty"`
+}
+
+// PromptRuntimeDiff defines model for PromptRuntimeDiff.
+type PromptRuntimeDiff struct {
+	Attempt             *int32                `json:"attempt,omitempty"`
+	Changes             []PromptRuntimeChange `json:"changes"`
+	CurrentRevisionRef  *OpaqueRef            `json:"currentRevisionRef,omitempty"`
+	Digest              string                `json:"digest"`
+	PreviousRevisionRef OpaqueRef             `json:"previousRevisionRef"`
+	SessionRef          OpaqueRef             `json:"sessionRef"`
+	TurnRef             *OpaqueRef            `json:"turnRef,omitempty"`
+}
+
+// PromptSectionSource defines model for PromptSectionSource.
+type PromptSectionSource string
+
+// PromptSemanticSlot defines model for PromptSemanticSlot.
+type PromptSemanticSlot string
+
+// PromptSlotProvenance defines model for PromptSlotProvenance.
+type PromptSlotProvenance struct {
+	Position int32               `json:"position"`
+	Slot     PromptSemanticSlot  `json:"slot"`
+	Source   PromptSectionSource `json:"source"`
+}
+
 // PromptTemplateDiagnostic defines model for PromptTemplateDiagnostic.
 type PromptTemplateDiagnostic struct {
-	Code     string                           `json:"code"`
-	Column   int32                            `json:"column"`
-	Line     int32                            `json:"line"`
-	Message  string                           `json:"message"`
-	Severity PromptTemplateDiagnosticSeverity `json:"severity"`
+	Code         string                           `json:"code"`
+	Column       int32                            `json:"column"`
+	Line         int32                            `json:"line"`
+	Message      string                           `json:"message"`
+	Severity     PromptTemplateDiagnosticSeverity `json:"severity"`
+	VariableName *string                          `json:"variableName,omitempty"`
 }
 
 // PromptTemplateDiagnosticSeverity defines model for PromptTemplateDiagnostic.Severity.
@@ -8647,32 +9009,95 @@ type PromptTemplateDiagnosticSeverity string
 
 // PromptTemplateInput defines model for PromptTemplateInput.
 type PromptTemplateInput struct {
-	Template string `json:"template"`
+	Context               *PromptPreviewContext    `json:"context,omitempty"`
+	ExpectedContextDigest *string                  `json:"expectedContextDigest,omitempty"`
+	TargetKind            *PromptPreviewTargetKind `json:"targetKind,omitempty"`
+	TargetRef             *OpaqueRef               `json:"targetRef,omitempty"`
+	Template              string                   `json:"template"`
 }
 
 // PromptTemplatePreview defines model for PromptTemplatePreview.
 type PromptTemplatePreview struct {
-	Diagnostics            []PromptTemplateDiagnostic `json:"diagnostics"`
-	FullMaterializedPrompt *string                    `json:"fullMaterializedPrompt,omitempty"`
-	SafePreview            string                     `json:"safePreview"`
+	Complete                bool                       `json:"complete"`
+	ContextPin              *PromptContextPin          `json:"contextPin,omitempty"`
+	Diagnostics             []PromptTemplateDiagnostic `json:"diagnostics"`
+	EffectiveCapabilities   []string                   `json:"effectiveCapabilities"`
+	FullMaterializedPrompt  *string                    `json:"fullMaterializedPrompt,omitempty"`
+	Locale                  string                     `json:"locale"`
+	MaterializationDigest   string                     `json:"materializationDigest"`
+	RuntimeDiff             *PromptRuntimeDiff         `json:"runtimeDiff,omitempty"`
+	SafePreview             string                     `json:"safePreview"`
+	Sections                []PromptPreviewSection     `json:"sections"`
+	ServiceTemplateDigest   string                     `json:"serviceTemplateDigest"`
+	ServiceTemplateRevision string                     `json:"serviceTemplateRevision"`
+	Slots                   []PromptSlotProvenance     `json:"slots"`
+	TemplateDigest          string                     `json:"templateDigest"`
+	TemplateRef             OpaqueRef                  `json:"templateRef"`
+	VariableSnapshotDigest  string                     `json:"variableSnapshotDigest"`
 }
 
 // PromptTemplatePreviewInput defines model for PromptTemplatePreviewInput.
 type PromptTemplatePreviewInput struct {
-	IncludeFullMaterialization *bool                                 `json:"includeFullMaterialization,omitempty"`
-	TargetKind                 *PromptTemplatePreviewInputTargetKind `json:"targetKind,omitempty"`
-	TargetRef                  *OpaqueRef                            `json:"targetRef,omitempty"`
-	Template                   string                                `json:"template"`
+	Context                    *PromptPreviewContext    `json:"context,omitempty"`
+	ExpectedContextDigest      *string                  `json:"expectedContextDigest,omitempty"`
+	IncludeFullMaterialization *bool                    `json:"includeFullMaterialization,omitempty"`
+	TargetKind                 *PromptPreviewTargetKind `json:"targetKind,omitempty"`
+	TargetRef                  *OpaqueRef               `json:"targetRef,omitempty"`
+	Template                   string                   `json:"template"`
 }
 
-// PromptTemplatePreviewInputTargetKind defines model for PromptTemplatePreviewInput.TargetKind.
-type PromptTemplatePreviewInputTargetKind string
+// PromptTemplateScope defines model for PromptTemplateScope.
+type PromptTemplateScope struct {
+	ContextPin   PromptContextPin                `json:"contextPin"`
+	TargetKind   PromptTemplateScopeTargetKind   `json:"targetKind"`
+	TargetRef    OpaqueRef                       `json:"targetRef"`
+	TemplateKind PromptTemplateScopeTemplateKind `json:"templateKind"`
+}
+
+// PromptTemplateScopeTargetKind defines model for PromptTemplateScope.TargetKind.
+type PromptTemplateScopeTargetKind string
+
+// PromptTemplateScopeTemplateKind defines model for PromptTemplateScope.TemplateKind.
+type PromptTemplateScopeTemplateKind string
+
+// PromptTemplateScopeInput defines model for PromptTemplateScopeInput.
+type PromptTemplateScopeInput struct {
+	AgentRef              *OpaqueRef                           `json:"agentRef,omitempty"`
+	ExpectedContextDigest *string                              `json:"expectedContextDigest,omitempty"`
+	TargetKind            PromptTemplateScopeInputTargetKind   `json:"targetKind"`
+	TargetRef             OpaqueRef                            `json:"targetRef"`
+	TemplateKind          PromptTemplateScopeInputTemplateKind `json:"templateKind"`
+	WorkflowRevisionRef   *OpaqueRef                           `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey      *string                              `json:"workflowStageKey,omitempty"`
+}
+
+// PromptTemplateScopeInputTargetKind defines model for PromptTemplateScopeInput.TargetKind.
+type PromptTemplateScopeInputTargetKind string
+
+// PromptTemplateScopeInputTemplateKind defines model for PromptTemplateScopeInput.TemplateKind.
+type PromptTemplateScopeInputTemplateKind string
 
 // PromptTemplateValidation defines model for PromptTemplateValidation.
 type PromptTemplateValidation struct {
+	ContextPin  *PromptContextPin          `json:"contextPin,omitempty"`
 	Diagnostics []PromptTemplateDiagnostic `json:"diagnostics"`
 	Valid       bool                       `json:"valid"`
 }
+
+// PromptVariableCatalogInput defines model for PromptVariableCatalogInput.
+type PromptVariableCatalogInput struct {
+	Context               *PromptPreviewContext                `json:"context,omitempty"`
+	ExpectedContextDigest *string                              `json:"expectedContextDigest,omitempty"`
+	PageSize              *int                                 `json:"pageSize,omitempty"`
+	PageToken             *string                              `json:"pageToken,omitempty"`
+	ProjectRef            *OpaqueRef                           `json:"projectRef,omitempty"`
+	Query                 *string                              `json:"query,omitempty"`
+	TargetKind            PromptVariableCatalogInputTargetKind `json:"targetKind"`
+	TargetRef             OpaqueRef                            `json:"targetRef"`
+}
+
+// PromptVariableCatalogInputTargetKind defines model for PromptVariableCatalogInput.TargetKind.
+type PromptVariableCatalogInputTargetKind string
 
 // ProviderAccount defines model for ProviderAccount.
 type ProviderAccount struct {
@@ -10518,6 +10943,7 @@ type TemplateVariableFieldValueType string
 
 // TemplateVariablePage defines model for TemplateVariablePage.
 type TemplateVariablePage struct {
+	ContextPin    *PromptContextPin  `json:"contextPin,omitempty"`
 	Items         []TemplateVariable `json:"items"`
 	NextPageToken *string            `json:"nextPageToken,omitempty"`
 	Total         int64              `json:"total"`
@@ -12097,6 +12523,11 @@ type ListPromptTemplateVariablesParams struct {
 	RuntimeRevisionRef *TemplateRuntimeRevisionRef `form:"runtimeRevisionRef,omitempty" json:"runtimeRevisionRef,omitempty"`
 }
 
+// QueryPromptTemplateVariablesParams defines parameters for QueryPromptTemplateVariables.
+type QueryPromptTemplateVariablesParams struct {
+	XCSRFToken CsrfToken `json:"X-CSRF-Token"`
+}
+
 // PreviewPromptTemplateParams defines parameters for PreviewPromptTemplate.
 type PreviewPromptTemplateParams struct {
 	XCSRFToken CsrfToken `json:"X-CSRF-Token"`
@@ -13019,6 +13450,9 @@ type RebindPromptTemplateConsumersJSONRequestBody = ManagedConfigurationRebindIn
 // SavePromptTemplateDraftJSONRequestBody defines body for SavePromptTemplateDraft for application/json ContentType.
 type SavePromptTemplateDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
 
+// QueryPromptTemplateVariablesJSONRequestBody defines body for QueryPromptTemplateVariables for application/json ContentType.
+type QueryPromptTemplateVariablesJSONRequestBody = PromptVariableCatalogInput
+
 // PreviewPromptTemplateJSONRequestBody defines body for PreviewPromptTemplate for application/json ContentType.
 type PreviewPromptTemplateJSONRequestBody = PromptTemplatePreviewInput
 
@@ -13675,6 +14109,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/prompt-templates/catalog)
 	ListPromptTemplateVariables(w http.ResponseWriter, r *http.Request, params ListPromptTemplateVariablesParams)
+
+	// (POST /api/v1/prompt-templates/catalog/query)
+	QueryPromptTemplateVariables(w http.ResponseWriter, r *http.Request, params QueryPromptTemplateVariablesParams)
 
 	// (POST /api/v1/prompt-templates/preview)
 	PreviewPromptTemplate(w http.ResponseWriter, r *http.Request, params PreviewPromptTemplateParams)
@@ -29490,6 +29927,57 @@ func (siw *ServerInterfaceWrapper) ListPromptTemplateVariables(w http.ResponseWr
 	handler.ServeHTTP(w, r)
 }
 
+// QueryPromptTemplateVariables operation middleware
+func (siw *ServerInterfaceWrapper) QueryPromptTemplateVariables(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params QueryPromptTemplateVariablesParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.QueryPromptTemplateVariables(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PreviewPromptTemplate operation middleware
 func (siw *ServerInterfaceWrapper) PreviewPromptTemplate(w http.ResponseWriter, r *http.Request) {
 
@@ -39154,6 +39642,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SavePromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidatePromptTemplateDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/prompt-templates/catalog", wrapper.ListPromptTemplateVariables)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/catalog/query", wrapper.QueryPromptTemplateVariables)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/preview", wrapper.PreviewPromptTemplate)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/validation", wrapper.ValidatePromptTemplate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/provider-accounts", wrapper.ListProviderAccounts)

@@ -1170,6 +1170,19 @@ paths:
           description: Типизированный каталог разрешённых Go template namespaces без secrets
           content: { application/json: { schema: { $ref: '#/components/schemas/TemplateVariablePage' } } }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/prompt-templates/catalog/query:
+    post:
+      tags: [Agents]
+      operationId: queryPromptTemplateVariables
+      parameters: [{ $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PromptVariableCatalogInput' } } }
+      responses:
+        '200':
+          description: Каталог выбранного контекста без пользовательских значений в URL
+          content: { application/json: { schema: { $ref: '#/components/schemas/TemplateVariablePage' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/prompt-templates/validation:
     post:
       tags: [Agents]
@@ -5093,12 +5106,14 @@ components:
         name: { type: string, minLength: 1, maxLength: 160 }
         contentFormat: { type: string, enum: [TEXT, JSON, YAML, TOML] }
         content: { type: string, minLength: 1, maxLength: 262144 }
+        promptScope: { $ref: '#/components/schemas/PromptTemplateScopeInput' }
     ManagedConfigurationDraftSaveInput:
       type: object
       additionalProperties: false
       required: [contentFormat, content]
       properties:
         contentFormat: { type: string, enum: [TEXT, JSON, YAML, TOML] }
+        promptScope: { $ref: '#/components/schemas/PromptTemplateScopeInput' }
         content:
           type: string
           maxLength: 262144
@@ -5115,7 +5130,7 @@ components:
       additionalProperties: false
       required: [kind, ref, revisionRef, version]
       properties:
-        kind: { type: string, enum: [AGENT, WORKFLOW, SCHEDULE, RUNTIME_ENVIRONMENT, INTEGRATION_CONNECTION, STT_SERVICE] }
+        kind: { type: string, enum: [AGENT, AGENT_CONTINUATION, WORKFLOW, SCHEDULE, RUNTIME_ENVIRONMENT, INTEGRATION_CONNECTION, STT_SERVICE] }
         ref: { type: string, minLength: 1, maxLength: 160 }
         revisionRef: { $ref: '#/components/schemas/OpaqueRef' }
         version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
@@ -5343,6 +5358,7 @@ components:
         createdAt: { $ref: '#/components/schemas/Timestamp' }
         validatedAt: { $ref: '#/components/schemas/Timestamp' }
         publishedAt: { $ref: '#/components/schemas/Timestamp' }
+        promptScope: { $ref: '#/components/schemas/PromptTemplateScope' }
     RoleImageGitSourceInput:
       type: object
       additionalProperties: false
@@ -6811,7 +6827,7 @@ components:
         nextPageToken: { type: string, maxLength: 512 }
     TemplateVariableAvailabilityReason:
       type: string
-      enum: [AVAILABLE, PROJECT_CONTEXT_REQUIRED, AGENT_CONTEXT_REQUIRED, RUNTIME_CONTEXT_REQUIRED, NOT_MATERIALIZED]
+      enum: [AVAILABLE, PROJECT_CONTEXT_REQUIRED, AGENT_CONTEXT_REQUIRED, RUNTIME_CONTEXT_REQUIRED, NOT_MATERIALIZED, PERMISSION_REQUIRED, CAPABILITY_REQUIRED]
     TemplateVariable:
       type: object
       additionalProperties: false
@@ -6825,7 +6841,7 @@ components:
         collection: { type: boolean }
         available: { type: boolean }
         reason: { $ref: '#/components/schemas/TemplateVariableAvailabilityReason' }
-        itemValueType: { type: string, enum: [STRING, OPAQUE_REF, INTEGER, BOOLEAN, TIMESTAMP, OBJECT, FILE_DESCRIPTOR, TOOL_DESCRIPTOR] }
+        itemValueType: { type: string, enum: [STRING, OPAQUE_REF, INTEGER, BOOLEAN, TIMESTAMP, OBJECT, FILE_DESCRIPTOR, TOOL_DESCRIPTOR, INTEGRATION_DESCRIPTOR] }
         itemFields: { type: array, maxItems: 32, items: { $ref: '#/components/schemas/TemplateVariableField' } }
         rangeExample: { type: string, maxLength: 500 }
     TemplateVariableField:
@@ -6844,6 +6860,7 @@ components:
         items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/TemplateVariable' } }
         total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
         nextPageToken: { type: string, maxLength: 512 }
+        contextPin: { $ref: '#/components/schemas/PromptContextPin' }
     ModelCapability:
       type: object
       additionalProperties: false
@@ -6899,20 +6916,151 @@ components:
       properties:
         items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ProviderDefinition' } }
         nextPageToken: { type: string, maxLength: 512 }
+    PromptVariableCatalogInput:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetRef]
+      properties:
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        targetKind: { type: string, enum: [AGENT, WORKFLOW_STAGE, SESSION_CONTINUATION] }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        context: { $ref: '#/components/schemas/PromptPreviewContext' }
+        expectedContextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        query: { type: string, maxLength: 200 }
+        pageSize: { type: integer, minimum: 1, maximum: 100 }
+        pageToken: { type: string, maxLength: 512 }
+    PromptTemplateScopeInput:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetRef, templateKind]
+      properties:
+        targetKind: { type: string, enum: [AGENT, WORKFLOW_STAGE] }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        agentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowStageKey: { type: string, minLength: 1, maxLength: 128 }
+        expectedContextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        templateKind: { type: string, enum: [INSTRUCTIONS, CONTINUATION] }
+    PromptTemplateScope:
+      type: object
+      additionalProperties: false
+      required: [targetKind, targetRef, contextPin, templateKind]
+      properties:
+        targetKind: { type: string, enum: [AGENT, WORKFLOW_STAGE] }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        contextPin: { $ref: '#/components/schemas/PromptContextPin' }
+        templateKind: { type: string, enum: [INSTRUCTIONS, CONTINUATION] }
     PromptTemplateInput:
       type: object
       additionalProperties: false
       required: [template]
-      properties: { template: { type: string, maxLength: 262144 } }
+      properties:
+        template: { type: string, maxLength: 262144 }
+        targetKind: { $ref: '#/components/schemas/PromptPreviewTargetKind' }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        context: { $ref: '#/components/schemas/PromptPreviewContext' }
+        expectedContextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
     PromptTemplatePreviewInput:
-      allOf:
-        - { $ref: '#/components/schemas/PromptTemplateInput' }
-        - type: object
-          additionalProperties: false
-          properties:
-            targetKind: { type: string, enum: [SYNTHETIC, SESSION, RUN] }
-            targetRef: { $ref: '#/components/schemas/OpaqueRef' }
-            includeFullMaterialization: { type: boolean, default: false }
+      type: object
+      additionalProperties: false
+      required: [template]
+      properties:
+        template: { type: string, maxLength: 262144 }
+        targetKind: { $ref: '#/components/schemas/PromptPreviewTargetKind' }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        context: { $ref: '#/components/schemas/PromptPreviewContext' }
+        expectedContextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        includeFullMaterialization: { type: boolean, default: false }
+    PromptPreviewTargetKind:
+      type: string
+      enum: [SYNTHETIC, SESSION, RUN, AGENT, WORKFLOW_STAGE, SESSION_CONTINUATION]
+    PromptPreviewContext:
+      type: object
+      additionalProperties: false
+      properties:
+        agentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowStageKey: { type: string, minLength: 1, maxLength: 128 }
+        expectedAgentVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        expectedWorkflowVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        input: { type: object, additionalProperties: true }
+        attachmentSetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        task: { type: string, maxLength: 65536 }
+    PromptContextPin:
+      type: object
+      additionalProperties: false
+      required: [digest]
+      properties:
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        agentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        agentVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        workflowRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        workflowRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        workflowStageKey: { type: string, minLength: 1, maxLength: 128 }
+        runtimeConfigurationRef: { $ref: '#/components/schemas/OpaqueRef' }
+        runtimeConfigurationDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        environmentBindingRef: { $ref: '#/components/schemas/OpaqueRef' }
+        environmentBindingVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        environmentVersionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        environmentDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        attachmentSetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        attachmentManifestDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        previousRuntimeRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+    PromptSemanticSlot:
+      type: string
+      enum: [WORKFLOW, STAGE, PURPOSE, EXPECTED_RESULT, INPUT, CONSTRAINTS, EFFECTIVE_CAPABILITIES, FILES, TOOLS, INTEGRATIONS, RUNTIME_CHANGES]
+    PromptSectionSource:
+      type: string
+      enum: [USER_TEMPLATE, PLATFORM]
+    PromptSlotProvenance:
+      type: object
+      additionalProperties: false
+      required: [slot, source, position]
+      properties:
+        slot: { $ref: '#/components/schemas/PromptSemanticSlot' }
+        source: { $ref: '#/components/schemas/PromptSectionSource' }
+        position: { type: integer, format: int32, minimum: 1 }
+    PromptPreviewSection:
+      type: object
+      additionalProperties: false
+      required: [source, content]
+      properties:
+        source: { $ref: '#/components/schemas/PromptSectionSource' }
+        slot: { $ref: '#/components/schemas/PromptSemanticSlot' }
+        content: { type: string, maxLength: 1048576 }
+        userKind: { type: string, enum: [BASE_TEMPLATE, WORKFLOW_CONTEXT, AUTOMATION_TASK] }
+        templateRef: { $ref: '#/components/schemas/OpaqueRef' }
+        templateDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+    PromptRuntimeDescriptor:
+      type: object
+      additionalProperties: false
+      properties:
+        ref: { type: string, maxLength: 128 }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        value: { type: string, maxLength: 256 }
+    PromptRuntimeChange:
+      type: object
+      additionalProperties: false
+      required: [component, previous, current, action]
+      properties:
+        component: { type: string, enum: [INSTRUCTIONS, MODEL, REASONING, IMAGE, ENVIRONMENT, FILES, SKILLS, MEMORY, TOOLS, MCP, INTEGRATIONS, CAPABILITIES, POLICY] }
+        previous: { type: array, maxItems: 256, items: { $ref: '#/components/schemas/PromptRuntimeDescriptor' } }
+        current: { type: array, maxItems: 256, items: { $ref: '#/components/schemas/PromptRuntimeDescriptor' } }
+        action: { type: string, enum: [USE_CURRENT_CONTEXT] }
+    PromptRuntimeDiff:
+      type: object
+      additionalProperties: false
+      required: [previousRevisionRef, sessionRef, changes, digest]
+      properties:
+        previousRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        currentRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        sessionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        turnRef: { $ref: '#/components/schemas/OpaqueRef' }
+        attempt: { type: integer, format: int32, minimum: 1 }
+        changes: { type: array, maxItems: 13, items: { $ref: '#/components/schemas/PromptRuntimeChange' } }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
     PromptTemplateDiagnostic:
       type: object
       additionalProperties: false
@@ -6923,6 +7071,7 @@ components:
         message: { type: string, maxLength: 500 }
         line: { type: integer, format: int32, minimum: 1 }
         column: { type: integer, format: int32, minimum: 1 }
+        variableName: { type: string, maxLength: 160 }
     PromptTemplateValidation:
       type: object
       additionalProperties: false
@@ -6930,14 +7079,28 @@ components:
       properties:
         valid: { type: boolean }
         diagnostics: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/PromptTemplateDiagnostic' } }
+        contextPin: { $ref: '#/components/schemas/PromptContextPin' }
     PromptTemplatePreview:
       type: object
       additionalProperties: false
-      required: [safePreview, diagnostics]
+      required: [safePreview, diagnostics, complete, templateRef, templateDigest, materializationDigest, effectiveCapabilities, serviceTemplateRevision, serviceTemplateDigest, variableSnapshotDigest, locale, slots, sections]
       properties:
         safePreview: { type: string, maxLength: 262144 }
         fullMaterializedPrompt: { type: string, maxLength: 1048576 }
         diagnostics: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/PromptTemplateDiagnostic' } }
+        complete: { type: boolean }
+        templateRef: { $ref: '#/components/schemas/OpaqueRef' }
+        templateDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        materializationDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        effectiveCapabilities: { type: array, maxItems: 128, uniqueItems: true, items: { type: string, minLength: 1, maxLength: 128 } }
+        serviceTemplateRevision: { type: string, minLength: 1, maxLength: 128 }
+        serviceTemplateDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        variableSnapshotDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        locale: { type: string, minLength: 1, maxLength: 16 }
+        slots: { type: array, maxItems: 11, items: { $ref: '#/components/schemas/PromptSlotProvenance' } }
+        sections: { type: array, maxItems: 32, items: { $ref: '#/components/schemas/PromptPreviewSection' } }
+        contextPin: { $ref: '#/components/schemas/PromptContextPin' }
+        runtimeDiff: { $ref: '#/components/schemas/PromptRuntimeDiff' }
     RoleEnvironmentPlatform:
       type: object
       additionalProperties: false

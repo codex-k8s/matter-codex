@@ -334,10 +334,12 @@ export type ManagedConfigurationDraftInput = {
     name: string;
     contentFormat: 'TEXT' | 'JSON' | 'YAML' | 'TOML';
     content: string;
+    promptScope?: PromptTemplateScopeInput;
 };
 
 export type ManagedConfigurationDraftSaveInput = {
     contentFormat: 'TEXT' | 'JSON' | 'YAML' | 'TOML';
+    promptScope?: PromptTemplateScopeInput;
     /**
      * Неполный текст допустим; ограничение 256 KiB применяется к UTF-8 байтам. Пустая строка разрешена, отсутствие поля и null запрещены.
      */
@@ -349,7 +351,7 @@ export type ManagedConfigurationCopyInput = {
 };
 
 export type ManagedConfigurationConsumer = {
-    kind: 'AGENT' | 'WORKFLOW' | 'SCHEDULE' | 'RUNTIME_ENVIRONMENT' | 'INTEGRATION_CONNECTION' | 'STT_SERVICE';
+    kind: 'AGENT' | 'AGENT_CONTINUATION' | 'WORKFLOW' | 'SCHEDULE' | 'RUNTIME_ENVIRONMENT' | 'INTEGRATION_CONNECTION' | 'STT_SERVICE';
     ref: string;
     revisionRef: OpaqueRef;
     version: number;
@@ -541,6 +543,7 @@ export type ManagedConfigurationRevision = {
     createdAt: Timestamp;
     validatedAt?: Timestamp;
     publishedAt?: Timestamp;
+    promptScope?: PromptTemplateScope;
 };
 
 export type RoleImageGitSourceInput = {
@@ -1783,7 +1786,7 @@ export type RuntimeEnvironmentVersionPage = {
     nextPageToken?: string;
 };
 
-export type TemplateVariableAvailabilityReason = 'AVAILABLE' | 'PROJECT_CONTEXT_REQUIRED' | 'AGENT_CONTEXT_REQUIRED' | 'RUNTIME_CONTEXT_REQUIRED' | 'NOT_MATERIALIZED';
+export type TemplateVariableAvailabilityReason = 'AVAILABLE' | 'PROJECT_CONTEXT_REQUIRED' | 'AGENT_CONTEXT_REQUIRED' | 'RUNTIME_CONTEXT_REQUIRED' | 'NOT_MATERIALIZED' | 'PERMISSION_REQUIRED' | 'CAPABILITY_REQUIRED';
 
 export type TemplateVariable = {
     name: string;
@@ -1794,7 +1797,7 @@ export type TemplateVariable = {
     collection: boolean;
     available: boolean;
     reason: TemplateVariableAvailabilityReason;
-    itemValueType?: 'STRING' | 'OPAQUE_REF' | 'INTEGER' | 'BOOLEAN' | 'TIMESTAMP' | 'OBJECT' | 'FILE_DESCRIPTOR' | 'TOOL_DESCRIPTOR';
+    itemValueType?: 'STRING' | 'OPAQUE_REF' | 'INTEGER' | 'BOOLEAN' | 'TIMESTAMP' | 'OBJECT' | 'FILE_DESCRIPTOR' | 'TOOL_DESCRIPTOR' | 'INTEGRATION_DESCRIPTOR';
     itemFields: Array<TemplateVariableField>;
     rangeExample?: string;
 };
@@ -1809,6 +1812,7 @@ export type TemplateVariablePage = {
     items: Array<TemplateVariable>;
     total: number;
     nextPageToken?: string;
+    contextPin?: PromptContextPin;
 };
 
 export type ModelCapability = {
@@ -1856,14 +1860,126 @@ export type ProviderDefinitionPage = {
     nextPageToken: string;
 };
 
-export type PromptTemplateInput = {
-    template: string;
+export type PromptVariableCatalogInput = {
+    projectRef?: OpaqueRef;
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE' | 'SESSION_CONTINUATION';
+    targetRef: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
+    query?: string;
+    pageSize?: number;
+    pageToken?: string;
 };
 
-export type PromptTemplatePreviewInput = PromptTemplateInput & {
-    targetKind?: 'SYNTHETIC' | 'SESSION' | 'RUN';
+export type PromptTemplateScopeInput = {
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE';
+    targetRef: OpaqueRef;
+    agentRef?: OpaqueRef;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    expectedContextDigest?: string;
+    templateKind: 'INSTRUCTIONS' | 'CONTINUATION';
+};
+
+export type PromptTemplateScope = {
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE';
+    targetRef: OpaqueRef;
+    contextPin: PromptContextPin;
+    templateKind: 'INSTRUCTIONS' | 'CONTINUATION';
+};
+
+export type PromptTemplateInput = {
+    template: string;
+    targetKind?: PromptPreviewTargetKind;
     targetRef?: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
+};
+
+export type PromptTemplatePreviewInput = {
+    template: string;
+    targetKind?: PromptPreviewTargetKind;
+    targetRef?: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
     includeFullMaterialization?: boolean;
+};
+
+export type PromptPreviewTargetKind = 'SYNTHETIC' | 'SESSION' | 'RUN' | 'AGENT' | 'WORKFLOW_STAGE' | 'SESSION_CONTINUATION';
+
+export type PromptPreviewContext = {
+    agentRef?: OpaqueRef;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    expectedAgentVersion?: number;
+    expectedWorkflowVersion?: number;
+    input?: {
+        [key: string]: unknown;
+    };
+    attachmentSetRef?: OpaqueRef;
+    task?: string;
+};
+
+export type PromptContextPin = {
+    digest: string;
+    agentRef?: OpaqueRef;
+    agentVersion?: number;
+    workflowRef?: OpaqueRef;
+    workflowVersion?: number;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    runtimeConfigurationRef?: OpaqueRef;
+    runtimeConfigurationDigest?: string;
+    environmentBindingRef?: OpaqueRef;
+    environmentBindingVersion?: number;
+    environmentVersionRef?: OpaqueRef;
+    environmentDigest?: string;
+    attachmentSetRef?: OpaqueRef;
+    attachmentManifestDigest?: string;
+    previousRuntimeRevisionRef?: OpaqueRef;
+};
+
+export type PromptSemanticSlot = 'WORKFLOW' | 'STAGE' | 'PURPOSE' | 'EXPECTED_RESULT' | 'INPUT' | 'CONSTRAINTS' | 'EFFECTIVE_CAPABILITIES' | 'FILES' | 'TOOLS' | 'INTEGRATIONS' | 'RUNTIME_CHANGES';
+
+export type PromptSectionSource = 'USER_TEMPLATE' | 'PLATFORM';
+
+export type PromptSlotProvenance = {
+    slot: PromptSemanticSlot;
+    source: PromptSectionSource;
+    position: number;
+};
+
+export type PromptPreviewSection = {
+    source: PromptSectionSource;
+    slot?: PromptSemanticSlot;
+    content: string;
+    userKind?: 'BASE_TEMPLATE' | 'WORKFLOW_CONTEXT' | 'AUTOMATION_TASK';
+    templateRef?: OpaqueRef;
+    templateDigest?: string;
+};
+
+export type PromptRuntimeDescriptor = {
+    ref?: string;
+    version?: number;
+    digest?: string;
+    value?: string;
+};
+
+export type PromptRuntimeChange = {
+    component: 'INSTRUCTIONS' | 'MODEL' | 'REASONING' | 'IMAGE' | 'ENVIRONMENT' | 'FILES' | 'SKILLS' | 'MEMORY' | 'TOOLS' | 'MCP' | 'INTEGRATIONS' | 'CAPABILITIES' | 'POLICY';
+    previous: Array<PromptRuntimeDescriptor>;
+    current: Array<PromptRuntimeDescriptor>;
+    action: 'USE_CURRENT_CONTEXT';
+};
+
+export type PromptRuntimeDiff = {
+    previousRevisionRef: OpaqueRef;
+    currentRevisionRef?: OpaqueRef;
+    sessionRef: OpaqueRef;
+    turnRef?: OpaqueRef;
+    attempt?: number;
+    changes: Array<PromptRuntimeChange>;
+    digest: string;
 };
 
 export type PromptTemplateDiagnostic = {
@@ -1872,17 +1988,32 @@ export type PromptTemplateDiagnostic = {
     message: string;
     line: number;
     column: number;
+    variableName?: string;
 };
 
 export type PromptTemplateValidation = {
     valid: boolean;
     diagnostics: Array<PromptTemplateDiagnostic>;
+    contextPin?: PromptContextPin;
 };
 
 export type PromptTemplatePreview = {
     safePreview: string;
     fullMaterializedPrompt?: string;
     diagnostics: Array<PromptTemplateDiagnostic>;
+    complete: boolean;
+    templateRef: OpaqueRef;
+    templateDigest: string;
+    materializationDigest: string;
+    effectiveCapabilities: Array<string>;
+    serviceTemplateRevision: string;
+    serviceTemplateDigest: string;
+    variableSnapshotDigest: string;
+    locale: string;
+    slots: Array<PromptSlotProvenance>;
+    sections: Array<PromptPreviewSection>;
+    contextPin?: PromptContextPin;
+    runtimeDiff?: PromptRuntimeDiff;
 };
 
 export type RoleEnvironmentPlatform = {
@@ -5577,6 +5708,34 @@ export type ListPromptTemplateVariablesResponses = {
 };
 
 export type ListPromptTemplateVariablesResponse = ListPromptTemplateVariablesResponses[keyof ListPromptTemplateVariablesResponses];
+
+export type QueryPromptTemplateVariablesData = {
+    body: PromptVariableCatalogInput;
+    headers: {
+        'X-CSRF-Token': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/prompt-templates/catalog/query';
+};
+
+export type QueryPromptTemplateVariablesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type QueryPromptTemplateVariablesError = QueryPromptTemplateVariablesErrors[keyof QueryPromptTemplateVariablesErrors];
+
+export type QueryPromptTemplateVariablesResponses = {
+    /**
+     * Каталог выбранного контекста без пользовательских значений в URL
+     */
+    200: TemplateVariablePage;
+};
+
+export type QueryPromptTemplateVariablesResponse = QueryPromptTemplateVariablesResponses[keyof QueryPromptTemplateVariablesResponses];
 
 export type ValidatePromptTemplateData = {
     body: PromptTemplateInput;

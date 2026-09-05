@@ -14,7 +14,12 @@ func (server *Server) CreatePromptTemplateDraft(w http.ResponseWriter, r *http.R
 	if !ok {
 		return
 	}
-	mutation, ok := requireManagedDraftMutation(w, p.IdempotencyKey, stringValue(p.IfMatch), body)
+	scope, ok := promptScopeInput(body.PromptScope)
+	if !ok {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return
+	}
+	mutation, ok := requireManagedDraftMutation(w, p.IdempotencyKey, stringValue(p.IfMatch), body, true)
 	if !ok {
 		return
 	}
@@ -26,10 +31,14 @@ func (server *Server) CreatePromptTemplateDraft(w http.ResponseWriter, r *http.R
 	}
 	result, err := server.control.Command.CreatePromptTemplateDraft(r.Context(), &controlplanev1.CreatePromptTemplateDraftRequest{
 		Mutation: mutation, ConfigurationRef: stringValue(body.ConfigurationRef), ProjectRef: stringValue(body.ProjectRef),
-		Name: body.Name, ContentFormat: string(body.ContentFormat), Content: body.Content,
+		Name: body.Name, ContentFormat: string(body.ContentFormat), Content: body.Content, PromptScope: scope,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
+		return
+	}
+	if !validPromptScopeReceipt(scope, result.GetRevision().GetPromptScope()) {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
 		return
 	}
 	writeManagedResult(w, http.StatusCreated, result)

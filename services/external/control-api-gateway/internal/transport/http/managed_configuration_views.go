@@ -18,7 +18,11 @@ type managedConfigurationResponse interface {
 	GetRevision() *controlplanev1.ManagedConfigurationRevision
 }
 
-func requireManagedDraftMutation(w http.ResponseWriter, key, etag string, body generated.ManagedConfigurationDraftInput) (*controlplanev1.MutationContext, bool) {
+func requireManagedDraftMutation(w http.ResponseWriter, key, etag string, body generated.ManagedConfigurationDraftInput, allowPromptScope ...bool) (*controlplanev1.MutationContext, bool) {
+	if body.PromptScope != nil && (len(allowPromptScope) != 1 || !allowPromptScope[0]) {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return nil, false
+	}
 	if strings.TrimSpace(body.Name) == "" || len(body.Name) > 160 || len(body.Content) == 0 || len(body.Content) > 256<<10 ||
 		body.ConfigurationRef != nil && (*body.ConfigurationRef == "" || etag == "") {
 		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
@@ -155,6 +159,11 @@ func managedRevisionView(value *controlplanev1.ManagedConfigurationRevision) (ge
 		published := value.GetPublishedAt().AsTime()
 		result.PublishedAt = &published
 	}
+	scope, ok := promptScopeView(value.GetPromptScope())
+	if !ok {
+		return generated.ManagedConfigurationRevision{}, errManagedConfigurationShape
+	}
+	result.PromptScope = scope
 	return result, nil
 }
 
@@ -163,7 +172,7 @@ func managedConsumerView(value *controlplanev1.ManagedConfigurationConsumer) (ge
 		return generated.ManagedConfigurationConsumer{}, errManagedConfigurationShape
 	}
 	switch value.GetKind() {
-	case "AGENT", "WORKFLOW", "SCHEDULE", "RUNTIME_ENVIRONMENT", "INTEGRATION_CONNECTION", "STT_SERVICE":
+	case "AGENT", "AGENT_CONTINUATION", "WORKFLOW", "SCHEDULE", "RUNTIME_ENVIRONMENT", "INTEGRATION_CONNECTION", "STT_SERVICE":
 	default:
 		return generated.ManagedConfigurationConsumer{}, errManagedConfigurationShape
 	}

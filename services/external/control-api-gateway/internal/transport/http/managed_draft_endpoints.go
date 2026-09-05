@@ -16,11 +16,20 @@ func (server *Server) SavePromptTemplateDraft(w http.ResponseWriter, r *http.Req
 	if !ok {
 		return
 	}
+	scope, ok := promptScopeInput(body.PromptScope)
+	if !ok {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return
+	}
 	result, err := server.control.Command.SavePromptTemplateDraft(r.Context(), &controlplanev1.SavePromptTemplateDraftRequest{
-		Mutation: mutation, ConfigurationRef: configurationRef, RevisionRef: revisionRef, ContentFormat: string(body.ContentFormat), Content: *body.Content,
+		Mutation: mutation, ConfigurationRef: configurationRef, RevisionRef: revisionRef, ContentFormat: string(body.ContentFormat), Content: *body.Content, PromptScope: scope,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
+		return
+	}
+	if !validPromptScopeReceipt(scope, result.GetRevision().GetPromptScope()) {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
 		return
 	}
 	writeManagedDraftResult(w, result, configurationRef, revisionRef, mutation.GetExpectedVersion(), controlplanev1.ManagedConfigurationKind_MANAGED_CONFIGURATION_KIND_PROMPT_TEMPLATE, &body)
@@ -145,6 +154,10 @@ func readManagedDraftSave(w http.ResponseWriter, r *http.Request, configurationR
 		return body, nil, false
 	}
 	validFormat := body.ContentFormat == "JSON" || body.ContentFormat == "YAML" || body.ContentFormat == "TOML"
+	if body.PromptScope != nil && kind != controlplanev1.ManagedConfigurationKind_MANAGED_CONFIGURATION_KIND_PROMPT_TEMPLATE {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return body, nil, false
+	}
 	if kind == controlplanev1.ManagedConfigurationKind_MANAGED_CONFIGURATION_KIND_PROMPT_TEMPLATE {
 		validFormat = body.ContentFormat == "TEXT"
 	}
