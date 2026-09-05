@@ -82,7 +82,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `b6a841cb2f73a3a421c798846b270cb620acb0d2` включены следующие
+На `adb21e4d3367049853f631673248b7a3e26e0044` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
@@ -96,7 +96,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 | PWA #1022, PR #1067 | `29787d8239696095ae596d1e9343878910bed95a` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage. Files67 использует owner binding targets, stale recovery, modal/search/total и единый group sourceKinds cursor. Потребление полного641/643/644/645/70 SDK и нового72 ещё продолжается. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
-| Agent-runner #1026, PR #1058 | `e204788846450901f14742dd85d3c5f4101c9b9c` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
+| Agent-runner #1026, PR #1058 | `13c092f5131e17b8f1a7be4e1657f77bc1e88cde` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Выполненные native effects фиксируются до post-execution quota check. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
 | Integration-gateway #1028, PR #1064 | `b889673f04bd431788ac7553e1a80b033852e431` | SourceWork и исполняемый Git write-back: one-parent proposal commit, exact empty lease, separate branch/PR receipts, UNKNOWN read-only recovery, GitHub PR/GitLab MR readback; Git runtime/tmpfs/non-root и оба render. Live provider proof ещё NOT RUN. |
 | Interaction-gateway #1030, PR #1061 | `c7d03d818ac4e6c5a226d49c6d14d7c6dc798b9e` | Actual package системных subscriptions/deliveries; OwnerGate до notification/mirror, exact input и approval claim, fail-closed discovery. |
 
@@ -179,6 +179,7 @@ native effects до post-execution quota check. На этом runner SHA **PASS*
 контроля; до второго этапа `quota: NOT RUN` сохраняется. Execution volume
 удаляет обычный runtime terminal cleanup, оснастка не исправляет Pod вручную.
 
+На code SHA `adb21e4d3367049853f631673248b7a3e26e0044`
 `make test-runtime-workspace-acceptance` локально **PASS**:38 проверок,
 включая точные non-root probes, ошибочные owner/revision/attempt/Pod bindings,
 отсутствие native execution и неверный terminal. Также **PASS**
