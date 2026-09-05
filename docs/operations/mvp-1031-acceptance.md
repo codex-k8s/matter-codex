@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.5.0
+version: 1.6.0
 updated: 2026-09-05
 ---
 
@@ -82,34 +82,37 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `7f2f667b278aad5f11c2f03413d37f3dd92598dd` включены следующие
+На `17c120887754cee3813a6974ce36d59b7476f2a8` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
 | Unit | Включённый exact SHA | Граница checkpoint |
 | --- | --- | --- |
-| Control-plane #1046 | `b9402939a3ccdcef384d44cc2c04dfa5554f73b5` + `12f9eb26a4b4a3f329f49226c3a8cfc888c533c8` | Сохранены D1–D7, SourceWork, catalog/Session affinity v7, Home totals, Env638, Mattermost637; immutable overlay history/publish, RoleImage UI→build и managed lineage; effective capabilities и свежая authority до receipt, policy64. Selective rebind/writeback и prompt continuation ещё завершаются. |
+| Control-plane #1046 | `b0bea6f45e2c5ed3692922177ec9f3b54d81b4ff` | Сохранены D1–D7, SourceWork, catalog/Session affinity v7, Home totals, Env638, Mattermost637; RoleImage UI→build/lineage, resumable Session, prompt639, Git proposal owner640, policy65 и VFS exact source/selection/Artifact eligibility. Prompt641, RoleImage actual selective rebind и полный VFS/MCP ещё завершаются. |
 | Secret Broker #1068, PR #1069 | `af227acc60d9ca1bd0207429c6d8088fb9496af7` | Encrypted staged lifecycle и protected account model observer, fresh remote provenance, bounded actual Codex process и отказ refresh под read authority. |
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
-| HTTP/SDK #1045, PR #1066 | `0fd625f0af80e4dbfb9d7a844b8c891acabec614` | D2 pins/status/TOML, Home/globalArtifacts total, Env metadata, overlay history и typed effective capabilities. RoleImage query/lineage и новые Session/prompt/writeback consumers ещё завершаются. |
-| PWA #1022, PR #1067 | `9bb1197ff712f158bd674f9c1760d4bf79b1a458` | D2/TOML, Git source lifecycle, immutable overlay history/rollback, Home/Env metadata, исправлен async picker на390. Capability и новая Session eligibility ещё потребляются; общий build восстановлен. |
+| HTTP/SDK #1045, PR #1066 | `b0939429d4cd216ea34ae79e43ec78c8abbbbde3` | D2 pins/status/TOML, totals, Env/overlay history, typed effective capabilities, RoleImage query/state/lineage и resumable Session query/paired target/total. Новые prompt/writeback/VFS consumers ещё завершаются. |
+| PWA #1022, PR #1067 | `76cf061130cb66e28dc20c42ecfd9fb718cbf195` | D2/TOML, Git source/overlay lifecycle, effective capability projection, Home/NewRun server Session catalog, RoleImage lineage/filters и unbind после отзыва capability. Aggregate attachment/binding eligibility и новые VFS/prompt/writeback consumers ещё завершаются. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
 | Runtime-controller #1025, PR #1063 | `21425ddbbc2196849c5378f8227bd18e13f2f8fb` | Exact v7 mode/effort/context, Pod/callback, schema/admission/render contract revision 2. |
 | Agent-runner #1026, PR #1058 | `257c2f2c98e001d2422a3c8df20a95389a9b3850` | Server reasoning mode/effort во всех turns, UNSUPPORTED без параметра, сохранён bounded workspace/context lifecycle. |
-| Integration-gateway #1028, PR #1064 | `31164f57b622bd0322a7b64d313173e9e3582b82` | Actual SourceWork owner/consumer/profile63, GitHub/GitLab exact commit/regular blob reader, scoped PostgreSQL и оба render. Write-back ещё открыт. |
+| Integration-gateway #1028, PR #1064 | `b889673f04bd431788ac7553e1a80b033852e431` | SourceWork и исполняемый Git write-back: one-parent proposal commit, exact empty lease, separate branch/PR receipts, UNKNOWN read-only recovery, GitHub PR/GitLab MR readback; Git runtime/tmpfs/non-root и оба render. Live provider proof ещё NOT RUN. |
 | Interaction-gateway #1030, PR #1061 | `c7d03d818ac4e6c5a226d49c6d14d7c6dc798b9e` | Actual package системных subscriptions/deliveries; OwnerGate до notification/mirror, exact input и approval claim, fail-closed discovery. |
 
 Сохранены включённые ранее authority `0765f3dad`
 и исправление #1056. Исходные Proto/OpenAPI/policy объединены по семантике,
 generated Go/SDK/PWA validator получены повторной генерацией.
 
-На code SHA `7f2f667b278aad5f11c2f03413d37f3dd92598dd` локально **PASS**:
-Proto lint/build/clean replay, policy64 codegen, authority ABI render, оба EMAIL
-projection render, web-only release и полный PWA build/typecheck. Go/TS SDK и
-Proto повторно получены из объединённых источников, clean readback подтверждён.
-Безопасные логи: `integration-7f2-contracts.log`,
-`integration-7f2-pwa-build.log` в приватном evidence-каталоге. Предупреждение
+На code SHA `17c120887754cee3813a6974ce36d59b7476f2a8` локально **PASS**:
+Go/TS SDK и Proto source generation/clean replay, policy65 codegen,
+authority ABI render, оба integration-gateway/EMAIL projection render,
+web-only release и полный PWA build/typecheck. Integration-gateway integration
+и app race: 33.188s/1.065s. Исходные Proto ранее lint/build проверены на 72b9cd2,
+VFS additive source — на b0bea6f; полный baseline нового SHA ещё NOT RUN.
+Безопасные логи: `integration-17c-contracts.log`,
+`integration-17c-pwa-build.log`, `integration-17c-gateway-race.log`
+в приватном evidence-каталоге. Предупреждение
 о JS chunk более500kB сохраняется. Полный baseline этим запуском не выполнен.
 
 Исторический code `303f75b535cde2fd451d4d4ea22841becbaa488b` имел **FAIL**
@@ -121,8 +124,9 @@ overlaySchema. Новый запуск7f2 после PWA9bb подтвержда
 При merge сохранены managed EMAIL callback, exact configuration/policy pins и
 проверки CONNECT до provider bytes; старая prerequisite history их не откатила.
 SourceWork owner и account catalog/Session affinity теперь включены; локальный
-combined proof не выдаётся за deployed provider acceptance. Git write-back,
-полный RoleImage UI lifecycle и новые HTTP/PWA consumers остаются обязательными.
+combined proof не выдаётся за deployed provider acceptance. Git write-back
+HTTP/PWA/provider acceptance, полный RoleImage lifecycle и новые consumers
+остаются обязательными.
 
 На предыдущем exact `b4ef7be2976e528855c2a3f94e7094d28a1d00af` локально **PASS**:
 PWA `npm run build` с typecheck, Proto lint/build/clean replay,
