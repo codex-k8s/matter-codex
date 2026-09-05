@@ -188,7 +188,7 @@ func runTurn(ctx context.Context, input model.Input, client *callback.Client, wo
 	if err := codex.ValidateRuntimeProfile(input); err != nil {
 		return completeFailure(ctx, input, client, runtimeExecutionFailureCode(err))
 	}
-	if err := resetWorkspaceDirectory(input.WorkspaceRoot, ".kodex/outbox"); err != nil {
+	if err := resetWorkspaceDirectory(ctx, input.WorkspaceRoot, ".kodex/outbox"); err != nil {
 		return completeFailure(ctx, input, client, "RUNTIME_WORKSPACE_INVALID")
 	}
 	mcpProxy, err := readiness.StartMCPProxy(ctx, input, client.Token(), codex.RequiredMCPToolNames(input))
@@ -230,7 +230,7 @@ func runTurn(ctx context.Context, input model.Input, client *callback.Client, wo
 		return completeFailure(ctx, input, client, "RUNTIME_RESULT_INVALID")
 	}
 	if input.CodexSandbox == "workspace-write" && hasCapability(input, runtimecontract.ArtifactCapability) {
-		if err := workspacepolicy.PublishResult(input.WorkspaceRoot, input.WorkspacePolicy, workspacepolicy.ResultProvenance{
+		if err := workspacepolicy.PublishResult(ctx, input.WorkspaceRoot, input.WorkspacePolicy, workspacepolicy.ResultProvenance{
 			Schema: "kodex.workspace-write-result.v1", RuntimeRevisionRef: input.RuntimeRevisionRef,
 			RuntimeRevisionVersion: input.RuntimeRevisionVersion, RuntimeRevisionDigest: input.RuntimeRevisionDigest,
 			Attempt: input.Attempt, ExecutionBindingDigest: input.ExecutionBindingDigest,
@@ -363,6 +363,11 @@ func materializeWorkspace(ctx context.Context, input model.Input) error {
 	if err := validateMaterializedInstructions(input); err != nil {
 		return err
 	}
+	lock, err := workspacepolicy.Lock(ctx, input.WorkspaceRoot)
+	if err != nil {
+		return err
+	}
+	defer lock.Close()
 	if err := writeWorkspaceFile(input.WorkspaceRoot, "AGENTS.md", []byte(input.Instructions)); err != nil {
 		return err
 	}
@@ -536,13 +541,13 @@ func materializeInputArtifacts(ctx context.Context, input model.Input, client *c
 	if err != nil {
 		return errors.New("build runtime workspace manifest")
 	}
-	if err := resetWorkspaceDirectory(input.WorkspaceRoot, "input"); err != nil {
+	if err := resetWorkspaceDirectory(ctx, input.WorkspaceRoot, "input"); err != nil {
 		return err
 	}
-	if err := resetWorkspaceDirectory(input.WorkspaceRoot, "knowledge"); err != nil {
+	if err := resetWorkspaceDirectory(ctx, input.WorkspaceRoot, "knowledge"); err != nil {
 		return err
 	}
-	if err := resetWorkspaceDirectory(input.WorkspaceRoot, "session"); err != nil {
+	if err := resetWorkspaceDirectory(ctx, input.WorkspaceRoot, "session"); err != nil {
 		return err
 	}
 	for _, set := range input.AttachmentSets {
@@ -717,7 +722,12 @@ func writeInputManifests(input model.Input, sets map[string]runtimecontract.Cano
 	return writeReadOnlyWorkspaceFile(input.WorkspaceRoot, filepath.Join("input", "manifest.json"), workspace.Bytes)
 }
 
-func resetWorkspaceDirectory(root, relative string) error {
+func resetWorkspaceDirectory(ctx context.Context, root, relative string) error {
+	lock, err := workspacepolicy.Lock(ctx, root)
+	if err != nil {
+		return err
+	}
+	defer lock.Close()
 	directory := filepath.Join(root, relative)
 	info, err := os.Lstat(directory)
 	if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {

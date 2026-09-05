@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -85,6 +86,38 @@ func TestRunCanaryExercisesAtomicWritablePathAndCleansUp(t *testing.T) {
 	}
 }
 
+func TestConcurrentCanariesDoNotInvalidateEachOther(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, ".kodex/outbox"), 0o770); err != nil {
+		t.Fatal(err)
+	}
+	failures := make(chan error, 64)
+	// Каждый раунд конечен: непрерывный захват lock одним worker не должен
+	// превращать проверку filesystem race в тест превышения lock budget.
+	for range 8 {
+		var workers sync.WaitGroup
+		start := make(chan struct{})
+		for range 8 {
+			workers.Go(func() {
+				<-start
+				if err := RunCanary(t.Context(), root, testPolicy()); err != nil {
+					failures <- err
+				}
+			})
+		}
+		close(start)
+		workers.Wait()
+	}
+	close(failures)
+	for err := range failures {
+		t.Errorf("concurrent canary rejected a healthy workspace: %s", DenialReason(err))
+	}
+	entries, err := os.ReadDir(filepath.Join(root, ".kodex/outbox"))
+	if err != nil || len(entries) != 0 {
+		t.Fatal("concurrent canary cleanup is incomplete")
+	}
+}
+
 func TestWorkspaceWriteAcceptanceCreatesReplacesDeletesAndPublishesExactResult(t *testing.T) {
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, ".kodex/outbox"), 0o770); err != nil {
@@ -96,7 +129,7 @@ func TestWorkspaceWriteAcceptanceCreatesReplacesDeletesAndPublishesExactResult(t
 	provenance := ResultProvenance{Schema: "kodex.workspace-write-result.v1", RuntimeRevisionRef: "rrev_abcdefgh",
 		RuntimeRevisionVersion: 7, RuntimeRevisionDigest: strings.Repeat("a", 64), Attempt: 3,
 		ExecutionBindingDigest: strings.Repeat("b", 64)}
-	if err := PublishResult(root, testPolicy(), provenance); err != nil {
+	if err := PublishResult(t.Context(), root, testPolicy(), provenance); err != nil {
 		t.Fatal(err)
 	}
 	raw, err := os.ReadFile(filepath.Join(root, ".kodex/outbox/workspace-write-result.json"))
@@ -128,7 +161,7 @@ func TestPublishResultRejectsInvalidOrIncompleteProvenance(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			value := valid
 			mutate(&value)
-			if err := PublishResult(root, testPolicy(), value); err == nil {
+			if err := PublishResult(t.Context(), root, testPolicy(), value); err == nil {
 				t.Fatal("invalid result provenance was accepted")
 			}
 		})

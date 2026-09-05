@@ -46,6 +46,11 @@ func RunCanary(ctx context.Context, root string, policy runtimecontract.RuntimeW
 	if root == "" || !filepath.IsAbs(root) || filepath.Clean(root) != root || policy.Validate() != nil {
 		return &Denial{Reason: runtimecontract.RuntimeWorkspacePathOutsideWorkspace}
 	}
+	lock, err := Lock(ctx, root)
+	if err != nil {
+		return err
+	}
+	defer lock.Close()
 	for _, candidate := range []string{"/workspace/input/readiness", "/workspace/knowledge/readiness", runtimecontract.RuntimeContextRoot + "/readiness"} {
 		access, reason := policy.AccessForPath(candidate)
 		if reason != "" || access != runtimecontract.RuntimeWorkspaceReadOnly {
@@ -161,7 +166,7 @@ func verifyFile(directory int, name, expected string) error {
 	return nil
 }
 
-func PublishResult(root string, policy runtimecontract.RuntimeWorkspacePolicy, provenance ResultProvenance) error {
+func PublishResult(ctx context.Context, root string, policy runtimecontract.RuntimeWorkspacePolicy, provenance ResultProvenance) error {
 	if provenance.Schema != "kodex.workspace-write-result.v1" || provenance.RuntimeRevisionRef == "" ||
 		provenance.RuntimeRevisionVersion < 1 || !validSHA256(provenance.RuntimeRevisionDigest) ||
 		provenance.Attempt < 1 || !validSHA256(provenance.ExecutionBindingDigest) {
@@ -175,6 +180,11 @@ func PublishResult(root string, policy runtimecontract.RuntimeWorkspacePolicy, p
 	if access, reason := policy.AccessForPath(".kodex/outbox/workspace-write-result.json"); reason != "" || access != runtimecontract.RuntimeWorkspaceWritable {
 		return &Denial{Reason: runtimecontract.RuntimeWorkspaceReadOnly}
 	}
+	lock, err := Lock(ctx, root)
+	if err != nil {
+		return err
+	}
+	defer lock.Close()
 	directory, err := openDirectory(root, ".kodex/outbox")
 	if err != nil {
 		return classify(err)
