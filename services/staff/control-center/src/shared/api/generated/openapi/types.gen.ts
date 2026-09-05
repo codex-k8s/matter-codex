@@ -464,7 +464,10 @@ export type RevisionImpactPlan = {
 
 export type RevisionImpactItem = {
     ref: OpaqueRef;
-    projectRef: OpaqueRef;
+    /**
+     * Пустая строка допустима только для организационного Agent или AGENT_CONTINUATION в плане PromptTemplate; область и права проверяет owner.
+     */
+    projectRef: string;
     consumerKind: 'AGENT' | 'AGENT_CONTINUATION' | 'WORKFLOW' | 'SCHEDULE';
     consumerRef: OpaqueRef;
     consumerVersion: number;
@@ -1010,6 +1013,7 @@ export type Agent = {
     runtimeModel?: string;
     runtimeReady: boolean;
     publishedInstructions?: InstructionVersion;
+    instructionBinding?: AgentInstructionsBinding;
     draftInstructions?: InstructionVersion;
     capabilities: Array<PlatformCapability>;
     integrations: Array<string>;
@@ -1017,6 +1021,13 @@ export type Agent = {
     currentActivity?: string;
     updatedAt: Timestamp;
     nextActions: Array<NextAction>;
+};
+
+export type AgentInstructionsBinding = {
+    ref: OpaqueRef;
+    version: number;
+    revisionRef: OpaqueRef;
+    effective: boolean;
 };
 
 export type AgentInput = {
@@ -1064,9 +1075,29 @@ export type AgentCommand = {
     grantRef?: OpaqueRef;
 };
 
+/**
+ * PUBLISH требует planRef и явный selectedItemRefs (пустой массив допустим); остальные действия не принимают эти поля.
+ */
 export type InstructionCommand = {
     action: 'VALIDATE' | 'PUBLISH' | 'ROLLBACK';
     publishedInstructionRef?: OpaqueRef;
+    planRef?: OpaqueRef;
+    selectedItemRefs?: Array<OpaqueRef>;
+};
+
+export type InstructionPublicationResult = {
+    agent: {
+        ref: OpaqueRef;
+        projectRef: OpaqueRef;
+        version: number;
+    };
+    plan: RevisionImpactPlan;
+};
+
+export type PromptTemplatePublicationResult = {
+    configuration: ManagedConfiguration;
+    revision: ManagedConfigurationRevision;
+    plan: RevisionImpactPlan;
 };
 
 export type ArtifactBindingTargetReason = 'AVAILABLE' | 'ALREADY_BOUND' | 'NOT_BOUND' | 'AGENT_CAPABILITY_REQUIRED' | 'AGENT_ARCHIVED' | 'ARTIFACT_UNAVAILABLE';
@@ -4728,6 +4759,38 @@ export type CreateInstructionDraftResponses = {
 
 export type CreateInstructionDraftResponse = CreateInstructionDraftResponses[keyof CreateInstructionDraftResponses];
 
+export type PrepareInstructionsImpactData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        agentRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/agents/{agentRef}/instructions/impact-plans';
+};
+
+export type PrepareInstructionsImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareInstructionsImpactError = PrepareInstructionsImpactErrors[keyof PrepareInstructionsImpactErrors];
+
+export type PrepareInstructionsImpactResponses = {
+    /**
+     * Неизменяемый план публикации инструкций и выбранных привязок
+     */
+    200: RevisionImpactPlan;
+};
+
+export type PrepareInstructionsImpactResponse = PrepareInstructionsImpactResponses[keyof PrepareInstructionsImpactResponses];
+
 export type CommandAgentInstructionsData = {
     body: InstructionCommand;
     headers: {
@@ -4755,7 +4818,7 @@ export type CommandAgentInstructionsResponses = {
     /**
      * Команда к версии инструкций применена
      */
-    200: Agent;
+    200: Agent | InstructionPublicationResult;
 };
 
 export type CommandAgentInstructionsResponse = CommandAgentInstructionsResponses[keyof CommandAgentInstructionsResponses];
@@ -10372,8 +10435,41 @@ export type ValidatePromptTemplateDraftResponses = {
 
 export type ValidatePromptTemplateDraftResponse = ValidatePromptTemplateDraftResponses[keyof ValidatePromptTemplateDraftResponses];
 
-export type PublishPromptTemplateDraftData = {
+export type PreparePromptTemplateImpactData = {
     body?: never;
+    headers: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+        'If-Match': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+        revisionRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans';
+};
+
+export type PreparePromptTemplateImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PreparePromptTemplateImpactError = PreparePromptTemplateImpactErrors[keyof PreparePromptTemplateImpactErrors];
+
+export type PreparePromptTemplateImpactResponses = {
+    /**
+     * Неизменяемый план публикации шаблона и выбранных привязок
+     */
+    200: RevisionImpactPlan;
+};
+
+export type PreparePromptTemplateImpactResponse = PreparePromptTemplateImpactResponses[keyof PreparePromptTemplateImpactResponses];
+
+export type PublishPromptTemplateDraftData = {
+    body: RevisionImpactPublicationInput;
     headers: {
         'Idempotency-Key': string;
         'X-CSRF-Token': string;
@@ -10398,9 +10494,9 @@ export type PublishPromptTemplateDraftError = PublishPromptTemplateDraftErrors[k
 
 export type PublishPromptTemplateDraftResponses = {
     /**
-     * Авторитетная конфигурация и ревизия
+     * Опубликованная конфигурация, ревизия и итоговый план
      */
-    200: ManagedConfigurationResult;
+    200: PromptTemplatePublicationResult;
 };
 
 export type PublishPromptTemplateDraftResponse = PublishPromptTemplateDraftResponses[keyof PublishPromptTemplateDraftResponses];

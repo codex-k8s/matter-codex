@@ -66,15 +66,15 @@ func revisionImpactPlanView(v *cp.RevisionImpactPlan) (generated.RevisionImpactP
 	if v == nil || !validManagedVersion(v.Version) || !validManagedVersion(v.DraftVersion) || !fileTargetRef(v.Ref) || !fileTargetRef(v.DraftRef) || !validManagedDigest(v.TargetDigest) || !validManagedDigest(v.Digest) || v.Total < 0 || v.Total > 1000 || v.CreatedAt == nil || v.CreatedAt.CheckValid() != nil || v.ExpiresAt == nil || v.ExpiresAt.CheckValid() != nil || !v.ExpiresAt.AsTime().After(v.CreatedAt.AsTime()) {
 		return result, false
 	}
-	// Остальные kind становятся исполняемыми после отдельного owner checkpoint.
-	if v.Kind != cp.RevisionImpactKind_REVISION_IMPACT_KIND_RUNTIME_ENVIRONMENT {
+	kind := strings.TrimPrefix(v.Kind.String(), "REVISION_IMPACT_KIND_")
+	if kind != "RUNTIME_ENVIRONMENT" && kind != "PROMPT_TEMPLATE" && kind != "AGENT_INSTRUCTIONS" {
 		return result, false
 	}
 	if v.SourceRef == "" {
-		if v.SourceVersion != 0 || v.SourceRevisionRef != "" {
+		if kind != "RUNTIME_ENVIRONMENT" || v.SourceVersion != 0 || v.SourceRevisionRef != "" {
 			return result, false
 		}
-	} else if !fileTargetRef(v.SourceRef) || !validManagedVersion(v.SourceVersion) || !fileTargetRef(v.SourceRevisionRef) {
+	} else if !fileTargetRef(v.SourceRef) || !validManagedVersion(v.SourceVersion) || (v.SourceRevisionRef != "" || kind != "PROMPT_TEMPLATE") && !fileTargetRef(v.SourceRevisionRef) {
 		return result, false
 	}
 	state := strings.TrimPrefix(v.State.String(), "REVISION_IMPACT_STATE_")
@@ -84,22 +84,29 @@ func revisionImpactPlanView(v *cp.RevisionImpactPlan) (generated.RevisionImpactP
 			return result, false
 		}
 	case "APPLIED":
-		if !fileTargetRef(v.PublishedRevisionRef) {
+		if !fileTargetRef(v.PublishedRevisionRef) || kind != "RUNTIME_ENVIRONMENT" && v.PublishedRevisionRef != v.DraftRef {
 			return result, false
 		}
 	default:
 		return result, false
 	}
-	result = generated.RevisionImpactPlan{Ref: v.Ref, Version: v.Version, Kind: "RUNTIME_ENVIRONMENT", SourceRef: optionalManagedString(v.SourceRef), SourceVersion: v.SourceVersion, SourceRevisionRef: optionalManagedString(v.SourceRevisionRef), DraftRef: v.DraftRef, DraftVersion: v.DraftVersion, TargetDigest: v.TargetDigest, Digest: v.Digest, Total: v.Total, State: generated.RevisionImpactPlanState(state), CreatedAt: v.CreatedAt.AsTime(), ExpiresAt: v.ExpiresAt.AsTime(), PublishedRevisionRef: optionalManagedString(v.PublishedRevisionRef)}
+	result = generated.RevisionImpactPlan{Ref: v.Ref, Version: v.Version, Kind: generated.RevisionImpactPlanKind(kind), SourceRef: optionalManagedString(v.SourceRef), SourceVersion: v.SourceVersion, SourceRevisionRef: optionalManagedString(v.SourceRevisionRef), DraftRef: v.DraftRef, DraftVersion: v.DraftVersion, TargetDigest: v.TargetDigest, Digest: v.Digest, Total: v.Total, State: generated.RevisionImpactPlanState(state), CreatedAt: v.CreatedAt.AsTime(), ExpiresAt: v.ExpiresAt.AsTime(), PublishedRevisionRef: optionalManagedString(v.PublishedRevisionRef)}
 	return result, true
 }
 
 func revisionImpactItemView(v *cp.RevisionImpactItem, plan generated.RevisionImpactPlan) (generated.RevisionImpactItem, bool) {
 	result := generated.RevisionImpactItem{}
-	if v == nil || v.ConsumerKind != cp.RevisionImpactConsumerKind_REVISION_IMPACT_CONSUMER_KIND_AGENT || !validManagedVersion(v.ConsumerVersion) || !validManagedVersion(v.BindingVersion) {
+	if v == nil || !validManagedVersion(v.ConsumerVersion) || !validManagedVersion(v.BindingVersion) {
 		return result, false
 	}
-	for _, ref := range []string{v.Ref, v.ProjectRef, v.ConsumerRef, v.BindingRef, v.SourceRevisionRef} {
+	kind := strings.TrimPrefix(v.ConsumerKind.String(), "REVISION_IMPACT_CONSUMER_KIND_")
+	if kind != "AGENT" && (plan.Kind != "PROMPT_TEMPLATE" || kind != "AGENT_CONTINUATION" && kind != "WORKFLOW" && kind != "SCHEDULE") {
+		return result, false
+	}
+	if !fileTargetRef(v.ProjectRef) && !(v.ProjectRef == "" && plan.Kind == "PROMPT_TEMPLATE" && (kind == "AGENT" || kind == "AGENT_CONTINUATION")) {
+		return result, false
+	}
+	for _, ref := range []string{v.Ref, v.ConsumerRef, v.BindingRef, v.SourceRevisionRef} {
 		if !fileTargetRef(ref) {
 			return result, false
 		}
@@ -114,13 +121,13 @@ func revisionImpactItemView(v *cp.RevisionImpactItem, plan generated.RevisionImp
 		return result, false
 	}
 	if outcome == "APPLIED" {
-		if !fileTargetRef(v.ResultRevisionRef) || v.ResultRevisionRef == v.SourceRevisionRef || v.ResultRevisionRef != stringValue(plan.PublishedRevisionRef) || v.ResultBindingRef != v.BindingRef || !validManagedVersion(v.ResultBindingVersion) || v.ResultBindingVersion <= v.BindingVersion || !validManagedVersion(v.ResultConsumerVersion) || v.ResultConsumerVersion <= v.ConsumerVersion {
+		if !fileTargetRef(v.ResultRevisionRef) || v.ResultRevisionRef == v.SourceRevisionRef || v.ResultRevisionRef != stringValue(plan.PublishedRevisionRef) || v.ResultBindingRef != v.BindingRef || !validManagedVersion(v.ResultBindingVersion) || v.ResultBindingVersion <= v.BindingVersion || !validManagedVersion(v.ResultConsumerVersion) || v.ResultConsumerVersion < v.ConsumerVersion || plan.Kind != "PROMPT_TEMPLATE" && v.ResultConsumerVersion == v.ConsumerVersion {
 			return result, false
 		}
 	} else if v.ResultRevisionRef != "" || v.ResultBindingRef != "" || v.ResultBindingVersion != 0 || v.ResultConsumerVersion != 0 {
 		return result, false
 	}
-	result = generated.RevisionImpactItem{Ref: v.Ref, ProjectRef: v.ProjectRef, ConsumerKind: "AGENT", ConsumerRef: v.ConsumerRef, ConsumerVersion: v.ConsumerVersion, BindingRef: v.BindingRef, BindingVersion: v.BindingVersion, SourceRevisionRef: v.SourceRevisionRef, Outcome: generated.RevisionImpactItemOutcome(outcome), ResultRevisionRef: optionalManagedString(v.ResultRevisionRef), ResultBindingRef: optionalManagedString(v.ResultBindingRef)}
+	result = generated.RevisionImpactItem{Ref: v.Ref, ProjectRef: v.ProjectRef, ConsumerKind: generated.RevisionImpactItemConsumerKind(kind), ConsumerRef: v.ConsumerRef, ConsumerVersion: v.ConsumerVersion, BindingRef: v.BindingRef, BindingVersion: v.BindingVersion, SourceRevisionRef: v.SourceRevisionRef, Outcome: generated.RevisionImpactItemOutcome(outcome), ResultRevisionRef: optionalManagedString(v.ResultRevisionRef), ResultBindingRef: optionalManagedString(v.ResultBindingRef)}
 	if outcome == "APPLIED" {
 		result.ResultBindingVersion = &v.ResultBindingVersion
 		result.ResultConsumerVersion = &v.ResultConsumerVersion

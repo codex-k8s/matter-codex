@@ -54,6 +54,14 @@ func (client *managedRPCRecorder) Invoke(_ context.Context, method string, reque
 	}
 	var output proto.Message
 	switch {
+	case strings.HasSuffix(method, "/PublishPromptTemplateDraft"):
+		plan := revisionImpactFixture()
+		plan.Kind = controlplanev1.RevisionImpactKind_REVISION_IMPACT_KIND_PROMPT_TEMPLATE
+		plan.SourceRef, plan.SourceVersion, plan.DraftRef, plan.DraftVersion = configuration.Ref, configuration.Version, revision.Ref, revision.Revision
+		plan.State, plan.Version, plan.PublishedRevisionRef = controlplanev1.RevisionImpactState_REVISION_IMPACT_STATE_APPLIED, 2, revision.Ref
+		configuration.Version++
+		revision.State = controlplanev1.ManagedConfigurationState_MANAGED_CONFIGURATION_STATE_PUBLISHED
+		output = &controlplanev1.PublishPromptTemplateDraftResponse{Configuration: configuration, Revision: revision, Plan: plan}
 	case strings.HasSuffix(method, "/DetachGitManagedConfiguration"):
 		output = &controlplanev1.DetachGitManagedConfigurationResponse{Configuration: configuration}
 	case strings.HasSuffix(method, "/ListManagedConfigurationHistory"):
@@ -99,7 +107,7 @@ func TestManagedConfigurationRoutesCallExactTypedRPC(t *testing.T) {
 	}{
 		{"CreatePromptTemplateDraft", http.MethodPost, "/api/v1/prompt-template-configurations/drafts", draftBody, "CreatePromptTemplateDraft", http.StatusCreated},
 		{"ValidatePromptTemplateDraft", http.MethodPost, "/api/v1/prompt-template-configurations/mcfg_fixture01/revisions/mrev_fixture01/validation", "", "ValidatePromptTemplateDraft", http.StatusOK},
-		{"PublishPromptTemplateDraft", http.MethodPost, "/api/v1/prompt-template-configurations/mcfg_fixture01/revisions/mrev_fixture01/publication", "", "PublishPromptTemplateDraft", http.StatusOK},
+		{"PublishPromptTemplateDraft", http.MethodPost, "/api/v1/prompt-template-configurations/mcfg_fixture01/revisions/mrev_fixture01/publication", revisionImpactPublishBody, "PublishPromptTemplateDraft", http.StatusOK},
 		{"RebindPromptTemplateConsumers", http.MethodPost, "/api/v1/prompt-template-configurations/mcfg_fixture01/revisions/mrev_fixture01/consumer-bindings", rebindBody, "RebindPromptTemplateConsumers", http.StatusOK},
 		{"CreateRoleImageRevisionDraft", http.MethodPost, "/api/v1/role-image-configurations/drafts", draftBody, "CreateRoleImageRevisionDraft", http.StatusCreated},
 		{"ValidateRoleImageRevisionDraft", http.MethodPost, "/api/v1/role-image-configurations/mcfg_fixture01/revisions/mrev_fixture01/validation", "", "ValidateRoleImageRevisionDraft", http.StatusOK},

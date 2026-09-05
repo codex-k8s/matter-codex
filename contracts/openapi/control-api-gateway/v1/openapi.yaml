@@ -691,6 +691,16 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Agent' }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/agents/{agentRef}/instructions/impact-plans:
+    post:
+      tags: [Agents]
+      operationId: prepareInstructionsImpact
+      parameters: [{ $ref: '#/components/parameters/AgentRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '200':
+          description: Неизменяемый план публикации инструкций и выбранных привязок
+          content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPlan' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/agents/{agentRef}/instruction-commands:
     post:
       tags: [Agents]
@@ -706,7 +716,10 @@ paths:
           description: Команда к версии инструкций применена
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Agent' }
+              schema:
+                oneOf:
+                  - { $ref: '#/components/schemas/Agent' }
+                  - { $ref: '#/components/schemas/InstructionPublicationResult' }
         default: { $ref: '#/components/responses/Problem' }
 
   /api/v1/agents/{agentRef}/effective-capabilities:
@@ -3534,16 +3547,29 @@ paths:
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
           content: { application/json: { schema: { $ref: '#/components/schemas/ManagedConfigurationResult' } } }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans:
+    post:
+      tags: [Administration]
+      operationId: preparePromptTemplateImpact
+      parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/ConfigurationRevisionRef' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }, { $ref: '#/components/parameters/IfMatch' }]
+      responses:
+        '200':
+          description: Неизменяемый план публикации шаблона и выбранных привязок
+          content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPlan' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/publication:
     post:
       tags: [Administration]
       operationId: publishPromptTemplateDraft
       parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/ConfigurationRevisionRef' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }, { $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPublicationInput' } } }
       responses:
         '200':
-          description: Авторитетная конфигурация и ревизия
+          description: Опубликованная конфигурация, ревизия и итоговый план
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
-          content: { application/json: { schema: { $ref: '#/components/schemas/ManagedConfigurationResult' } } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/PromptTemplatePublicationResult' } } }
         default: { $ref: '#/components/responses/Problem' }
   /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings:
     post:
@@ -5281,7 +5307,10 @@ components:
       required: [ref, projectRef, consumerKind, consumerRef, consumerVersion, bindingRef, bindingVersion, sourceRevisionRef, outcome]
       properties:
         ref: { $ref: '#/components/schemas/OpaqueRef' }
-        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        projectRef:
+          type: string
+          maxLength: 160
+          description: Пустая строка допустима только для организационного Agent или AGENT_CONTINUATION в плане PromptTemplate; область и права проверяет owner.
         consumerKind: { type: string, enum: [AGENT, AGENT_CONTINUATION, WORKFLOW, SCHEDULE] }
         consumerRef: { $ref: '#/components/schemas/OpaqueRef' }
         consumerVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
@@ -5907,6 +5936,7 @@ components:
         runtimeModel: { type: string, maxLength: 160 }
         runtimeReady: { type: boolean }
         publishedInstructions: { $ref: '#/components/schemas/InstructionVersion' }
+        instructionBinding: { $ref: '#/components/schemas/AgentInstructionsBinding' }
         draftInstructions: { $ref: '#/components/schemas/InstructionVersion' }
         capabilities: { type: array, items: { $ref: '#/components/schemas/PlatformCapability' } }
         integrations: { type: array, items: { type: string, maxLength: 120 } }
@@ -5914,6 +5944,15 @@ components:
         currentActivity: { type: string, maxLength: 500 }
         updatedAt: { $ref: '#/components/schemas/Timestamp' }
         nextActions: { type: array, items: { $ref: '#/components/schemas/NextAction' } }
+    AgentInstructionsBinding:
+      type: object
+      additionalProperties: false
+      required: [ref, version, revisionRef, effective]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        revisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        effective: { type: boolean }
     AgentInput:
       type: object
       additionalProperties: false
@@ -5975,6 +6014,35 @@ components:
       properties:
         action: { type: string, enum: [VALIDATE, PUBLISH, ROLLBACK] }
         publishedInstructionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        planRef: { $ref: '#/components/schemas/OpaqueRef' }
+        selectedItemRefs:
+          type: array
+          maxItems: 1000
+          uniqueItems: true
+          items: { $ref: '#/components/schemas/OpaqueRef' }
+      description: PUBLISH требует planRef и явный selectedItemRefs (пустой массив допустим); остальные действия не принимают эти поля.
+    InstructionPublicationResult:
+      type: object
+      additionalProperties: false
+      required: [agent, plan]
+      properties:
+        agent:
+          type: object
+          additionalProperties: false
+          required: [ref, projectRef, version]
+          properties:
+            ref: { $ref: '#/components/schemas/OpaqueRef' }
+            projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+            version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        plan: { $ref: '#/components/schemas/RevisionImpactPlan' }
+    PromptTemplatePublicationResult:
+      type: object
+      additionalProperties: false
+      required: [configuration, revision, plan]
+      properties:
+        configuration: { $ref: '#/components/schemas/ManagedConfiguration' }
+        revision: { $ref: '#/components/schemas/ManagedConfigurationRevision' }
+        plan: { $ref: '#/components/schemas/RevisionImpactPlan' }
     ArtifactBindingTargetReason:
       type: string
       enum: [AVAILABLE, ALREADY_BOUND, NOT_BOUND, AGENT_CAPABILITY_REQUIRED, AGENT_ARCHIVED, ARTIFACT_UNAVAILABLE]

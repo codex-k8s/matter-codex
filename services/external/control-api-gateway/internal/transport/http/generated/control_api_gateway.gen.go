@@ -7,6 +7,7 @@ package generated
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -7122,33 +7123,34 @@ type AdministrationStateProfile string
 
 // Agent defines model for Agent.
 type Agent struct {
-	Avatar                *AgentAvatar         `json:"avatar,omitempty"`
-	AvatarUrl             *string              `json:"avatarUrl,omitempty"`
-	Capabilities          []PlatformCapability `json:"capabilities"`
-	CurrentActivity       *string              `json:"currentActivity,omitempty"`
-	DraftInstructions     *InstructionVersion  `json:"draftInstructions,omitempty"`
-	Enabled               bool                 `json:"enabled"`
-	Integrations          []string             `json:"integrations"`
-	KnowledgeArtifactRefs []OpaqueRef          `json:"knowledgeArtifactRefs"`
-	Name                  string               `json:"name"`
-	NextActions           []NextAction         `json:"nextActions"`
-	ProjectRef            OpaqueRef            `json:"projectRef"`
-	PublishedInstructions *InstructionVersion  `json:"publishedInstructions,omitempty"`
-	Purpose               string               `json:"purpose"`
-	Ref                   OpaqueRef            `json:"ref"`
-	RoleDefinitionName    *string              `json:"roleDefinitionName,omitempty"`
-	RoleDefinitionRef     *OpaqueRef           `json:"roleDefinitionRef,omitempty"`
-	RoleDescription       string               `json:"roleDescription"`
-	RuntimeModel          *string              `json:"runtimeModel,omitempty"`
-	RuntimeName           string               `json:"runtimeName"`
-	RuntimeProvider       *string              `json:"runtimeProvider,omitempty"`
-	RuntimeReady          bool                 `json:"runtimeReady"`
-	RuntimeRef            OpaqueRef            `json:"runtimeRef"`
-	RuntimeRevision       *string              `json:"runtimeRevision,omitempty"`
-	State                 AgentState           `json:"state"`
-	System                bool                 `json:"system"`
-	UpdatedAt             Timestamp            `json:"updatedAt"`
-	Version               int64                `json:"version"`
+	Avatar                *AgentAvatar              `json:"avatar,omitempty"`
+	AvatarUrl             *string                   `json:"avatarUrl,omitempty"`
+	Capabilities          []PlatformCapability      `json:"capabilities"`
+	CurrentActivity       *string                   `json:"currentActivity,omitempty"`
+	DraftInstructions     *InstructionVersion       `json:"draftInstructions,omitempty"`
+	Enabled               bool                      `json:"enabled"`
+	InstructionBinding    *AgentInstructionsBinding `json:"instructionBinding,omitempty"`
+	Integrations          []string                  `json:"integrations"`
+	KnowledgeArtifactRefs []OpaqueRef               `json:"knowledgeArtifactRefs"`
+	Name                  string                    `json:"name"`
+	NextActions           []NextAction              `json:"nextActions"`
+	ProjectRef            OpaqueRef                 `json:"projectRef"`
+	PublishedInstructions *InstructionVersion       `json:"publishedInstructions,omitempty"`
+	Purpose               string                    `json:"purpose"`
+	Ref                   OpaqueRef                 `json:"ref"`
+	RoleDefinitionName    *string                   `json:"roleDefinitionName,omitempty"`
+	RoleDefinitionRef     *OpaqueRef                `json:"roleDefinitionRef,omitempty"`
+	RoleDescription       string                    `json:"roleDescription"`
+	RuntimeModel          *string                   `json:"runtimeModel,omitempty"`
+	RuntimeName           string                    `json:"runtimeName"`
+	RuntimeProvider       *string                   `json:"runtimeProvider,omitempty"`
+	RuntimeReady          bool                      `json:"runtimeReady"`
+	RuntimeRef            OpaqueRef                 `json:"runtimeRef"`
+	RuntimeRevision       *string                   `json:"runtimeRevision,omitempty"`
+	State                 AgentState                `json:"state"`
+	System                bool                      `json:"system"`
+	UpdatedAt             Timestamp                 `json:"updatedAt"`
+	Version               int64                     `json:"version"`
 }
 
 // AgentState defines model for Agent.State.
@@ -7251,6 +7253,14 @@ type AgentInput struct {
 
 	// RuntimeRef Непрозрачный ref из runtime catalog; при отсутствии сервер выбирает безопасный default
 	RuntimeRef *OpaqueRef `json:"runtimeRef,omitempty"`
+}
+
+// AgentInstructionsBinding defines model for AgentInstructionsBinding.
+type AgentInstructionsBinding struct {
+	Effective   bool      `json:"effective"`
+	Ref         OpaqueRef `json:"ref"`
+	RevisionRef OpaqueRef `json:"revisionRef"`
+	Version     int64     `json:"version"`
 }
 
 // AgentPage defines model for AgentPage.
@@ -8187,14 +8197,26 @@ type IncidentSeverity string
 // IncidentState defines model for Incident.State.
 type IncidentState string
 
-// InstructionCommand defines model for InstructionCommand.
+// InstructionCommand PUBLISH требует planRef и явный selectedItemRefs (пустой массив допустим); остальные действия не принимают эти поля.
 type InstructionCommand struct {
 	Action                  InstructionCommandAction `json:"action"`
+	PlanRef                 *OpaqueRef               `json:"planRef,omitempty"`
 	PublishedInstructionRef *OpaqueRef               `json:"publishedInstructionRef,omitempty"`
+	SelectedItemRefs        *[]OpaqueRef             `json:"selectedItemRefs,omitempty"`
 }
 
 // InstructionCommandAction defines model for InstructionCommand.Action.
 type InstructionCommandAction string
+
+// InstructionPublicationResult defines model for InstructionPublicationResult.
+type InstructionPublicationResult struct {
+	Agent struct {
+		ProjectRef OpaqueRef `json:"projectRef"`
+		Ref        OpaqueRef `json:"ref"`
+		Version    int64     `json:"version"`
+	} `json:"agent"`
+	Plan RevisionImpactPlan `json:"plan"`
+}
 
 // InstructionVersion defines model for InstructionVersion.
 type InstructionVersion struct {
@@ -9100,6 +9122,13 @@ type PromptTemplatePreviewInput struct {
 	Template                   string                   `json:"template"`
 }
 
+// PromptTemplatePublicationResult defines model for PromptTemplatePublicationResult.
+type PromptTemplatePublicationResult struct {
+	Configuration ManagedConfiguration         `json:"configuration"`
+	Plan          RevisionImpactPlan           `json:"plan"`
+	Revision      ManagedConfigurationRevision `json:"revision"`
+}
+
 // PromptTemplateScope defines model for PromptTemplateScope.
 type PromptTemplateScope struct {
 	ContextPin   PromptContextPin                `json:"contextPin"`
@@ -9309,19 +9338,21 @@ type PublicRuntimeRevisionIdentity struct {
 
 // RevisionImpactItem defines model for RevisionImpactItem.
 type RevisionImpactItem struct {
-	BindingRef            OpaqueRef                      `json:"bindingRef"`
-	BindingVersion        int64                          `json:"bindingVersion"`
-	ConsumerKind          RevisionImpactItemConsumerKind `json:"consumerKind"`
-	ConsumerRef           OpaqueRef                      `json:"consumerRef"`
-	ConsumerVersion       int64                          `json:"consumerVersion"`
-	Outcome               RevisionImpactItemOutcome      `json:"outcome"`
-	ProjectRef            OpaqueRef                      `json:"projectRef"`
-	Ref                   OpaqueRef                      `json:"ref"`
-	ResultBindingRef      *OpaqueRef                     `json:"resultBindingRef,omitempty"`
-	ResultBindingVersion  *int64                         `json:"resultBindingVersion,omitempty"`
-	ResultConsumerVersion *int64                         `json:"resultConsumerVersion,omitempty"`
-	ResultRevisionRef     *OpaqueRef                     `json:"resultRevisionRef,omitempty"`
-	SourceRevisionRef     OpaqueRef                      `json:"sourceRevisionRef"`
+	BindingRef      OpaqueRef                      `json:"bindingRef"`
+	BindingVersion  int64                          `json:"bindingVersion"`
+	ConsumerKind    RevisionImpactItemConsumerKind `json:"consumerKind"`
+	ConsumerRef     OpaqueRef                      `json:"consumerRef"`
+	ConsumerVersion int64                          `json:"consumerVersion"`
+	Outcome         RevisionImpactItemOutcome      `json:"outcome"`
+
+	// ProjectRef Пустая строка допустима только для организационного Agent или AGENT_CONTINUATION в плане PromptTemplate; область и права проверяет owner.
+	ProjectRef            string     `json:"projectRef"`
+	Ref                   OpaqueRef  `json:"ref"`
+	ResultBindingRef      *OpaqueRef `json:"resultBindingRef,omitempty"`
+	ResultBindingVersion  *int64     `json:"resultBindingVersion,omitempty"`
+	ResultConsumerVersion *int64     `json:"resultConsumerVersion,omitempty"`
+	ResultRevisionRef     *OpaqueRef `json:"resultRevisionRef,omitempty"`
+	SourceRevisionRef     OpaqueRef  `json:"sourceRevisionRef"`
 }
 
 // RevisionImpactItemConsumerKind defines model for RevisionImpactItem.ConsumerKind.
@@ -11564,6 +11595,11 @@ type CommandAgentInstructionsParams struct {
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
+// CommandAgentInstructions200JSONResponseBody defines parameters for CommandAgentInstructions.
+type CommandAgentInstructions200JSONResponseBody struct {
+	union json.RawMessage
+}
+
 // CreateInstructionDraftJSONBody defines parameters for CreateInstructionDraft.
 type CreateInstructionDraftJSONBody struct {
 	Content string `json:"content"`
@@ -11580,6 +11616,13 @@ type CreateInstructionDraftParams struct {
 type ListAgentInstructionVersionsParams struct {
 	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// PrepareInstructionsImpactParams defines parameters for PrepareInstructionsImpact.
+type PrepareInstructionsImpactParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
 // UnbindAgentMemoryRecordParams defines parameters for UnbindAgentMemoryRecord.
@@ -12561,6 +12604,13 @@ type DiscardPromptTemplateDraftParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PreparePromptTemplateImpactParams defines parameters for PreparePromptTemplateImpact.
+type PreparePromptTemplateImpactParams struct {
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+	IfMatch        IfMatch        `json:"If-Match"`
+}
+
 // PublishPromptTemplateDraftParams defines parameters for PublishPromptTemplateDraft.
 type PublishPromptTemplateDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -13516,6 +13566,9 @@ type CreatePromptTemplateDraftJSONRequestBody = ManagedConfigurationDraftInput
 // RebindPromptTemplateConsumersJSONRequestBody defines body for RebindPromptTemplateConsumers for application/json ContentType.
 type RebindPromptTemplateConsumersJSONRequestBody = ManagedConfigurationRebindInput
 
+// PublishPromptTemplateDraftJSONRequestBody defines body for PublishPromptTemplateDraft for application/json ContentType.
+type PublishPromptTemplateDraftJSONRequestBody = RevisionImpactPublicationInput
+
 // SavePromptTemplateDraftJSONRequestBody defines body for SavePromptTemplateDraft for application/json ContentType.
 type SavePromptTemplateDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
 
@@ -13645,6 +13698,68 @@ type UpdateWorkflowDraftJSONRequestBody = WorkflowInput
 // CommandWorkflowJSONRequestBody defines body for CommandWorkflow for application/json ContentType.
 type CommandWorkflowJSONRequestBody = WorkflowCommand
 
+// AsAgent returns the union data inside the CommandAgentInstructions200JSONResponseBody as a Agent
+func (t CommandAgentInstructions200JSONResponseBody) AsAgent() (Agent, error) {
+	var body Agent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAgent overwrites any union data inside the CommandAgentInstructions200JSONResponseBody as the provided Agent
+func (t *CommandAgentInstructions200JSONResponseBody) FromAgent(v Agent) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAgent performs a merge with any union data inside the CommandAgentInstructions200JSONResponseBody, using the provided Agent
+func (t *CommandAgentInstructions200JSONResponseBody) MergeAgent(v Agent) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsInstructionPublicationResult returns the union data inside the CommandAgentInstructions200JSONResponseBody as a InstructionPublicationResult
+func (t CommandAgentInstructions200JSONResponseBody) AsInstructionPublicationResult() (InstructionPublicationResult, error) {
+	var body InstructionPublicationResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromInstructionPublicationResult overwrites any union data inside the CommandAgentInstructions200JSONResponseBody as the provided InstructionPublicationResult
+func (t *CommandAgentInstructions200JSONResponseBody) FromInstructionPublicationResult(v InstructionPublicationResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeInstructionPublicationResult performs a merge with any union data inside the CommandAgentInstructions200JSONResponseBody, using the provided InstructionPublicationResult
+func (t *CommandAgentInstructions200JSONResponseBody) MergeInstructionPublicationResult(v InstructionPublicationResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t CommandAgentInstructions200JSONResponseBody) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *CommandAgentInstructions200JSONResponseBody) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 
@@ -13761,6 +13876,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/agents/{agentRef}/instruction-versions)
 	ListAgentInstructionVersions(w http.ResponseWriter, r *http.Request, agentRef AgentRef, params ListAgentInstructionVersionsParams)
+
+	// (POST /api/v1/agents/{agentRef}/instructions/impact-plans)
+	PrepareInstructionsImpact(w http.ResponseWriter, r *http.Request, agentRef AgentRef, params PrepareInstructionsImpactParams)
 
 	// (DELETE /api/v1/agents/{agentRef}/memory-records/{recordRef})
 	UnbindAgentMemoryRecord(w http.ResponseWriter, r *http.Request, agentRef AgentRef, recordRef MemoryRecordRef, params UnbindAgentMemoryRecordParams)
@@ -14166,6 +14284,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/discard)
 	DiscardPromptTemplateDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params DiscardPromptTemplateDraftParams)
+
+	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans)
+	PreparePromptTemplateImpact(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PreparePromptTemplateImpactParams)
 
 	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/publication)
 	PublishPromptTemplateDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PublishPromptTemplateDraftParams)
@@ -17449,6 +17570,112 @@ func (siw *ServerInterfaceWrapper) ListAgentInstructionVersions(w http.ResponseW
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListAgentInstructionVersions(w, r, agentRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PrepareInstructionsImpact operation middleware
+func (siw *ServerInterfaceWrapper) PrepareInstructionsImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "agentRef" -------------
+	var agentRef AgentRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "agentRef", r.PathValue("agentRef"), &agentRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "agentRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareInstructionsImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareInstructionsImpact(w, r, agentRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -29573,6 +29800,121 @@ func (siw *ServerInterfaceWrapper) DiscardPromptTemplateDraft(w http.ResponseWri
 	handler.ServeHTTP(w, r)
 }
 
+// PreparePromptTemplateImpact operation middleware
+func (siw *ServerInterfaceWrapper) PreparePromptTemplateImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "revisionRef" -------------
+	var revisionRef ConfigurationRevisionRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "revisionRef", r.PathValue("revisionRef"), &revisionRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "revisionRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PreparePromptTemplateImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PreparePromptTemplateImpact(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PublishPromptTemplateDraft operation middleware
 func (siw *ServerInterfaceWrapper) PublishPromptTemplateDraft(w http.ResponseWriter, r *http.Request) {
 
@@ -39598,6 +39940,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-commands", wrapper.CommandAgentInstructions)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-drafts", wrapper.CreateInstructionDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-versions", wrapper.ListAgentInstructionVersions)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instructions/impact-plans", wrapper.PrepareInstructionsImpact)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/agents/{agentRef}/memory-records/{recordRef}", wrapper.UnbindAgentMemoryRecord)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/agents/{agentRef}/memory-records/{recordRef}", wrapper.BindAgentMemoryRecord)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agents/{agentRef}/runtime-configuration", wrapper.GetAgentRuntimeConfiguration)
@@ -39733,6 +40076,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/drafts", wrapper.CreatePromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindPromptTemplateConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardPromptTemplateDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans", wrapper.PreparePromptTemplateImpact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishPromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SavePromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidatePromptTemplateDraft)

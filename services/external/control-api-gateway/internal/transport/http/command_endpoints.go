@@ -264,10 +264,19 @@ func (server *Server) CommandAgentInstructions(w http.ResponseWriter, r *http.Re
 	var err error
 	switch body.Action {
 	case generated.InstructionCommandActionVALIDATE:
+		if body.PlanRef != nil || body.SelectedItemRefs != nil {
+			writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+			return
+		}
 		response, err = server.control.Command.ValidateInstructionDraft(r.Context(), &controlplanev1.ValidateInstructionDraftRequest{Mutation: m, AgentRef: ref})
 	case generated.InstructionCommandActionPUBLISH:
-		response, err = server.control.Command.PublishInstructionDraft(r.Context(), &controlplanev1.PublishInstructionDraftRequest{Mutation: m, AgentRef: ref})
+		server.publishInstructionsWithImpact(w, r, ref, m, body)
+		return
 	case generated.InstructionCommandActionROLLBACK:
+		if body.PlanRef != nil || body.SelectedItemRefs != nil {
+			writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+			return
+		}
 		response, err = server.control.Command.RollbackInstructions(r.Context(), &controlplanev1.RollbackInstructionsRequest{Mutation: m, AgentRef: ref, PublishedInstructionRef: stringValue(body.PublishedInstructionRef)})
 	default:
 		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)

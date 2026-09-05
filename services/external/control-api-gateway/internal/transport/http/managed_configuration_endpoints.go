@@ -60,18 +60,34 @@ func (server *Server) ValidatePromptTemplateDraft(w http.ResponseWriter, r *http
 }
 
 func (server *Server) PublishPromptTemplateDraft(w http.ResponseWriter, r *http.Request, configurationRef generated.ConfigurationRef, revisionRef generated.ConfigurationRevisionRef, p generated.PublishPromptTemplateDraftParams) {
+	body, ok := decodeJSON[generated.RevisionImpactPublicationInput](w, r)
+	if !ok {
+		return
+	}
+	if !validRevisionImpactSelection(body.PlanRef, body.SelectedItemRefs) {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
 	mutation, ok := requireMutation(w, p.IdempotencyKey, p.IfMatch)
 	if !ok {
 		return
 	}
 	result, err := server.control.Command.PublishPromptTemplateDraft(r.Context(), &controlplanev1.PublishPromptTemplateDraftRequest{
-		Mutation: mutation, ConfigurationRef: configurationRef, RevisionRef: revisionRef,
+		Mutation: mutation, ConfigurationRef: configurationRef, RevisionRef: revisionRef, PlanRef: body.PlanRef, SelectedItemRefs: body.SelectedItemRefs,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
 	}
-	writeManagedResult(w, http.StatusOK, result)
+	plan, ok := revisionImpactPlanView(result.GetPlan())
+	configuration, configErr := managedConfigurationView(result.GetConfiguration())
+	revision, revisionErr := managedRevisionView(result.GetRevision())
+	if !ok || configErr != nil || revisionErr != nil || plan.Kind != "PROMPT_TEMPLATE" || plan.Ref != body.PlanRef || stringValue(plan.SourceRef) != configurationRef || plan.SourceVersion != mutation.GetExpectedVersion() || plan.DraftRef != revisionRef || plan.State != "APPLIED" || plan.Version != 2 || int64(len(body.SelectedItemRefs)) > plan.Total || configuration.Ref != configurationRef || configuration.Version <= plan.SourceVersion || revision.Ref != revisionRef || revision.State != "PUBLISHED" || revision.Digest != plan.TargetDigest {
+		writeLocalProblem(w, 502, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	w.Header().Set("ETag", fmt.Sprintf("\"%d\"", configuration.Version))
+	writeJSON(w, http.StatusOK, generated.PromptTemplatePublicationResult{Configuration: configuration, Revision: revision, Plan: plan})
 }
 
 func (server *Server) RebindPromptTemplateConsumers(w http.ResponseWriter, r *http.Request, configurationRef generated.ConfigurationRef, revisionRef generated.ConfigurationRevisionRef, p generated.RebindPromptTemplateConsumersParams) {
