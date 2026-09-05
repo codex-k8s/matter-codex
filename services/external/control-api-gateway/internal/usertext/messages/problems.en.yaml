@@ -1,5 +1,19 @@
 INTERNAL:
   other: Internal error
+GATE_CONSEQUENCE_CONTINUE:
+  other: Continue execution
+GATE_CONSEQUENCE_EXTERNAL_EFFECT:
+  other: Allow the external integration effect
+GATE_CONSEQUENCE_REJECT_RUN:
+  other: Reject the request and terminate the run
+GATE_CONSEQUENCE_REJECT_EFFECT:
+  other: Reject the external effect without terminating the run
+GATE_CONSEQUENCE_CANCEL_RUN:
+  other: Cancel the run
+GATE_CONSEQUENCE_CANCEL_EFFECT:
+  other: Cancel the external effect without terminating the run
+GATE_CONSEQUENCE_REQUEST_CHANGES:
+  other: Request changes
 AGENT_INSTRUCTIONS_IMPACT_PREPARED:
   other: Instruction publication impact plan prepared
 PROMPT_TEMPLATE_IMPACT_PREPARED:

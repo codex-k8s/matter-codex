@@ -10,9 +10,33 @@ import (
 	cp "github.com/codex-k8s/kodex/libs/go/controlplaneapi/gen/controlplane/v1"
 	"github.com/codex-k8s/kodex/libs/go/controlplaneclient"
 	"github.com/codex-k8s/kodex/services/external/control-api-gateway/internal/transport/http/generated"
+	"github.com/codex-k8s/kodex/services/external/control-api-gateway/internal/usertext"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+func TestOwnerGateConsequencesLocalizeWithoutChangingIntent(t *testing.T) {
+	texts, err := usertext.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, locale := range []string{"ru", "en"} {
+		for _, suffix := range []string{"CONTINUE", "EXTERNAL_EFFECT", "REJECT_RUN", "REJECT_EFFECT", "CANCEL_RUN", "CANCEL_EFFECT", "REQUEST_CHANGES"} {
+			id := "GATE_CONSEQUENCE_" + suffix
+			literal := "i18n:" + id
+			intent := map[string]any{"effectPreview": map[string]any{"value": literal}}
+			consequence := map[string]any{"safeSummary": literal, "terminalForRun": false}
+			value := map[string]any{"integrationIntent": intent, "decisionConsequences": []any{consequence}}
+			LocalizeSafeErrors(value, func(id string) string { return texts.Localize(locale, id, nil) })
+			if got := consequence["safeSummary"]; got == literal || got == id || got == "" {
+				t.Fatalf("unresolved consequence %s/%s", locale, id)
+			}
+			if intent["effectPreview"].(map[string]any)["value"] != literal || consequence["terminalForRun"] != false {
+				t.Fatal("owner data changed during localization")
+			}
+		}
+	}
+}
 
 func integrationGateFixture() *cp.OwnerGate {
 	preview, _ := structpb.NewStruct(map[string]any{

@@ -1,3 +1,17 @@
+GATE_CONSEQUENCE_CONTINUE:
+  other: Продолжить выполнение
+GATE_CONSEQUENCE_EXTERNAL_EFFECT:
+  other: Разрешить внешнее действие интеграции
+GATE_CONSEQUENCE_REJECT_RUN:
+  other: Отклонить запрос и завершить запуск
+GATE_CONSEQUENCE_REJECT_EFFECT:
+  other: Отклонить внешнее действие без завершения запуска
+GATE_CONSEQUENCE_CANCEL_RUN:
+  other: Отменить запуск
+GATE_CONSEQUENCE_CANCEL_EFFECT:
+  other: Отменить внешнее действие без завершения запуска
+GATE_CONSEQUENCE_REQUEST_CHANGES:
+  other: Запросить изменения
 AGENT_INSTRUCTIONS_IMPACT_PREPARED:
   other: Подготовлен план применения публикации инструкций
 PROMPT_TEMPLATE_IMPACT_PREPARED:
