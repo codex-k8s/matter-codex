@@ -114,3 +114,17 @@ readonly input manifest без managed write capability. Вклад642 доба�
 catalog UNION к этому owner path; отдельный checkpoint не заменяет общую
 проверку объединённого control-plane. Policy revision общего дерева должна
 сохранять более новые operations и монотонный номер.
+
+Объединение owner641 (`f55aadb93`, `8a1bd2d08`, `d81b054e7`) и owner642
+(`ccefadda86f25370924a5a4fd19f57d7ace7ae85`) выполнено поверх Environment644
+`ac67c10e5691bd8039f087a38bc6ef472d90b8ad`. Actor read/download guard,
+readonly input eligibility и catalog UNION сохранены одновременно;
+capture выполняется до RuntimeRevision digest. Policy69 сохраняет все
+operations66–69. Полный объединённый Bootstrap PASS27.109s; три package
+race PASS1.104/1.729/1.087s, SQL/policy/ABI/web-only release PASS.
+
+Выявленный transport tail остаётся обязательным: текущий unary body read
+ограничен32MiB, тогда как InputArtifact допускает512MiB. Большие input files
+не объявляются доступными через этот transport; следующий bounded stream
+должен сохранить размер продукта, exact lease/provenance и проверку digest
+до выдачи bytes. Увеличение unary buffer не считается завершением этого пути.

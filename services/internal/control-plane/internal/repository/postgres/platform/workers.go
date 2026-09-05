@@ -674,10 +674,14 @@ func (repository *Repository) ClaimDueSchedules(ctx context.Context, principal v
 		digest := sha256.Sum256([]byte(fence))
 		inputDigest := sha256.Sum256(item.input)
 		automationTextDigest := sha256.Sum256([]byte(item.automationText))
-		promptInputsDigest := sha256.Sum256(item.promptInputs)
+		item.promptInputs, err = repository.captureSchedulePromptTx(ctx, tx, scope, item.ref, item.promptInputs)
+		if err != nil {
+			return nil, err
+		}
+		promptInputsDigest := schedulePromptDigest(1, item.promptInputs)
 		expires := now.Add(30 * time.Second)
 		var occurrenceID string
-		if err := tx.QueryRow(ctx, queryWorkersClaimdueschedulesInsertScheduleOccurrencesRefScheduleIdState, occurrenceRef, scope.organizationID, item.id, *occurrence, item.version, item.targetType, item.targetRef, item.name, item.input, hex.EncodeToString(inputDigest[:]), leaseRef, hex.EncodeToString(digest[:]), instance, expires, item.currentRevisionID, item.targetVersion, item.targetDigest, item.automationText, hex.EncodeToString(automationTextDigest[:]), item.promptInputs, hex.EncodeToString(promptInputsDigest[:]), item.initiatedBy, skipped).Scan(&occurrenceID); err != nil {
+		if err := tx.QueryRow(ctx, queryWorkersClaimdueschedulesInsertScheduleOccurrencesRefScheduleIdState, occurrenceRef, scope.organizationID, item.id, *occurrence, item.version, item.targetType, item.targetRef, item.name, item.input, hex.EncodeToString(inputDigest[:]), leaseRef, hex.EncodeToString(digest[:]), instance, expires, item.currentRevisionID, item.targetVersion, item.targetDigest, item.automationText, hex.EncodeToString(automationTextDigest[:]), item.promptInputs, promptInputsDigest, item.initiatedBy, skipped).Scan(&occurrenceID); err != nil {
 			return nil, mapWriteError(err)
 		}
 		if skipped {
@@ -699,7 +703,7 @@ func (repository *Repository) ClaimDueSchedules(ctx context.Context, principal v
 			"leaseRef": leaseRef, "fence": fence, "generation": int64(1), "expiresAt": expires,
 			"attempt": int32(1), "targetRef": item.targetRef, "targetVersion": item.targetVersion,
 			"targetDigest": item.targetDigest, "automationTextDigest": hex.EncodeToString(automationTextDigest[:]),
-			"promptInputsDigest": hex.EncodeToString(promptInputsDigest[:]),
+			"promptInputsDigest": promptInputsDigest,
 			"scheduleVersion":    item.version, "scheduleRevisionRef": item.currentRevisionRef,
 			"scheduleRevision": item.currentRevision, "scheduleRevisionDigest": item.currentRevisionDigest,
 			"inputDigest": hex.EncodeToString(inputDigest[:])})
@@ -746,13 +750,14 @@ func (repository *Repository) changeOccurrence(ctx context.Context, tx pgx.Tx, s
 	}
 	var occurrenceID, scheduleID, projectID, projectRef, state, storedDigest, targetType, targetRef, name, storedInputDigest string
 	var revisionDigest, targetDigest, automationText, automationTextDigest, promptInputsDigest string
+	var promptInputFormat int
 	var initiatedBy, initiatorRef, initiatorName string
 	var sessionPolicy, continueSessionRef string
 	var scheduleVersion, generation, targetVersion int64
 	var attempt int32
 	var occurrenceInput, promptInputs []byte
 	var expires time.Time
-	err := tx.QueryRow(ctx, queryWorkersChangeoccurrenceSelectScheduleOccurrencesOrganizationIdRefLeaseRef, scope.organizationID, payload.OccurrenceRef, payload.LeaseRef, input.Principal.CredentialRevision).Scan(&occurrenceID, &scheduleID, &projectID, &projectRef, &state, &storedDigest, &generation, &expires, &targetType, &targetRef, &name, &occurrenceInput, &scheduleVersion, &storedInputDigest, &attempt, &revisionDigest, &targetVersion, &targetDigest, &automationText, &automationTextDigest, &promptInputs, &promptInputsDigest, &initiatedBy, &initiatorRef, &initiatorName, &sessionPolicy, &continueSessionRef)
+	err := tx.QueryRow(ctx, queryWorkersChangeoccurrenceSelectScheduleOccurrencesOrganizationIdRefLeaseRef, scope.organizationID, payload.OccurrenceRef, payload.LeaseRef, input.Principal.CredentialRevision).Scan(&occurrenceID, &scheduleID, &projectID, &projectRef, &state, &storedDigest, &generation, &expires, &targetType, &targetRef, &name, &occurrenceInput, &scheduleVersion, &storedInputDigest, &attempt, &revisionDigest, &targetVersion, &targetDigest, &automationText, &automationTextDigest, &promptInputs, &promptInputsDigest, &initiatedBy, &initiatorRef, &initiatorName, &sessionPolicy, &continueSessionRef, &promptInputFormat)
 	if err != nil {
 		return commandOutcome{}, errs.ErrNotFound
 	}
@@ -766,10 +771,10 @@ func (repository *Repository) changeOccurrence(ctx context.Context, tx pgx.Tx, s
 	}
 	inputDigest := sha256.Sum256(occurrenceInput)
 	storedAutomationDigest := sha256.Sum256([]byte(automationText))
-	storedPromptInputsDigest := sha256.Sum256(promptInputs)
+	storedPromptInputsDigest := schedulePromptDigest(promptInputFormat, promptInputs)
 	if storedInputDigest != hex.EncodeToString(inputDigest[:]) ||
 		automationTextDigest != hex.EncodeToString(storedAutomationDigest[:]) ||
-		promptInputsDigest != hex.EncodeToString(storedPromptInputsDigest[:]) ||
+		promptInputsDigest != storedPromptInputsDigest ||
 		scheduleVersion < 1 || targetVersion < 1 || revisionDigest == "" || initiatedBy == "" {
 		return commandOutcome{}, errs.ErrUnavailable
 	}
@@ -812,8 +817,10 @@ func (repository *Repository) changeOccurrence(ctx context.Context, tx pgx.Tx, s
 		return commandOutcome{}, errs.ErrConflict
 	}
 	var immutableInput map[string]any
-	var immutablePromptInputs map[string]any
-	if json.Unmarshal(occurrenceInput, &immutableInput) != nil || json.Unmarshal(promptInputs, &immutablePromptInputs) != nil {
+	if _, err := decodeSchedulePromptCapture(promptInputFormat, promptInputs); err != nil {
+		return commandOutcome{}, errs.ErrUnavailable
+	}
+	if json.Unmarshal(occurrenceInput, &immutableInput) != nil {
 		return commandOutcome{}, errs.ErrUnavailable
 	}
 	nested := input
@@ -1018,7 +1025,7 @@ func (repository *Repository) resolveIntegrationInvocation(ctx context.Context, 
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	encodedInput, err := json.Marshal(boundedInput)
-	if err != nil || len(encodedInput) > 64<<10 {
+	if err != nil || len(encodedInput) > 512<<10 {
 		return nil, errs.ErrInvalid
 	}
 	var runID, nodeID, connectionID, grantID, grantRef, projectID, rootRunID, initiatorRef string
@@ -1050,6 +1057,9 @@ func (repository *Repository) resolveIntegrationInvocation(ctx context.Context, 
 	}
 	canonicalInput, err := capability.ValidateInput(encodedInput)
 	if err != nil {
+		return nil, errs.ErrInvalid
+	}
+	if len(encodedInput) > 64<<10 && (definitionKey != "github" || capability.Operation != "github.repository.content.update") {
 		return nil, errs.ErrInvalid
 	}
 	var resourceScope map[string]string

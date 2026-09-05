@@ -8,6 +8,8 @@ type Page struct {
 
 type Filter struct {
 	VFSKinds                                                                        []string                 `json:",omitempty"`
+	TargetType, TargetRef                                                           string                   `json:",omitempty"`
+	ResumableSessionsOnly                                                           bool                     `json:",omitempty"`
 	ExpectedCatalogRevision, ExpectedCatalogDigest                                  string                   `json:",omitempty"`
 	TemplateContext                                                                 *TemplateVariableContext `json:",omitempty"`
 	ProjectRef, ResourceRef, Query, State, Category, DefinitionKey, Action, Outcome string
@@ -19,5 +21,7 @@ type Filter struct {
 }
 
 type TemplateVariableContext struct {
-	AgentRef, RuntimeRevisionRef string
+	AgentRef, RuntimeRevisionRef                 string
+	TargetKind, TargetRef, ExpectedContextDigest string
+	Preview                                      PromptPreviewContext
 }

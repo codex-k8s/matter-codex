@@ -72,6 +72,8 @@ service PlatformQueryService {
   rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse);
   rpc GetAgentRuntimeConfiguration(GetAgentRuntimeConfigurationRequest) returns (GetAgentRuntimeConfigurationResponse);
   rpc GetAgentEffectiveCapabilities(GetAgentEffectiveCapabilitiesRequest) returns (GetAgentEffectiveCapabilitiesResponse);
+  rpc ListArtifactBindingTargets(ListArtifactBindingTargetsRequest) returns (ListArtifactBindingTargetsResponse);
+  rpc GetRunAttachmentEligibility(GetRunAttachmentEligibilityRequest) returns (GetRunAttachmentEligibilityResponse);
   rpc ListConfigOverlayRevisions(ListConfigOverlayRevisionsRequest) returns (ListConfigOverlayRevisionsResponse);
   rpc GetConfigOverlayRevision(GetConfigOverlayRevisionRequest) returns (GetConfigOverlayRevisionResponse);
   rpc ListAgentRuntimeConfigurationVersions(ListAgentRuntimeConfigurationVersionsRequest) returns (ListAgentRuntimeConfigurationVersionsResponse);
@@ -91,6 +93,8 @@ service PlatformQueryService {
   rpc ListManagedConfigurationHistory(ListManagedConfigurationHistoryRequest) returns (ListManagedConfigurationHistoryResponse);
   rpc ListManagedConfigurations(ListManagedConfigurationsRequest) returns (ListManagedConfigurationsResponse);
   rpc GetManagedConfigurationImpact(GetManagedConfigurationImpactRequest) returns (GetManagedConfigurationImpactResponse);
+  rpc GetRoleImageImpactPlan(GetRoleImageImpactPlanRequest) returns (GetRoleImageImpactPlanResponse);
+  rpc GetRevisionImpactPlan(GetRevisionImpactPlanRequest) returns (GetRevisionImpactPlanResponse);
   rpc GetManagedConfigurationGitWriteBack(GetManagedConfigurationGitWriteBackRequest) returns (GetManagedConfigurationGitWriteBackResponse);
   rpc ListManagedConfigurationGitWriteBacks(ListManagedConfigurationGitWriteBacksRequest) returns (ListManagedConfigurationGitWriteBacksResponse);
   rpc GetSystemSTTConfiguration(GetSystemSTTConfigurationRequest) returns (GetSystemSTTConfigurationResponse);
@@ -244,6 +248,8 @@ service PlatformCommandService {
   rpc ValidateRoleImageRevisionDraft(ValidateRoleImageRevisionDraftRequest) returns (ValidateRoleImageRevisionDraftResponse);
   rpc PublishRoleImageRevisionDraft(PublishRoleImageRevisionDraftRequest) returns (PublishRoleImageRevisionDraftResponse);
   rpc RebindRoleImageConsumers(RebindRoleImageConsumersRequest) returns (RebindRoleImageConsumersResponse);
+  rpc PrepareRoleImageImpactPlan(PrepareRoleImageImpactPlanRequest) returns (PrepareRoleImageImpactPlanResponse);
+  rpc PrepareEnvironmentDraftImpact(PrepareEnvironmentDraftImpactRequest) returns (PrepareEnvironmentDraftImpactResponse);
   rpc CreateIntegrationDefinitionDraft(CreateIntegrationDefinitionDraftRequest) returns (CreateIntegrationDefinitionDraftResponse);
   rpc ValidateIntegrationDefinitionDraft(ValidateIntegrationDefinitionDraftRequest) returns (ValidateIntegrationDefinitionDraftResponse);
   rpc PublishIntegrationDefinitionDraft(PublishIntegrationDefinitionDraftRequest) returns (PublishIntegrationDefinitionDraftResponse);
@@ -2054,6 +2060,9 @@ message ListRunsRequest {
   PageRequest page = 2;
   repeated RunState states = 3;
   string query = 4;
+  bool resumable_sessions_only = 5;
+  string target_type = 6;
+  string target_ref = 7;
 }
 message ListRunsResponse {
   repeated Run runs = 1;
@@ -2109,6 +2118,7 @@ message AddSessionTurnRequest {
   reserved 6;
   reserved "artifact_refs";
   string attachment_set_ref = 7;
+  string expected_prompt_context_digest = 8;
 }
 message AddSessionTurnResponse {
   Run run = 1;
@@ -2846,6 +2856,7 @@ message SavePromptTemplateDraftRequest {
   string revision_ref = 3;
   string content_format = 4;
   string content = 5;
+  PromptTemplateScopeInput prompt_scope = 6;
 }
 message SavePromptTemplateDraftResponse {
   ManagedConfigurationSet configuration = 1;
@@ -3724,6 +3735,65 @@ message GetAgentEffectiveCapabilitiesRequest {
   string query = 4;
   PageRequest page = 5;
 }
+enum ArtifactBindingTargetReason {
+  ARTIFACT_BINDING_TARGET_REASON_UNSPECIFIED = 0;
+  ARTIFACT_BINDING_TARGET_REASON_AVAILABLE = 1;
+  ARTIFACT_BINDING_TARGET_REASON_ALREADY_BOUND = 2;
+  ARTIFACT_BINDING_TARGET_REASON_NOT_BOUND = 3;
+  ARTIFACT_BINDING_TARGET_REASON_AGENT_CAPABILITY_REQUIRED = 4;
+  ARTIFACT_BINDING_TARGET_REASON_AGENT_ARCHIVED = 5;
+  ARTIFACT_BINDING_TARGET_REASON_ARTIFACT_UNAVAILABLE = 6;
+}
+message ArtifactBindingTarget {
+  string agent_ref = 1;
+  int64 agent_version = 2;
+  string name = 3;
+  AgentState state = 4;
+  bool bound = 5;
+  bool can_bind = 6;
+  bool can_unbind = 7;
+  ArtifactBindingTargetReason bind_reason = 8;
+  ArtifactBindingTargetReason unbind_reason = 9;
+}
+message ListArtifactBindingTargetsRequest {
+  string artifact_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message ListArtifactBindingTargetsResponse {
+  string artifact_ref = 1;
+  int64 artifact_version = 2;
+  string project_ref = 3;
+  repeated ArtifactBindingTarget items = 4;
+  int64 total = 5;
+  PageInfo page = 6;
+  string digest = 7;
+  google.protobuf.Timestamp evaluated_at = 8;
+}
+enum RunAttachmentEligibilityReason {
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_UNSPECIFIED = 0;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_AVAILABLE = 1;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_TARGET_UNAVAILABLE = 2;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_RUNTIME_NOT_READY = 3;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_AGENT_CAPABILITY_REQUIRED = 4;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_SESSION_UNAVAILABLE = 5;
+}
+message GetRunAttachmentEligibilityRequest {
+  string project_ref = 1;
+  RunTarget target = 2;
+  string run_ref = 3;
+}
+message GetRunAttachmentEligibilityResponse {
+  string project_ref = 1;
+  RunTarget target = 2;
+  string run_ref = 3;
+  int64 run_version = 4;
+  string workflow_version_ref = 5;
+  bool eligible = 6;
+  RunAttachmentEligibilityReason reason = 7;
+  google.protobuf.Timestamp evaluated_at = 8;
+  string digest = 9;
+}
 message EffectiveCapability {
   string key = 1;
   string name = 2;
@@ -3811,11 +3881,16 @@ message ListTemplateVariablesRequest {
   PageRequest page = 3;
   string agent_ref = 4;
   string runtime_revision_ref = 5;
+  string target_kind = 6;
+  string target_ref = 7;
+  PromptPreviewContext context = 8;
+  string expected_context_digest = 9;
 }
 message ListTemplateVariablesResponse {
   repeated TemplateVariable variables = 1;
   PageInfo page = 2;
   int64 total = 3;
+  PromptContextPin context_pin = 4;
 }
 
 enum RuntimeSecretValueType {
@@ -4314,10 +4389,13 @@ message ValidateRuntimeEnvironmentDraftResponse { RuntimeEnvironmentDraft draft 
 message PublishRuntimeEnvironmentDraftRequest {
   MutationContext mutation = 1;
   string draft_ref = 2;
+  string plan_ref = 3;
+  repeated string selected_item_refs = 4;
 }
 message PublishRuntimeEnvironmentDraftResponse {
   RuntimeEnvironmentDraft draft = 1;
   RuntimeEnvironmentSet environment = 2;
+  RevisionImpactPlan plan = 3;
 }
 message DiscardRuntimeEnvironmentDraftRequest {
   MutationContext mutation = 1;
@@ -5138,13 +5216,19 @@ message PromptTemplateDiagnostic {
   string message = 3;
   int32 line = 4;
   int32 column = 5;
+  string variable_name = 6;
 }
 message ValidatePromptTemplateRequest {
   string template = 1;
+  string target_kind = 2;
+  string target_ref = 3;
+  PromptPreviewContext context = 4;
+  string expected_context_digest = 5;
 }
 message ValidatePromptTemplateResponse {
   bool valid = 1;
   repeated PromptTemplateDiagnostic diagnostics = 2;
+  PromptContextPin context_pin = 3;
 }
 message PreviewPromptTemplateRequest {
   string template = 1;
@@ -5164,6 +5248,7 @@ message PromptPreviewContext {
   int64 expected_workflow_version = 5;
   google.protobuf.Struct input = 6;
   string attachment_set_ref = 7;
+  string task = 8;
 }
 
 enum PromptSemanticSlot {
@@ -5197,6 +5282,16 @@ message PromptPreviewSection {
   PromptSectionSource source = 1;
   PromptSemanticSlot slot = 2;
   string content = 3;
+  PromptUserSectionKind user_kind = 4;
+  string template_ref = 5;
+  string template_digest = 6;
+}
+
+enum PromptUserSectionKind {
+  PROMPT_USER_SECTION_KIND_UNSPECIFIED = 0;
+  PROMPT_USER_SECTION_KIND_BASE_TEMPLATE = 1;
+  PROMPT_USER_SECTION_KIND_WORKFLOW_CONTEXT = 2;
+  PROMPT_USER_SECTION_KIND_AUTOMATION_TASK = 3;
 }
 
 message PromptContextPin {
@@ -5233,6 +5328,56 @@ message PreviewPromptTemplateResponse {
   repeated PromptSlotProvenance slots = 12;
   repeated PromptPreviewSection sections = 13;
   PromptContextPin context_pin = 14;
+  bool complete = 15;
+  PromptRuntimeDiff runtime_diff = 16;
+}
+
+enum PromptRuntimeComponent {
+  PROMPT_RUNTIME_COMPONENT_UNSPECIFIED = 0;
+  PROMPT_RUNTIME_COMPONENT_INSTRUCTIONS = 1;
+  PROMPT_RUNTIME_COMPONENT_MODEL = 2;
+  PROMPT_RUNTIME_COMPONENT_REASONING = 3;
+  PROMPT_RUNTIME_COMPONENT_IMAGE = 4;
+  PROMPT_RUNTIME_COMPONENT_ENVIRONMENT = 5;
+  PROMPT_RUNTIME_COMPONENT_FILES = 6;
+  PROMPT_RUNTIME_COMPONENT_SKILLS = 7;
+  PROMPT_RUNTIME_COMPONENT_MEMORY = 8;
+  PROMPT_RUNTIME_COMPONENT_TOOLS = 9;
+  PROMPT_RUNTIME_COMPONENT_MCP = 10;
+  PROMPT_RUNTIME_COMPONENT_INTEGRATIONS = 11;
+  PROMPT_RUNTIME_COMPONENT_CAPABILITIES = 12;
+  PROMPT_RUNTIME_COMPONENT_POLICY = 13;
+}
+
+enum PromptRuntimeAction {
+  PROMPT_RUNTIME_ACTION_UNSPECIFIED = 0;
+  PROMPT_RUNTIME_ACTION_USE_CURRENT_CONTEXT = 1;
+}
+
+message PromptRuntimeDescriptor {
+  string ref = 1;
+  int64 version = 2;
+  string digest = 3;
+  string value = 4;
+}
+
+message PromptRuntimeChange {
+  PromptRuntimeComponent component = 1;
+  repeated PromptRuntimeDescriptor previous = 2;
+  repeated PromptRuntimeDescriptor current = 3;
+  PromptRuntimeAction action = 4;
+}
+
+// До materialization current/turn/attempt отсутствуют; context pin связывает
+// prospective snapshot без создания Run или назначения выдуманной revision.
+message PromptRuntimeDiff {
+  string previous_revision_ref = 1;
+  string current_revision_ref = 2;
+  string session_ref = 3;
+  string turn_ref = 4;
+  int32 attempt = 5;
+  repeated PromptRuntimeChange changes = 6;
+  string digest = 7;
 }
 
 enum ManagedConfigurationKind {
@@ -5269,6 +5414,31 @@ message ManagedConfigurationRevision {
   google.protobuf.Timestamp created_at = 9;
   google.protobuf.Timestamp validated_at = 10;
   google.protobuf.Timestamp published_at = 11;
+  PromptTemplateScope prompt_scope = 12;
+}
+
+// Declared scope не хранит task, input values или будущие runtime refs.
+message PromptTemplateScopeInput {
+  string target_kind = 1;
+  string target_ref = 2;
+  string agent_ref = 3;
+  string workflow_revision_ref = 4;
+  string workflow_stage_key = 5;
+  string expected_context_digest = 6;
+  PromptTemplateKind template_kind = 7;
+}
+
+message PromptTemplateScope {
+  string target_kind = 1;
+  string target_ref = 2;
+  PromptContextPin context_pin = 3;
+  PromptTemplateKind template_kind = 4;
+}
+
+enum PromptTemplateKind {
+  PROMPT_TEMPLATE_KIND_UNSPECIFIED = 0;
+  PROMPT_TEMPLATE_KIND_INSTRUCTIONS = 1;
+  PROMPT_TEMPLATE_KIND_CONTINUATION = 2;
 }
 message ManagedConfigurationSet {
   string ref = 1;
@@ -5316,6 +5486,7 @@ message CreatePromptTemplateDraftRequest {
   string name = 4;
   string content_format = 5;
   string content = 6;
+  PromptTemplateScopeInput prompt_scope = 7;
 }
 message CreatePromptTemplateDraftResponse {
   ManagedConfigurationSet configuration = 1;
@@ -5386,10 +5557,151 @@ message RebindRoleImageConsumersRequest {
   string revision_ref = 3;
   string impact_digest = 4;
   repeated ManagedConfigurationConsumer consumers = 5;
+  string plan_ref = 6;
+  repeated string selected_item_refs = 7;
 }
 message RebindRoleImageConsumersResponse {
   ManagedConfigurationSet configuration = 1;
   ManagedConfigurationRevision revision = 2;
+  RoleImageImpactPlan plan = 3;
+}
+enum RoleImageImpactPlanState {
+  ROLE_IMAGE_IMPACT_PLAN_STATE_UNSPECIFIED = 0;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_PREPARED = 1;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_APPLIED = 2;
+  ROLE_IMAGE_IMPACT_PLAN_STATE_EXPIRED = 3;
+}
+enum RoleImageImpactOutcome {
+  ROLE_IMAGE_IMPACT_OUTCOME_UNSPECIFIED = 0;
+  ROLE_IMAGE_IMPACT_OUTCOME_PENDING = 1;
+  ROLE_IMAGE_IMPACT_OUTCOME_APPLIED = 2;
+  ROLE_IMAGE_IMPACT_OUTCOME_CONFLICT = 3;
+  ROLE_IMAGE_IMPACT_OUTCOME_FORBIDDEN = 4;
+  ROLE_IMAGE_IMPACT_OUTCOME_NOT_SELECTED = 5;
+}
+message RoleImageImpactPlan {
+  string ref = 1;
+  int64 version = 2;
+  string configuration_ref = 3;
+  int64 configuration_version = 4;
+  string revision_ref = 5;
+  string revision_digest = 6;
+  string recipe_ref = 7;
+  int64 recipe_generation = 8;
+  string build_ref = 9;
+  string artifact_ref = 10;
+  string artifact_digest = 11;
+  string admission_policy_digest = 12;
+  string digest = 13;
+  int64 total = 14;
+  RoleImageImpactPlanState state = 15;
+  google.protobuf.Timestamp created_at = 16;
+  google.protobuf.Timestamp expires_at = 17;
+}
+message RoleImageImpactItem {
+  string ref = 1;
+  string environment_ref = 2;
+  int64 environment_version = 3;
+  string source_version_ref = 4;
+  string source_version_digest = 5;
+  RuntimeEnvironmentConsumer consumer = 6;
+  RoleImageImpactOutcome outcome = 7;
+  string result_environment_version_ref = 8;
+  string result_binding_ref = 9;
+  int64 result_binding_version = 10;
+}
+enum RevisionImpactKind {
+  REVISION_IMPACT_KIND_UNSPECIFIED = 0;
+  REVISION_IMPACT_KIND_RUNTIME_ENVIRONMENT = 1;
+  REVISION_IMPACT_KIND_PROMPT_TEMPLATE = 2;
+  REVISION_IMPACT_KIND_AGENT_INSTRUCTIONS = 3;
+}
+enum RevisionImpactState {
+  REVISION_IMPACT_STATE_UNSPECIFIED = 0;
+  REVISION_IMPACT_STATE_PREPARED = 1;
+  REVISION_IMPACT_STATE_APPLIED = 2;
+  REVISION_IMPACT_STATE_EXPIRED = 3;
+}
+enum RevisionImpactOutcome {
+  REVISION_IMPACT_OUTCOME_UNSPECIFIED = 0;
+  REVISION_IMPACT_OUTCOME_PENDING = 1;
+  REVISION_IMPACT_OUTCOME_APPLIED = 2;
+  REVISION_IMPACT_OUTCOME_CONFLICT = 3;
+  REVISION_IMPACT_OUTCOME_FORBIDDEN = 4;
+  REVISION_IMPACT_OUTCOME_NOT_SELECTED = 5;
+}
+enum RevisionImpactConsumerKind {
+  REVISION_IMPACT_CONSUMER_KIND_UNSPECIFIED = 0;
+  REVISION_IMPACT_CONSUMER_KIND_AGENT = 1;
+  REVISION_IMPACT_CONSUMER_KIND_AGENT_CONTINUATION = 2;
+  REVISION_IMPACT_CONSUMER_KIND_WORKFLOW = 3;
+  REVISION_IMPACT_CONSUMER_KIND_SCHEDULE = 4;
+}
+message RevisionImpactPlan {
+  string ref = 1;
+  int64 version = 2;
+  RevisionImpactKind kind = 3;
+  string source_ref = 4;
+  int64 source_version = 5;
+  string source_revision_ref = 6;
+  string draft_ref = 7;
+  int64 draft_version = 8;
+  string target_digest = 9;
+  string digest = 10;
+  int64 total = 11;
+  RevisionImpactState state = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp expires_at = 14;
+  string published_revision_ref = 15;
+}
+message RevisionImpactItem {
+  string ref = 1;
+  string project_ref = 2;
+  RevisionImpactConsumerKind consumer_kind = 3;
+  string consumer_ref = 4;
+  int64 consumer_version = 5;
+  string binding_ref = 6;
+  int64 binding_version = 7;
+  string source_revision_ref = 8;
+  RevisionImpactOutcome outcome = 9;
+  string result_revision_ref = 10;
+  string result_binding_ref = 11;
+  int64 result_binding_version = 12;
+  int64 result_consumer_version = 13;
+}
+message PrepareEnvironmentDraftImpactRequest {
+  MutationContext mutation = 1;
+  string draft_ref = 2;
+}
+message PrepareEnvironmentDraftImpactResponse { RevisionImpactPlan plan = 1; }
+message GetRevisionImpactPlanRequest {
+  string plan_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message GetRevisionImpactPlanResponse {
+  RevisionImpactPlan plan = 1;
+  repeated RevisionImpactItem items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
+}
+
+message PrepareRoleImageImpactPlanRequest {
+  MutationContext mutation = 1;
+  string configuration_ref = 2;
+  string revision_ref = 3;
+}
+message PrepareRoleImageImpactPlanResponse { RoleImageImpactPlan plan = 1; }
+message GetRoleImageImpactPlanRequest {
+  string plan_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message GetRoleImageImpactPlanResponse {
+  RoleImageImpactPlan plan = 1;
+  repeated RoleImageImpactItem items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
 }
 message CreateIntegrationDefinitionDraftRequest {
   MutationContext mutation = 1;

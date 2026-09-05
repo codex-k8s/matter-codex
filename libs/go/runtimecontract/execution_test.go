@@ -29,7 +29,7 @@ func TestRunnerV7RejectsOldABIAndEffortTampering(t *testing.T) {
 
 func TestRunnerInputArtifactCatalogIsVersionBoundedAndUnique(t *testing.T) {
 	input := validRunnerInputFixture()
-	input.Capabilities = []string{ArtifactCapability}
+	input.Capabilities = nil
 	refreshRunnerInputBindings(&input)
 	input.AttachmentSetRef = "aset_abcdefgh"
 	input.AttachmentSetManifestDigest = strings.Repeat("4", 64)
@@ -47,6 +47,28 @@ func TestRunnerInputArtifactCatalogIsVersionBoundedAndUnique(t *testing.T) {
 	refreshRunnerInputBindings(&input)
 	if _, err := EncodeRunnerInput(input); err != nil {
 		t.Fatalf("EncodeRunnerInput() rejected a valid artifact catalog: %v", err)
+	}
+	for _, mutate := range []struct {
+		name  string
+		apply func(*RunnerInput)
+	}{
+		{"missing manifest", func(value *RunnerInput) { value.AttachmentSetManifestDigest = "" }},
+		{"tampered artifact", func(value *RunnerInput) {
+			value.InputArtifacts = append([]RunnerInputArtifact{}, value.InputArtifacts...)
+			value.InputArtifacts[0].Revision++
+		}},
+		{"tampered set", func(value *RunnerInput) {
+			value.AttachmentSets = append([]RunnerAttachmentSet{}, value.AttachmentSets...)
+			value.AttachmentSets[0].ManifestDigest = strings.Repeat("f", 64)
+		}},
+	} {
+		t.Run(mutate.name, func(t *testing.T) {
+			copy := input
+			mutate.apply(&copy)
+			if copy.Validate() == nil {
+				t.Fatal("unbound readonly context accepted")
+			}
+		})
 	}
 	input.InputArtifacts = append(input.InputArtifacts, input.InputArtifacts[0])
 	if _, err := EncodeRunnerInput(input); err == nil {
