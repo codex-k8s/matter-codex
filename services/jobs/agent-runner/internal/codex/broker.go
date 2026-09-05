@@ -23,6 +23,7 @@ import (
 
 	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
 	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/credentialrelay"
+	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/filetransfer"
 	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/model"
 	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/security"
 	"golang.org/x/sys/unix"
@@ -291,6 +292,12 @@ func serveBrokerRequest(ctx context.Context, connection net.Conn) error {
 	if err := ValidateRuntimeProfile(request.Input); err != nil {
 		return writeProviderBrokerFailure(connection, err)
 	}
+	snapshot, err := request.Input.RequiredContextSnapshot(time.Now())
+	if err != nil || verifyProviderContext(request.Input, snapshot) != nil {
+		return writeProviderBrokerFailure(connection, ErrRuntimeProfile)
+	}
+	ctx, cancelContext := snapshot.BoundExecutionContext(ctx)
+	defer cancelContext()
 	auth, err := readProviderAuthentication(request.Input)
 	if err != nil {
 		return writeProviderBrokerFailure(connection, err)
@@ -310,7 +317,7 @@ func serveBrokerRequest(ctx context.Context, connection net.Conn) error {
 	if _, err := hex.DecodeString(request.MCPProxyToken); err != nil {
 		return errors.New("provider broker MCP capability is invalid")
 	}
-	bridge, err := startProviderMCPBridge(ctx, request.MCPSocket, request.MCPProxyToken)
+	bridge, err := startProviderMCPBridge(ctx, request.MCPSocket, request.MCPProxyToken, request.Input)
 	if err != nil {
 		return writeProviderBrokerFailure(connection, err)
 	}
@@ -397,7 +404,7 @@ type providerMCPBridge struct {
 	url       string
 }
 
-func startProviderMCPBridge(ctx context.Context, socketPath, localToken string) (*providerMCPBridge, error) {
+func startProviderMCPBridge(ctx context.Context, socketPath, localToken string, input model.Input) (*providerMCPBridge, error) {
 	if os.Geteuid() != 10002 || socketPath != "/run/kodex/provider/mcp-authority.sock" || len(localToken) != 64 {
 		return nil, errors.New("provider MCP bridge binding is invalid")
 	}
@@ -405,14 +412,14 @@ func startProviderMCPBridge(ctx context.Context, socketPath, localToken string) 
 	if err != nil {
 		return nil, errors.New("listen provider MCP bridge")
 	}
-	transport := &http.Transport{DisableCompression: true, DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+	transport := &http.Transport{DisableCompression: true, MaxResponseHeaderBytes: 16 << 10, DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, "unix", socketPath)
 	}}
 	target, _ := url.Parse("http://kodex-mcp-authority/mcp")
 	reverse := &httputil.ReverseProxy{Transport: transport, ErrorLog: log.New(io.Discard, "", 0),
 		Director: func(request *http.Request) {
-			request.URL.Scheme, request.URL.Host, request.URL.Path = target.Scheme, target.Host, target.Path
-			request.URL.RawPath, request.URL.RawQuery, request.Host = "", "", target.Host
+			request.URL.Scheme, request.URL.Host = target.Scheme, target.Host
+			request.Host = target.Host
 			request.Header.Del("Cookie")
 			request.Header.Del("Forwarded")
 			request.Header.Del("X-Forwarded-For")
@@ -422,6 +429,23 @@ func startProviderMCPBridge(ctx context.Context, socketPath, localToken string) 
 			http.Error(writer, "required MCP authority is unavailable", http.StatusBadGateway)
 		}, FlushInterval: -1}
 	handler := http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method == http.MethodGet && request.URL.Path != "/mcp" && subtle.ConstantTimeCompare([]byte(request.Header.Get("Authorization")), []byte("Bearer "+localToken)) == 1 {
+			if _, err := filetransfer.CatalogRequest(input, request); err != nil {
+				http.NotFound(writer, request)
+				return
+			}
+			bounded, cancel := context.WithTimeout(request.Context(), filetransfer.TotalTimeout)
+			defer cancel()
+			control := http.NewResponseController(writer)
+			deadline, _ := bounded.Deadline()
+			if err := control.SetWriteDeadline(deadline); err != nil {
+				http.Error(writer, "runtime file response deadline is unavailable", http.StatusServiceUnavailable)
+				return
+			}
+			defer control.SetWriteDeadline(time.Time{})
+			reverse.ServeHTTP(writer, request.WithContext(bounded))
+			return
+		}
 		if request.URL.Path != "/mcp" || request.URL.RawQuery != "" ||
 			(request.Method != http.MethodPost && request.Method != http.MethodGet && request.Method != http.MethodDelete) ||
 			subtle.ConstantTimeCompare([]byte(request.Header.Get("Authorization")), []byte("Bearer "+localToken)) != 1 {
