@@ -53,6 +53,7 @@ const runsReady = ref(platform.runList.length > 0);
 
 const runCatalogTotal = ref<number>();
 const sessionCatalogTotal = ref<number>();
+const runsSettled = ref(false);
 const artifactCatalogTotal = ref<number>();
 const failedCatalogTotal = ref<number>();
 const pendingGates = computed(() => platform.overview?.pendingGates ?? []);
@@ -162,8 +163,12 @@ async function refreshProjects(append = false): Promise<void> {
 }
 
 async function refreshRuns(): Promise<void> {
-  await platform.loadRuns();
-  if (!platform.problems.runs) runsReady.value = true;
+  try {
+    await platform.loadRuns();
+    if (!platform.problems.runs) runsReady.value = true;
+  } finally {
+    runsSettled.value = true;
+  }
 }
 
 async function refresh(): Promise<void> {
@@ -315,6 +320,7 @@ onBeforeUnmount(() => {
           v-show="failedCatalogTotal !== 0"
           kind="RUN"
           fixed-filter="FAILED"
+          :ready="runsSettled"
           @total="failedCatalogTotal = $event"
       /></template>
     </HomeAttentionCenter>
@@ -328,6 +334,7 @@ onBeforeUnmount(() => {
           v-show="showRuns"
           kind="RUN"
           class="home-running-section"
+          :ready="runsSettled"
           @total="runCatalogTotal = $event"
         />
 
@@ -335,6 +342,7 @@ onBeforeUnmount(() => {
           v-show="showSessions"
           kind="SESSION"
           class="home-session-section"
+          :ready="runsSettled"
           @total="sessionCatalogTotal = $event"
         />
       </div>

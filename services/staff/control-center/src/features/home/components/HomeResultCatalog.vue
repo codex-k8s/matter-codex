@@ -12,10 +12,14 @@ import ModalDialog from "@/shared/ui/ModalDialog.vue";
 import ProblemNotice from "@/shared/ui/ProblemNotice.vue";
 import GateProjectFilter from "@/features/workboard/components/GateProjectFilter.vue";
 import HomeResultRows from "./HomeResultRows.vue";
-const props = defineProps<{
-  kind: "RUN" | "ARTIFACT" | "SESSION";
-  fixedFilter?: "FAILED";
-}>();
+const props = withDefaults(
+  defineProps<{
+    kind: "RUN" | "ARTIFACT" | "SESSION";
+    fixedFilter?: "FAILED";
+    ready?: boolean;
+  }>(),
+  { ready: true },
+);
 const emit = defineEmits<{ total: [value: number | undefined] }>();
 const platform = usePlatformStore();
 const items = ref<HomeResultItem[]>([]);
@@ -48,6 +52,8 @@ let artifactController: AbortController | undefined;
 let artifactGeneration = 0;
 const seen = new Set<string>();
 async function load(more = false) {
+  if (!props.ready || (props.kind !== "ARTIFACT" && platform.loading.runs))
+    return;
   if (more && (loading.value || !cursor.value)) return;
   controller?.abort();
   const active = new AbortController();
@@ -176,7 +182,7 @@ async function download() {
     if (current === artifactGeneration) artifactBusy.value = false;
   }
 }
-watch([query, projectRef, runFilter], refresh);
+watch([query, projectRef, runFilter, () => props.ready], refresh);
 watch(
   () => platform.loading.runs,
   (loading, previous) => {
@@ -230,7 +236,9 @@ onBeforeUnmount(() => {
         <option value="ALL">{{ $t("common.all") }}</option>
       </select></label
     >
-    <p v-if="loading" role="status">{{ $t("common.loading") }}</p>
+    <p v-if="loading || !ready" role="status">
+      {{ $t("common.loading") }}
+    </p>
     <p v-else-if="total === 0">{{ $t("common.empty") }}</p>
     <ProblemNotice v-if="problem" :problem="problem" @retry="load()" />
     <HomeResultRows
