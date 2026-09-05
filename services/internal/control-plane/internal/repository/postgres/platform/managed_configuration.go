@@ -58,6 +58,11 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		return commandOutcome{}, errs.ErrVersionMismatch
 	}
 	var revision *entity.ManagedConfigurationRevision
+	if action == "DETACH" {
+		if err := repository.cancelConfigurationWriteBacks(ctx, tx, current, configuration.Ref, ""); err != nil {
+			return commandOutcome{}, err
+		}
+	}
 	if (action == "CREATE" || action == "SAVE" || action == "DISCARD" || action == "VALIDATE" || action == "PUBLISH") && configuration.ManagedBy != "UI" {
 		return commandOutcome{}, errs.ErrConflict
 	}
@@ -236,6 +241,11 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 				return commandOutcome{}, errs.ErrInvalid
 			}
 			switch consumer.Kind {
+			case "AGENT_CONTINUATION":
+				permission, target, resolveErr := repository.resolveRuntimeConfigurationTarget(ctx, tx, current, "agent.manage", consumer.Ref)
+				if resolveErr != nil || repository.requireAccess(ctx, tx, current, permission, target) != nil {
+					return commandOutcome{}, errs.ErrNotFound
+				}
 			case "AGENT", "WORKFLOW", "SCHEDULE":
 				permission := strings.ToLower(consumer.Kind) + ".manage"
 				if err := repository.requireAccess(ctx, tx, current, permission, entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: consumer.Kind, ResourceRef: consumer.Ref}); err != nil {
@@ -260,6 +270,9 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 				})
 				if resolveErr != nil || repository.requireAccess(ctx, tx, current, "integration.manage", connection) != nil {
 					return commandOutcome{}, errs.ErrNotFound
+				}
+				if err := repository.cancelConfigurationWriteBacks(ctx, tx, current, "", consumer.Ref); err != nil {
+					return commandOutcome{}, err
 				}
 			}
 			var allowed bool
@@ -468,7 +481,7 @@ func managedCommand(kind command.Kind) (string, string) {
 
 func managedConsumerAllowed(kind string, consumer entity.ManagedConfigurationConsumer) bool {
 	allowed := map[string][]string{
-		revisionservice.KindPromptTemplate:        {"AGENT", "WORKFLOW", "SCHEDULE"},
+		revisionservice.KindPromptTemplate:        {"AGENT", "AGENT_CONTINUATION", "WORKFLOW", "SCHEDULE"},
 		revisionservice.KindRoleImage:             {"RUNTIME_ENVIRONMENT"},
 		revisionservice.KindIntegrationDefinition: {"INTEGRATION_CONNECTION"},
 		revisionservice.KindSystemSTT:             {"STT_SERVICE"},
