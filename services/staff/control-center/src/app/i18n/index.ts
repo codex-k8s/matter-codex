@@ -1,6 +1,8 @@
 import { createI18n } from "vue-i18n";
 
 import { currentLocale } from "@/shared/locale";
+import { serverMessagesFor } from "@/shared/ui/server-message-catalog";
+import { additionalPermissionMessages } from "@/shared/ui/permission-message-catalog";
 
 const ru = {
   capabilityAuthority: {
@@ -59,13 +61,6 @@ const ru = {
   },
   serverMessages: {
     unsupported: "Сообщение сервера недоступно в этой версии приложения.",
-    INTERACTION_AUTHORITY_CHANGED:
-      "Подключение или разрешения изменены. Отправка отменена.",
-    INTERACTION_DELIVERY_GATE_TITLE: "Подтверждение доставки во внешний канал",
-    INTERACTION_DELIVERY_GATE_PROMPT:
-      "Разрешить доставку результата запуска в указанный внешний канал?",
-    INTERACTION_DELIVERY_APPROVAL_REQUIRED:
-      "Для доставки результата требуется решение владельца.",
   },
   gitSource: {
     title: "Источник Git",
@@ -1515,6 +1510,14 @@ const ru = {
     inputFilesHint: "Доступны только проверенные файлы из текущего Проекта.",
     filesCapabilityRequired:
       "Сначала выдайте всем выбранным ИИ-сотрудникам возможность «Файлы».",
+    attachmentEligibility: {
+      AVAILABLE: "Вложения доступны.",
+      TARGET_UNAVAILABLE: "Выбранная цель недоступна для запуска с вложениями.",
+      RUNTIME_NOT_READY: "Среда выполнения выбранной цели пока не готова.",
+      AGENT_CAPABILITY_REQUIRED:
+        "Не всем исполнителям предоставлена возможность «Файлы».",
+      SESSION_UNAVAILABLE: "Вложения для продолжения этой сессии недоступны.",
+    },
     fileReady: "Проверен и готов",
     noInputFiles: "В Проекте пока нет проверенных файлов.",
     manageFiles: "Открыть файлы Проекта",
@@ -2245,6 +2248,7 @@ const ru = {
       NO_ALLOW_BINDING: "Подходящая разрешающая привязка отсутствует",
     },
     permissionsRegistry: {
+      ...additionalPermissionMessages("ru"),
       "organization.view": {
         name: "Просматривать организацию",
         description: "Читать профиль и доступные ресурсы организации.",
@@ -2915,13 +2919,6 @@ const en = {
   },
   serverMessages: {
     unsupported: "This server message is unavailable in this app version.",
-    INTERACTION_AUTHORITY_CHANGED:
-      "The connection or permissions changed. Delivery was cancelled.",
-    INTERACTION_DELIVERY_GATE_TITLE: "External channel delivery approval",
-    INTERACTION_DELIVERY_GATE_PROMPT:
-      "Allow delivery of the run result to the specified external channel?",
-    INTERACTION_DELIVERY_APPROVAL_REQUIRED:
-      "Owner approval is required to deliver the result.",
   },
   gitSource: {
     title: "Git source",
@@ -4375,6 +4372,16 @@ const en = {
       "Only validated files from the current Project are available.",
     filesCapabilityRequired:
       "Grant the Files capability to every selected AI employee first.",
+    attachmentEligibility: {
+      AVAILABLE: "Attachments are available.",
+      TARGET_UNAVAILABLE:
+        "The selected target is unavailable for a run with attachments.",
+      RUNTIME_NOT_READY: "The selected target runtime is not ready.",
+      AGENT_CAPABILITY_REQUIRED:
+        "Some participants do not have the Files capability.",
+      SESSION_UNAVAILABLE:
+        "Attachments are unavailable for continuing this session.",
+    },
     fileReady: "Validated and ready",
     noInputFiles: "This Project has no validated files yet.",
     manageFiles: "Open Project files",
@@ -5092,6 +5099,7 @@ const en = {
       NO_ALLOW_BINDING: "No matching allow-binding exists",
     },
     permissionsRegistry: {
+      ...additionalPermissionMessages("en"),
       "organization.view": {
         name: "View organization",
         description: "Read the organization profile and eligible resources.",
@@ -5707,5 +5715,20 @@ export const i18n = createI18n({
   legacy: false,
   locale: currentLocale(),
   fallbackLocale: "ru",
-  messages: { ru, en },
+  messages: {
+    ru: {
+      ...ru,
+      serverMessages: {
+        ...serverMessagesFor("ru", ru.access.permissionsRegistry),
+        ...ru.serverMessages,
+      },
+    },
+    en: {
+      ...en,
+      serverMessages: {
+        ...serverMessagesFor("en", en.access.permissionsRegistry),
+        ...en.serverMessages,
+      },
+    },
+  },
 });

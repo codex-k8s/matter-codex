@@ -109,6 +109,30 @@ export async function checkResumableSessions(
   await page.route(`**/api/v1/agents/${agent.ref}`, (route) =>
     route.fulfill({ json: agent }),
   );
+  const attachmentReads: string[] = [];
+  await page.route(
+    `**/api/v1/projects/${projectRef}/run-attachment-eligibility?**`,
+    async (route) => {
+      const query = new URL(route.request().url()).searchParams;
+      expect(query.get("targetType")).toBe("AGENT");
+      expect(query.get("targetRef")).toBe(agent.ref);
+      const runRef = query.get("runRef") ?? "";
+      attachmentReads.push(runRef);
+      await route.fulfill({
+        json: {
+          projectRef,
+          targetType: "AGENT",
+          targetRef: agent.ref,
+          ...(runRef ? { runRef } : {}),
+          runVersion: runRef ? run(70).version : 0,
+          eligible: false,
+          reason: "AGENT_CAPABILITY_REQUIRED",
+          digest: "a".repeat(64),
+          evaluatedAt: "2026-09-05T12:00:00Z",
+        },
+      });
+    },
+  );
   await page.goto(
     `/projects/${projectRef}/runs/new?targetType=AGENT&targetRef=${agent.ref}`,
   );
@@ -137,4 +161,13 @@ export async function checkResumableSessions(
   await expect(page.locator("#new-run-session-picker-trigger")).toContainText(
     "Продолжение 70",
   );
+  await expect.poll(() => attachmentReads.includes(run(70).ref)).toBe(true);
+  await expect(
+    page.getByText("Не всем исполнителям предоставлена возможность «Файлы».", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Выбрать файлы", exact: true }),
+  ).toBeDisabled();
 }

@@ -1070,7 +1070,7 @@ onBeforeUnmount(() => {
   <section
     class="files-workspace"
     :class="{ 'files-workspace--drag-active': dragActive }"
-    aria-label="files"
+    :aria-label="t('files.title')"
     @dragenter="handleDragEnter"
     @dragover="handleDragOver"
     @dragleave="handleDragLeave"

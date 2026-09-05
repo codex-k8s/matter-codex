@@ -207,7 +207,7 @@ const expanded = ref(false);
             <ShieldCheck
               v-if="capability.approvalRequired"
               :size="12"
-              aria-label="Human Gate"
+              :aria-label="t('workflows.humanGate')"
             />
           </span>
         </div>

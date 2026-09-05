@@ -584,6 +584,15 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
       sizeBytes: 0,
       digest: "",
       modifiedAt: project.updatedAt,
+      version: 0,
+      revisionRef: "",
+      revision: 0,
+      lifecycleState: "ACTIVE",
+      scanState: "",
+      resourceKind: "",
+      selectable: false,
+      selectionReason: "DIRECTORY",
+      nextActions: [],
     }));
     const vfsRequests: string[] = [];
     await page.route("**/api/v1/**", async (route) => {

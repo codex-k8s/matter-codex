@@ -515,6 +515,9 @@ paths:
       parameters:
         - { $ref: '#/components/parameters/ProjectRefQuery' }
         - { name: path, in: query, required: false, schema: { type: string, maxLength: 1000, default: /projects } }
+        - { name: query, in: query, schema: { type: string, maxLength: 200 } }
+        - { $ref: '#/components/parameters/VFSLifecycleState' }
+        - { $ref: '#/components/parameters/VFSKinds' }
         - { $ref: '#/components/parameters/PageSize' }
         - { $ref: '#/components/parameters/VFSPageToken' }
       responses:
@@ -531,6 +534,9 @@ paths:
       parameters:
         - { $ref: '#/components/parameters/ProjectRefQuery' }
         - { name: query, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 200 } }
+        - { name: path, in: query, schema: { type: string, maxLength: 1000 } }
+        - { $ref: '#/components/parameters/VFSLifecycleState' }
+        - { $ref: '#/components/parameters/VFSKinds' }
         - { $ref: '#/components/parameters/PageSize' }
         - { $ref: '#/components/parameters/VFSPageToken' }
       responses:
@@ -2483,6 +2489,38 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Artifact' }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/artifacts/{artifactRef}/binding-targets:
+    get:
+      tags: [Artifacts]
+      operationId: listArtifactBindingTargets
+      parameters:
+        - { $ref: '#/components/parameters/ArtifactRef' }
+        - { name: query, in: query, schema: { type: string, maxLength: 200 } }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/VFSPageToken' }
+      responses:
+        '200':
+          description: Доступные цели связи и текущие полномочия
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ArtifactBindingTargetPage' }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/projects/{projectRef}/run-attachment-eligibility:
+    get:
+      tags: [Artifacts]
+      operationId: getRunAttachmentEligibility
+      parameters:
+        - { $ref: '#/components/parameters/ProjectRef' }
+        - { name: targetType, in: query, required: true, schema: { type: string, enum: [AGENT, WORKFLOW] } }
+        - { name: targetRef, in: query, required: true, schema: { $ref: '#/components/schemas/OpaqueRef' } }
+        - { name: runRef, in: query, schema: { $ref: '#/components/schemas/OpaqueRef' } }
+      responses:
+        '200':
+          description: Текущая доступность вложений для выбранной цели
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RunAttachmentEligibility' }
         default: { $ref: '#/components/responses/Problem' }
   /api/v1/artifacts/{artifactRef}:
     get:
@@ -4468,8 +4506,21 @@ components:
     VFSPageToken:
       name: pageToken
       in: query
-      required: false
       schema: { type: string, maxLength: 2048 }
+    VFSLifecycleState:
+      name: lifecycleState
+      in: query
+      schema: { type: string, enum: [ACTIVE, DELETED] }
+    VFSKinds:
+      name: kinds
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 12
+        uniqueItems: true
+        items: { $ref: '#/components/schemas/VFSKind' }
   responses:
     Problem:
       description: Безопасная ошибка API
@@ -5549,16 +5600,61 @@ components:
       properties:
         action: { type: string, enum: [VALIDATE, PUBLISH, ROLLBACK] }
         publishedInstructionRef: { $ref: '#/components/schemas/OpaqueRef' }
+    ArtifactBindingTargetReason:
+      type: string
+      enum: [AVAILABLE, ALREADY_BOUND, NOT_BOUND, AGENT_CAPABILITY_REQUIRED, AGENT_ARCHIVED, ARTIFACT_UNAVAILABLE]
+    ArtifactBindingTarget:
+      type: object
+      additionalProperties: false
+      required: [agentRef, agentVersion, name, state, bound, canBind, canUnbind, bindReason, unbindReason]
+      properties:
+        agentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        agentVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        state: { type: string, enum: [DRAFT, READY, RUNNING, DISABLED, ARCHIVED] }
+        bound: { type: boolean }
+        canBind: { type: boolean }
+        canUnbind: { type: boolean }
+        bindReason: { $ref: '#/components/schemas/ArtifactBindingTargetReason' }
+        unbindReason: { $ref: '#/components/schemas/ArtifactBindingTargetReason' }
+    ArtifactBindingTargetPage:
+      type: object
+      additionalProperties: false
+      required: [artifactRef, artifactVersion, projectRef, items, total, digest, evaluatedAt]
+      properties:
+        artifactRef: { $ref: '#/components/schemas/OpaqueRef' }
+        artifactVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ArtifactBindingTarget' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 2048 }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        evaluatedAt: { $ref: '#/components/schemas/Timestamp' }
+    RunAttachmentEligibility:
+      type: object
+      additionalProperties: false
+      required: [projectRef, targetType, targetRef, runVersion, eligible, reason, digest, evaluatedAt]
+      properties:
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        targetType: { type: string, enum: [AGENT, WORKFLOW] }
+        targetRef: { $ref: '#/components/schemas/OpaqueRef' }
+        runRef: { $ref: '#/components/schemas/OpaqueRef' }
+        runVersion: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        workflowVersionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        eligible: { type: boolean }
+        reason: { type: string, enum: [AVAILABLE, TARGET_UNAVAILABLE, RUNTIME_NOT_READY, AGENT_CAPABILITY_REQUIRED, SESSION_UNAVAILABLE] }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        evaluatedAt: { $ref: '#/components/schemas/Timestamp' }
     VFSNode:
       type: object
       additionalProperties: false
-      required: [ref, path, parentPath, name, kind, directory, projectRef, entityRef, runRef, sizeBytes, digest]
+      required: [ref, path, parentPath, name, kind, directory, projectRef, entityRef, runRef, sizeBytes, digest, version, revisionRef, revision, lifecycleState, scanState, resourceKind, selectable, selectionReason, nextActions]
       properties:
         ref: { type: string, minLength: 1, maxLength: 1000 }
         path: { type: string, minLength: 1, maxLength: 1000 }
         parentPath: { type: string, maxLength: 1000 }
         name: { type: string, maxLength: 1000 }
-        kind: { type: string, enum: [DIRECTORY, PROJECT, AGENT, WORKFLOW, RUN, INPUT, RESULT, SKILL, MEMORY, AUTOMATION, ENVIRONMENT, AVATAR] }
+        kind: { $ref: '#/components/schemas/VFSKind' }
         directory: { type: boolean }
         projectRef: { type: string, maxLength: 128 }
         entityRef: { type: string, maxLength: 128 }
@@ -5566,6 +5662,22 @@ components:
         sizeBytes: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
         digest: { type: string, maxLength: 128 }
         modifiedAt: { $ref: '#/components/schemas/Timestamp' }
+        version: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        revisionRef: { type: string, maxLength: 128 }
+        revision: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        lifecycleState: { type: string, enum: [ACTIVE, DELETED, ARCHIVED] }
+        scanState: { type: string, enum: ['', PENDING, SCANNING, CLEAN, QUARANTINED, FAILED] }
+        resourceKind: { type: string, enum: ['', ARTIFACT, SKILL_BUNDLE, MEMORY_RECORD] }
+        selectable: { type: boolean }
+        selectionReason: { type: string, enum: [AVAILABLE, DIRECTORY, PERMISSION_REQUIRED, IMMUTABLE_CONTEXT, LIFECYCLE_BLOCKED, ARTIFACT_USED_BY_SKILL, ARTIFACT_NOT_ACTIVE, ARTIFACT_NOT_DELETED, ARTIFACT_HAS_BINDINGS, ACTIVE_RUN_USES_ARTIFACT] }
+        nextActions:
+          type: array
+          maxItems: 6
+          uniqueItems: true
+          items: { type: string, enum: [DOWNLOAD, DELETE, RESTORE, PURGE, ARCHIVE, BIND] }
+    VFSKind:
+      type: string
+      enum: [DIRECTORY, PROJECT, AGENT, WORKFLOW, RUN, INPUT, RESULT, SKILL, MEMORY, AUTOMATION, ENVIRONMENT, AVATAR]
     VFSNodePage:
       type: object
       additionalProperties: false
@@ -6796,7 +6908,7 @@ components:
       type: object
       additionalProperties: false
       required: [action]
-      properties: { action: { type: string, enum: [VALIDATE, PUBLISH, ARCHIVE] } }
+      properties: { action: { type: string, enum: [VALIDATE, PUBLISH, ARCHIVE], x-enum-varnames: [WorkflowCommandActionVALIDATE, WorkflowCommandActionPUBLISH, WorkflowCommandActionARCHIVE] } }
     WorkflowPage:
       type: object
       additionalProperties: false

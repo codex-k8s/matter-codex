@@ -87,6 +87,7 @@ describe("Control Center translations", () => {
     const ru = entries(i18n.global.getLocaleMessage("ru"));
     const en = entries(i18n.global.getLocaleMessage("en"));
     const englishKeys = new Set(en.map(([key]) => key));
+    expect([...englishKeys].sort()).toEqual(ru.map(([key]) => key).sort());
     expect
       .soft(ru.map(([key]) => key).filter((key) => !englishKeys.has(key)))
       .toEqual([]);

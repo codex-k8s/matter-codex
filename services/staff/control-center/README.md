@@ -990,8 +990,8 @@ OCC версии сотрудника и перечитывает проекци
 
 Unit и synthetic проверяют запрет нового grant, допустимый revoke, OCC, серверную
 пагинацию/поиск, отдельные integration rows и опубликованный step readback.
-Реальный HTTP→CP/browser lifecycle остаётся NOT RUN. Aggregate preview target и
-проверка вложений в NewRun/Files остаются незавершённой частью исходного scope.
+Реальный HTTP→CP/browser lifecycle остаётся NOT RUN. Каталог допустимых целей
+привязки Files остаётся незавершённой частью исходного scope.
 
 Context7: проверены Vue `/websites/vuejs` (watch cleanup и отмена устаревших
 запросов) и Playwright `/microsoft/playwright/v1.61.0` (fullPage screenshots).
@@ -1011,9 +1011,36 @@ service-account token или server credentials.
 Произвольный пользовательский текст с упоминанием префикса сохраняется.
 Закрытие чата через Escape, фон или кнопку предупреждает о неотправленном
 тексте/вложениях; отказ сохраняет открытый чат и ввод. SSR-проверки ru/en и
-browser-сценарии на 390/1440 PASS. Новые query Files/Run, VFS hierarchy,
-RoleImage impact и Git write-back ожидают соответствующий generated SDK;
-этот аудит не завершает их приёмку.
+browser-сценарии на 390/1440 PASS. Этот аудит не завершает приёмку файлового
+каталога, RoleImage impact и Git write-back.
+
+Закрытый реестр переводов ru/en охватывает literal server tokens владельца,
+семейства permissions, system roles и безопасных кодов ошибок. Проверка сверяет
+исполняемые Go/SQL источники и закрытые реестры, а не только прямые вызовы `t`.
+Назначаемые сервером роли запуска переводятся до безопасного отображения.
+Неизвестный token по-прежнему не отображается как пользовательский текст.
+
+## Доступность вложений и метаданные VFS
+
+Generated SDK потреблён из HTTP `820ad57f1a64700ed27c0f31165d19d3ee579289`
+через исходный OpenAPI и каноническую генерацию Go/TypeScript. NewRun читает
+`getRunAttachmentEligibility` для точных Project/target и, при продолжении,
+серверного Run. Один owner query проверяет весь Процесс. Браузер не загружает
+исполнителей по отдельности для вычисления разрешения. Смена scope отменяет
+прежний запрос и закрывает выбор вложений; отказ показывает server reason,
+ошибка допускает повторное чтение. Запуск с уже выбранными файлами недоступен
+до положительного ответа; окончательную проверку выполняет launch/continuation.
+
+VFS search передаёт текущий path серверу вместе с query и поддерживает typed
+lifecycle/kinds filters. Ответ проверяется по закрытым metadata/action enums,
+версиям и scope; каталог с version=0 остаётся допустимым. Эти поля не выводятся
+из browser state. UI массового выбора VFS и `listArtifactBindingTargets` ещё
+требуют подключения, RoleImage643 и Git write-back потребляются следующим пакетом.
+
+На текущем дереве unit 1016/1016 и targeted synthetic 390/2900 21/21 PASS;
+browser-сценарий проверяет точный continuation Run и отказ по assigned Files
+capability. Полный baseline фиксируется по SHA в PR. Реальный protected
+browser→HTTP→CP, staging и live-провайдеры — NOT RUN.
 
 ## Проверенная документация библиотек
 
