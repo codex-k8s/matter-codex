@@ -9,11 +9,13 @@ import {
 } from "@/features/integrations/ui/model";
 import type {
   IntegrationConnection,
+  IntegrationGrantConnectionCandidate,
   IntegrationGrantProjectCandidate,
   IntegrationGrantRecipientCandidate,
   IntegrationGrantCapabilityCandidate,
 } from "@/shared/api/generated/openapi/types.gen";
 import StatusBadge from "@/shared/ui/StatusBadge.vue";
+import SafeStructuredData from "@/shared/ui/SafeStructuredData.vue";
 import AsyncEntityPicker from "@/shared/ui/AsyncEntityPicker.vue";
 import type {
   AsyncEntityOption,
@@ -54,6 +56,21 @@ const chosenCapability = ref<AsyncEntityOption>();
 const projectCandidate = ref<IntegrationGrantProjectCandidate>();
 const recipientCandidate = ref<IntegrationGrantRecipientCandidate>();
 const capabilityCandidate = ref<IntegrationGrantCapabilityCandidate>();
+const connectionRows = ref(
+  new Map<string, IntegrationGrantConnectionCandidate>(),
+);
+const connectionCandidate = computed(() => {
+  const selected = props.selectedConnection;
+  const candidate = selected && connectionRows.value.get(selected.ref);
+  return candidate?.pins.connectionVersion === selected?.version
+    ? candidate
+    : undefined;
+});
+function scopeLabel(candidate: IntegrationGrantConnectionCandidate): string {
+  return Object.entries(candidate.resourceScope)
+    .map(([key, value]) => `${key}=${value.slice(0, 160)}`)
+    .join(" · ");
+}
 const projectRows = new Map<string, IntegrationGrantProjectCandidate>();
 const recipientRows = new Map<string, IntegrationGrantRecipientCandidate>();
 const capabilityRows = new Map<string, IntegrationGrantCapabilityCandidate>();
@@ -205,11 +222,20 @@ async function loadConnections(
   signal: AbortSignal,
 ): Promise<AsyncEntityOptionPage> {
   const page = await connectionLoader(query, cursor, signal);
+  if (!cursor) connectionRows.value.clear();
+  page.items.forEach((item) =>
+    connectionRows.value.set(item.connectionRef, item),
+  );
   return {
     items: page.items.map((item) => ({
       ref: item.connectionRef,
       title: item.name,
-      description: [item.providerName, item.credentialKind]
+      description: [
+        item.providerName,
+        item.credentialKind,
+        item.projectRef,
+        scopeLabel(item),
+      ]
         .filter(Boolean)
         .join(" · "),
       meta: t(`integrationCandidates.${item.reason}`),
@@ -483,15 +509,15 @@ const canManageSelected = computed(
             <p>{{ selectedCapability.description }}</p>
             <dl>
               <div>
-                <dt>Operation</dt>
+                <dt>{{ t("integrations.operation") }}</dt>
                 <dd class="mono">{{ selectedCapability.operation }}</dd>
               </div>
               <div>
-                <dt>Resource scope</dt>
+                <dt>{{ t("integrations.resourceKind") }}</dt>
                 <dd class="mono">{{ selectedCapability.resourceKind }}</dd>
               </div>
               <div>
-                <dt>Approval policy</dt>
+                <dt>{{ t("integrations.approvalPolicy") }}</dt>
                 <dd class="mono">
                   {{ selectedCapability.approvalPolicy }}
                 </dd>
@@ -499,11 +525,14 @@ const canManageSelected = computed(
             </dl>
           </section>
 
-          <div class="missing-boundary">
+          <SafeStructuredData
+            v-if="connectionCandidate"
+            :value="connectionCandidate.resourceScope"
+            :label="t('integrations.resourceScope')"
+          />
+          <div v-else class="missing-boundary">
             <LockKeyhole :size="17" aria-hidden="true" />
-            <span>{{
-              t("integrationsRedesign.resourceScopeUnavailable")
-            }}</span>
+            <span>{{ t("integrationsRedesign.resourceScopeRefresh") }}</span>
           </div>
           <p class="grant-boundary">{{ t("integrations.grantBoundary") }}</p>
           <button

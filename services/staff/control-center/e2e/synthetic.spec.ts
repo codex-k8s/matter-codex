@@ -7,6 +7,7 @@ import { checkInteractionIdentities } from "./fixtures/interaction-identities";
 import { checkContextResources } from "./fixtures/context-resources";
 import { checkIntegrationPackage } from "./fixtures/integration-package";
 import { checkEmailEffects } from "./fixtures/email-effects";
+import { checkGrantCandidates } from "./fixtures/grant-candidates";
 import { checkRunsCatalog } from "./fixtures/runs-catalog";
 import { checkOrganizationCatalog } from "./fixtures/organization-catalog";
 import { checkFileSelection } from "./fixtures/file-selection";
@@ -1381,6 +1382,7 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
           fullPage: false,
         });
       });
+      await checkGrantCandidates(page, project.ref);
     }
     const catalogProject = projects[0];
     if (!catalogProject) throw new Error("Missing synthetic project");

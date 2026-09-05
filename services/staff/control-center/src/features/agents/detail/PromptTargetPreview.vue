@@ -21,6 +21,7 @@ const props = defineProps<{
   disabledReason?: string;
 }>();
 const { t } = useI18n();
+const emit = defineEmits<{ checked: [value: boolean] }>();
 const full = ref(false);
 const busy = ref(false);
 const problem = ref<AppProblem>();
@@ -31,6 +32,7 @@ const loader = computed(
 );
 let controller: AbortController | undefined;
 function invalidate(): void {
+  emit("checked", false);
   controller?.abort();
   controller = undefined;
   busy.value = false;
@@ -56,7 +58,10 @@ async function refresh(): Promise<void> {
       active.signal,
       full.value,
     );
-    if (controller === active && !active.signal.aborted) preview.value = result;
+    if (controller === active && !active.signal.aborted) {
+      preview.value = result;
+      emit("checked", true);
+    }
   } catch (error) {
     if (controller === active && !active.signal.aborted)
       problem.value = asProblem(error);

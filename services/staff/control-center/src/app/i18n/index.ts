@@ -1832,6 +1832,10 @@ const ru = {
     chooseTarget: "Выберите по названию",
     capability: "Возможность",
     grant: "Выдать разрешение",
+    operation: "Операция",
+    resourceKind: "Вид ресурса",
+    resourceScope: "Область ресурсов",
+    approvalPolicy: "Порядок подтверждения",
     revoke: "Отозвать",
     noGrants: "У подключения пока нет выданных разрешений.",
     grantBoundary:
@@ -1920,10 +1924,15 @@ const ru = {
     noGrantsHint:
       "Выберите управляемое подключение, Проект, получателя и capability.",
     grantEditorTitle: "Выдать разрешение",
+    resourceScopeRefresh:
+      "Выберите подключение в каталоге, чтобы проверить актуальную область ресурсов.",
     chooseConnectionHint: "Выберите подключение с действием MANAGE_GRANTS.",
     resourceScopeUnavailable:
       "Resource scope, режим учётной записи, срок и Human Gate policy не представлены текущим API. Разрешение нельзя расширить локально.",
     approvalsTitle: "Решения Human Gate",
+    decisionsEntry:
+      "Подтверждения интеграций доступны в общей очереди решений. В выбранном решении показаны подключение, операция, область ресурса и безопасное описание эффекта.",
+    openDecisions: "Открыть решения",
     approvalsDescription:
       "Неизменяемое намерение, effect preview, actor, root initiator и результат решения.",
     backendUnavailableShort: "backend недоступен",
@@ -4763,6 +4772,10 @@ const en = {
     chooseTarget: "Choose by name",
     capability: "Capability",
     grant: "Grant capability",
+    operation: "Operation",
+    resourceKind: "Resource kind",
+    resourceScope: "Resource scope",
+    approvalPolicy: "Approval policy",
     revoke: "Revoke",
     noGrants: "No grants have been assigned to this connection.",
     grantBoundary:
@@ -4852,10 +4865,15 @@ const en = {
     noGrantsHint:
       "Choose a manageable connection, Project, recipient, and capability.",
     grantEditorTitle: "Issue a grant",
+    resourceScopeRefresh:
+      "Select a connection in the catalog to check its current resource scope.",
     chooseConnectionHint: "Choose a connection with the MANAGE_GRANTS action.",
     resourceScopeUnavailable:
       "Resource scope, credential mode, expiry, and Human Gate policy are not represented by the current API. The UI cannot widen the grant locally.",
     approvalsTitle: "Human Gate decisions",
+    decisionsEntry:
+      "Integration approvals are available in Decisions. A selected decision shows its connection, operation, resource scope and safe effect preview.",
+    openDecisions: "Open Decisions",
     approvalsDescription:
       "Immutable intent, effect preview, actor, root initiator, and decision outcome.",
     backendUnavailableShort: "backend unavailable",

@@ -877,6 +877,12 @@ const serverMessage = useServerMessage();
               </div>
             </dl>
             <SafeStructuredData
+              :value="selected.gate.integrationIntent.resourceScope"
+            />
+            <p>
+              <code>{{ selected.gate.integrationIntent.effectKey }}</code>
+            </p>
+            <SafeStructuredData
               :value="selected.gate.integrationIntent.effectPreview"
             />
           </section>

@@ -104,6 +104,14 @@ const form = reactive({
 const continuationPreviewTarget = ref<PromptTarget>();
 const continuationPreview = ref<{ refresh: () => Promise<void> }>();
 const continuationPreviewBusy = ref(false);
+const continuationPreviewRequested = ref(false);
+const continuationPreviewChecked = ref(false);
+const continuationPreviewStale = computed(
+  () =>
+    sessionMode.value === "CONTINUE" &&
+    continuationPreviewRequested.value &&
+    !continuationPreviewChecked.value,
+);
 function isContinuationMode(): boolean {
   return sessionMode.value === "CONTINUE";
 }
@@ -127,6 +135,7 @@ watch(
   continuationPreviewIdentity,
   () => {
     continuationPreviewTarget.value = undefined;
+    continuationPreviewChecked.value = false;
   },
   { flush: "sync" },
 );
@@ -141,6 +150,7 @@ async function previewContinuation(): Promise<void> {
   )
     return;
   continuationPreviewBusy.value = true;
+  continuationPreviewRequested.value = true;
   problem.value = undefined;
   try {
     const task = form.task.trim();
@@ -428,7 +438,13 @@ function workflowInput(): Record<string, string | number | boolean> {
 }
 
 async function submit(): Promise<void> {
-  if (!canSubmit.value || busy.value || !selectedTarget.value) return;
+  if (
+    !canSubmit.value ||
+    continuationPreviewStale.value ||
+    busy.value ||
+    !selectedTarget.value
+  )
+    return;
   busy.value = true;
   problem.value = undefined;
   try {
@@ -872,6 +888,7 @@ watch(
               ref="continuationPreview"
               :target="continuationPreviewTarget"
               :disabled="busy"
+              @checked="continuationPreviewChecked = $event"
             />
           </section>
           <ProblemNotice v-if="problem" :problem="problem" compact />
@@ -933,7 +950,7 @@ watch(
             <button
               class="button button--primary button--large"
               type="submit"
-              :disabled="busy || !canSubmit"
+              :disabled="busy || !canSubmit || continuationPreviewStale"
             >
               <Play :size="17" aria-hidden="true" />
               {{ busy ? $t("common.loading") : $t("common.launch") }}

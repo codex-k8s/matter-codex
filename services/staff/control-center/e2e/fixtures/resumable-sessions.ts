@@ -1,5 +1,10 @@
 import { expect, type Page } from "@playwright/test";
-import type { Agent } from "../../src/shared/api/generated/openapi/types.gen";
+import type {
+  Agent,
+  PromptVariableCatalogInput,
+  PromptTemplatePreviewInput,
+  PromptTemplatePreview,
+} from "../../src/shared/api/generated/openapi/types.gen";
 import { syntheticCatalogRun } from "./catalog-run";
 
 export async function checkResumableSessions(
@@ -170,4 +175,107 @@ export async function checkResumableSessions(
   await expect(
     page.getByRole("button", { name: "Выбрать файлы", exact: true }),
   ).toBeDisabled();
+  let previews = 0;
+  const pin = {
+    digest: "b".repeat(64),
+    agentRef: agent.ref,
+    agentVersion: agent.version,
+    previousRuntimeRevisionRef: "runtime_previous",
+  };
+  await page.route(
+    "**/api/v1/prompt-templates/catalog/query",
+    async (route) => {
+      const body = route.request().postDataJSON() as PromptVariableCatalogInput;
+      expect(body.targetKind).toBe("SESSION_CONTINUATION");
+      expect(body.targetRef).toBe(run(70).sessionRef);
+      expect(body.context?.task).toMatch(/^Продолжить/);
+      expect(body.context?.attachmentSetRef).toBeUndefined();
+      await route.fulfill({ json: { items: [], total: 0, contextPin: pin } });
+    },
+  );
+  await page.route("**/api/v1/prompt-templates/preview", async (route) => {
+    const body = route.request().postDataJSON() as PromptTemplatePreviewInput;
+    expect(body.targetKind).toBe("SESSION_CONTINUATION");
+    expect(body.targetRef).toBe(run(70).sessionRef);
+    expect(body.template).toBe("");
+    expect(body.expectedContextDigest).toBe(pin.digest);
+    expect(body.includeFullMaterialization).toBe(false);
+    previews++;
+    const result: PromptTemplatePreview = {
+      safePreview: `Сообщение Session: ${body.context?.task ?? ""}`,
+      complete: true,
+      diagnostics: [],
+      templateRef: "continuation_template",
+      templateDigest: "c".repeat(64),
+      materializationDigest: "d".repeat(64),
+      serviceTemplateRevision: "7",
+      serviceTemplateDigest: "e".repeat(64),
+      variableSnapshotDigest: "f".repeat(64),
+      locale: "ru",
+      effectiveCapabilities: [],
+      contextPin: pin,
+      slots: [{ source: "PLATFORM", slot: "RUNTIME_CHANGES", position: 0 }],
+      sections: [
+        {
+          source: "PLATFORM",
+          slot: "RUNTIME_CHANGES",
+          content: "Модель обновлена",
+        },
+      ],
+      runtimeDiff: {
+        sessionRef: run(70).sessionRef,
+        previousRevisionRef: "runtime_previous",
+        digest: "a".repeat(64),
+        changes: [
+          {
+            component: "MODEL",
+            action: "USE_CURRENT_CONTEXT",
+            previous: [{ value: "before" }],
+            current: [{ value: "after" }],
+          },
+        ],
+      },
+    };
+    await route.fulfill({ json: result });
+  });
+  await page
+    .getByRole("textbox", { name: /^Задание\s/ })
+    .fill("Продолжить проверку");
+  await page
+    .getByRole("button", {
+      name: "Просмотреть сообщение продолжения",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText("Сообщение Session: Продолжить проверку", { exact: true }),
+  ).toBeVisible();
+  expect(previews).toBe(1);
+  await expect(
+    page.locator('.launch-summary button[type="submit"]'),
+  ).toBeEnabled();
+  await page
+    .getByRole("textbox", { name: /^Задание\s/ })
+    .fill("Продолжить с новым вводом");
+  await expect(
+    page.getByText("Сообщение Session: Продолжить проверку", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('.launch-summary button[type="submit"]'),
+  ).toBeDisabled();
+  await page
+    .getByRole("button", {
+      name: "Просмотреть сообщение продолжения",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText("Сообщение Session: Продолжить с новым вводом", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  expect(previews).toBe(2);
+  await expect(
+    page.locator('.launch-summary button[type="submit"]'),
+  ).toBeEnabled();
 }

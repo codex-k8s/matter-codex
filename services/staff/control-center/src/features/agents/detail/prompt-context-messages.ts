@@ -1,5 +1,6 @@
 export const promptContextMessages = {
   ru: {
+    markdownPreview: "Предпросмотр Markdown",
     platform: "Будет добавлено платформой",
     order: "Порядок и происхождение блоков",
     USER_TEMPLATE: "Пользовательский шаблон",
@@ -45,6 +46,7 @@ export const promptContextMessages = {
     },
   },
   en: {
+    markdownPreview: "Markdown preview",
     platform: "Added by the platform",
     order: "Block order and provenance",
     USER_TEMPLATE: "User template",

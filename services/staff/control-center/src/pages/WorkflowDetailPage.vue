@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check, Play, Plus, Save, Trash2, Upload } from "@lucide/vue";
 import VoiceTextarea from "@/shared/ui/VoiceTextarea.vue";
-import CodeEditor from "@/shared/ui/CodeEditor.vue";
+import TemplateSourceField from "@/features/agents/detail/TemplateSourceField.vue";
 import PromptTargetPreview from "@/features/agents/detail/PromptTargetPreview.vue";
 import {
   workflowEditorInput,
@@ -85,6 +85,11 @@ function publishedStep(position: number) {
 }
 function promptTarget(position: number) {
   return workflow.value && !dirty.value
+    ? workflowStagePromptTarget(workflow.value, position)
+    : undefined;
+}
+function savedPromptTarget(position: number) {
+  return workflow.value
     ? workflowStagePromptTarget(workflow.value, position)
     : undefined;
 }
@@ -291,6 +296,18 @@ onBeforeUnmount(() => {
       :problem="platform.problems.workflow"
       @retry="load"
       ><div v-if="workflow" class="workflow-layout">
+        <ul
+          v-if="(workflow.draft ?? workflow).validationMessages.length"
+          class="problem"
+          role="status"
+        >
+          <li
+            v-for="message in (workflow.draft ?? workflow).validationMessages"
+            :key="message"
+          >
+            {{ message }}
+          </li>
+        </ul>
         <fieldset class="workflow-editor" :disabled="!canEdit || busy">
           <legend class="sr-only">{{ $t("workflows.steps") }}</legend>
           <div class="form-grid">
@@ -450,8 +467,9 @@ onBeforeUnmount(() => {
               </div>
               <div class="field field--wide">
                 <span>{{ $t("common.purpose") }}</span
-                ><CodeEditor
+                ><TemplateSourceField
                   v-model="step.purpose"
+                  :target="savedPromptTarget(step.position)"
                   :label="$t('common.purpose')"
                   :disabled="!canEdit || busy"
                 />
@@ -493,8 +511,9 @@ onBeforeUnmount(() => {
                   /></label>
                   <div class="field field--wide">
                     <span>{{ $t("workflows.expectedResult") }}</span
-                    ><CodeEditor
+                    ><TemplateSourceField
                       :disabled="!canEdit || busy"
+                      :target="savedPromptTarget(step.position)"
                       v-model="step.expectedResult"
                       :label="$t('workflows.expectedResult')"
                     />

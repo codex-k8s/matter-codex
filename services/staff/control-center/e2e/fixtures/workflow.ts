@@ -9,6 +9,10 @@ import type {
   BootstrapState,
   Workflow,
   WorkflowInput,
+  PromptVariableCatalogInput,
+  PromptTemplatePreviewInput,
+  PromptTemplatePreview,
+  PromptContextPin,
 } from "../../src/shared/api/generated/openapi/types.gen";
 
 export async function checkWorkflowEditor(
@@ -75,7 +79,10 @@ export async function checkWorkflowEditor(
     projectRef,
     name: "Процесс synthetic",
     purpose: "Согласование документа",
-    state: "DRAFT",
+    state: "PUBLISHED",
+    revisionRef: "workflow_published",
+    publishedRevisionRef: "workflow_published",
+    draftRevisionRef: "workflow_draft",
     coordinatorAgentRef: agent.ref,
     inputFields: [],
     steps: [
@@ -99,6 +106,83 @@ export async function checkWorkflowEditor(
     updatedAt: "2026-09-05T00:00:00Z",
   };
   let saves = 0;
+  workflow.draft = {
+    ref: "workflow_draft",
+    version: 1,
+    revision: 2,
+    state: "DRAFT",
+    coordinatorAgentRef: agent.ref,
+    inputFields: [],
+    steps: workflow.steps.map((step) => ({
+      ...step,
+      ref: "draft_stage",
+      purpose: "Назначение черновика",
+    })),
+    validationMessages: [],
+  };
+  let previews = 0;
+  const contextPin = (): PromptContextPin => ({
+    digest: String(workflow.version).padStart(64, "a"),
+    workflowRef: workflow.ref,
+    workflowVersion: workflow.version,
+    workflowRevisionRef: workflow.draft?.ref ?? workflow.revisionRef,
+    workflowStageKey: (workflow.draft ?? workflow).steps[0]?.ref,
+    agentRef: agent.ref,
+    agentVersion: agent.version,
+  });
+  await page.route(
+    "**/api/v1/prompt-templates/catalog/query",
+    async (route) => {
+      const body = route.request().postDataJSON() as PromptVariableCatalogInput;
+      expect(body.targetKind).toBe("WORKFLOW_STAGE");
+      expect(body.targetRef).toBe(workflow.ref);
+      expect(body.context?.workflowRevisionRef).toBe(
+        contextPin().workflowRevisionRef,
+      );
+      expect(body.context?.workflowStageKey).toBe(
+        contextPin().workflowStageKey,
+      );
+      expect(body.context?.expectedWorkflowVersion).toBe(workflow.version);
+      await route.fulfill({
+        json: { items: [], total: 0, contextPin: contextPin() },
+      });
+    },
+  );
+  await page.route("**/api/v1/prompt-templates/preview", async (route) => {
+    const body = route.request().postDataJSON() as PromptTemplatePreviewInput;
+    expect(body.template).toBe("");
+    expect(body.targetKind).toBe("WORKFLOW_STAGE");
+    expect(body.targetRef).toBe(workflow.ref);
+    expect(body.expectedContextDigest).toBe(contextPin().digest);
+    expect(body.context?.workflowRevisionRef).toBe(
+      contextPin().workflowRevisionRef,
+    );
+    expect(body.includeFullMaterialization).toBe(false);
+    previews++;
+    const preview: PromptTemplatePreview = {
+      safePreview: `Точный сохранённый этап: ${(workflow.draft ?? workflow).steps[0]?.purpose ?? ""}`,
+      diagnostics: [],
+      complete: true,
+      templateRef: "template_synthetic",
+      templateDigest: "b".repeat(64),
+      materializationDigest: "c".repeat(64),
+      serviceTemplateRevision: "7",
+      serviceTemplateDigest: "d".repeat(64),
+      variableSnapshotDigest: "e".repeat(64),
+      locale: "ru",
+      slots: [{ slot: "PURPOSE", source: "PLATFORM", position: 0 }],
+      sections: [
+        {
+          slot: "PURPOSE",
+          source: "PLATFORM",
+          content: (workflow.draft ?? workflow).steps[0]?.purpose ?? "",
+        },
+      ],
+      effectiveCapabilities: [],
+      contextPin: contextPin(),
+    };
+    await route.fulfill({ json: preview });
+  });
   const failures: string[] = [];
   await page.route("**/api/v1/platform-capabilities", (route) =>
     route.fulfill({ json: { items: [] } }),
@@ -110,7 +194,7 @@ export async function checkWorkflowEditor(
       const published = url.searchParams.has("workflowRef");
       if (published) {
         expect(url.searchParams.get("workflowRef")).toBe(workflow.ref);
-        expect(url.searchParams.get("stepKey")).toBe("step_synthetic");
+        expect(url.searchParams.get("stepKey")).toBe(workflow.steps[0]?.ref);
       }
       return route.fulfill({
         json: {
@@ -121,7 +205,7 @@ export async function checkWorkflowEditor(
           ...(published
             ? {
                 workflowRef: workflow.ref,
-                stepKey: "step_synthetic",
+                stepKey: workflow.steps[0]?.ref,
                 workflowVersionRef: "workflow_published_version",
               }
             : {}),
@@ -149,11 +233,20 @@ export async function checkWorkflowEditor(
         ...workflow,
         name: input.name,
         purpose: input.purpose,
-        coordinatorAgentRef: input.coordinatorAgentRef,
-        steps: input.steps.map((step, index) => ({
-          ...step,
-          ref: workflow.steps[index]?.ref ?? `step_${String(index)}`,
-        })),
+        draftRevisionRef: "workflow_draft_saved",
+        draft: {
+          ref: "workflow_draft_saved",
+          version: 2,
+          revision: 3,
+          state: "DRAFT",
+          coordinatorAgentRef: input.coordinatorAgentRef,
+          inputFields: [],
+          validationMessages: [],
+          steps: input.steps.map((step, index) => ({
+            ...step,
+            ref: `draft_stage_${String(index)}`,
+          })),
+        },
         version: workflow.version + 1,
       };
     } else if (route.request().method() !== "GET")
@@ -173,7 +266,7 @@ export async function checkWorkflowEditor(
   await instructions.press("Tab");
   const exactInstructions = await instructions.innerText();
   expect(exactInstructions).toContain("  Synthetic instructions  ");
-  await step.locator(".step-advanced summary").click();
+  await step.locator(".step-advanced > summary").click();
   await step.getByRole("checkbox", { name: /^Файлы/ }).check();
   await expect(
     step.getByRole("checkbox", { name: /^Запуск задач/ }),
@@ -212,8 +305,20 @@ export async function checkWorkflowEditor(
     page.getByRole("button", { name: "Проверить Процесс", exact: true }),
   ).toBeEnabled();
   expect(saves).toBe(1);
-  expect(workflow.steps[0]?.purpose).toBe(exactInstructions);
-  expect(workflow.steps[0]?.expectedResult).toBe("  Synthetic result  ");
+  expect(workflow.draft.steps[0]?.purpose).toBe(exactInstructions);
+  expect(workflow.draft.steps[0]?.expectedResult).toBe("  Synthetic result  ");
+  expect(workflow.steps[0]?.purpose).toBe("Проверить документ");
+  await expect(instructions).toContainText("Synthetic instructions");
+  await page
+    .getByRole("button", {
+      name: "Просмотреть контекст исполнения",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByText(/Точный сохранённый этап:.*Synthetic instructions/),
+  ).toBeVisible();
+  expect(previews).toBe(1);
   if (speechBootstrap) {
     await expect(voice.locator("button")).toHaveCount(1);
     await expect(instructions).toHaveAttribute("contenteditable", "true");
@@ -222,12 +327,23 @@ export async function checkWorkflowEditor(
     await page.unroute("**/api/v1/speech/transcriptions", transcriptionRoute);
   }
   expect(failures).toEqual([]);
-  expect(workflow.steps[0]?.requiredCapabilityKeys).toEqual([
+  expect(workflow.draft.steps[0]?.requiredCapabilityKeys).toEqual([
     effectiveFiles.key,
   ]);
   workflow.state = "PUBLISHED";
+  workflow = {
+    ...workflow,
+    ...workflow.draft,
+    ref: workflow.ref,
+    version: workflow.version + 1,
+    state: "PUBLISHED",
+    revisionRef: workflow.draft.ref,
+    publishedRevisionRef: workflow.draft.ref,
+    draft: undefined,
+    draftRevisionRef: undefined,
+  };
   await page.goto(`/projects/${projectRef}/workflows/${workflow.ref}`);
-  await page.locator(".step-advanced summary").first().click();
+  await page.locator(".step-advanced > summary").first().click();
   await page
     .getByRole("button", {
       name: "Возможности опубликованного этапа",

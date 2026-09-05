@@ -290,6 +290,10 @@ NOT RUN. Полный unit остаётся незавершённым по пе
 
 ### Локальная синтетическая проверка
 
+Историческая карта передачи ранних checkpoints. Указанные ниже отсутствующие
+контракты отражают состояние на момент передачи, а не текущий SDK. Актуальный
+остаток и результаты приведены в разделе «Текущий остаток 641/72 и #1075».
+
 Адресная передача #1045 исполнителю Meitner (`01a06dee-d29a-72c2-8d22-3a67d150c8a7`):
 
 | Приоритетный контракт | Требуемые данные для PWA                                                                                                                                                                                                                                                                                                                      |
@@ -481,7 +485,7 @@ state, Playwright route mocking/viewports и CodeMirror dynamic configuration
   UI/GIT IntegrationPackage execution. Полная MVP-UI-01..61 и staging-приёмка
   остаются незавершёнными; новые блоки в рамках этой передачи не реализовывались.
 
-### Текущий UI mailbox lifecycle и остаток требований
+### Исторический checkpoint UI mailbox lifecycle и требований
 
 `EmailMailboxConfigurationPanel.vue` и `email-mailbox-editor.ts` используют
 только server `View.nextActions` / `List.nextActions`, включая создание при
@@ -511,8 +515,9 @@ revisionRef: сервер выбирает новый UI draft. Опублико
 не наследует boundRevisionRef; owner подтвердил этот mapping локальными PG
 проверками, общий путь всё ещё требует интеграционной проверки.
 
-Следующий список относится ко всему исходному scope 01–61 и CFG, а не к наличию
-компонентов или числу synthetic-тестов:
+Следующая историческая таблица относится к исходному scope 01–61 и CFG на момент
+mailbox checkpoint. Последующие поставки контрактов описаны ниже; таблица не
+является актуальным списком отсутствующих producer paths.
 
 | Требования     | Существующий consumer/API                                                                   | Незавершённая producer/сквозная часть                                                                                                                                                                  |
 | -------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -763,7 +768,7 @@ Context7: Ajv standalone ESM/CSP и esbuild stdin/resolveDir/browser bundle.
 массивов. `e2e/fixtures/integration-package.ts` проверяет form→JSON→save и diff
 на синтетическом HTTP, не объявляет публикацию работающей на CP.
 
-Конкретная незакрытая producer-зависимость: `revision.IntegrationPackage()`
+Историческая producer-зависимость до поставки UI/GIT source contract: `revision.IntegrationPackage()`
 в control-plane принимает только digest из `integrationpackage.LoadShipped()`.
 Любая UI-правка manifest отклоняется даже для известного adapter. Schema пока
 разрешает только `metadata.origin=SHIPPED`; UI/GIT origin и исполнение новой
@@ -1202,6 +1207,37 @@ Declared promptScope передаётся create/save шаблона и сохр
 пока NOT RUN. Исторические browser FAIL и установленная причина EDQUOT остаются
 выше; итоговый browser baseline использует disk TMPDIR и прежние flags/timeouts.
 Продолжается полный scope #1022, checkpoint не означает окончание приёмки.
+
+## Текущий остаток 641/72 и #1075
+
+Coherent source SDK `65b38abf4` подключён: 641 typed context и Workflow Draft,
+72 четыре каталога разрешений, VFS/67, планы 643/644/645/70 и Git write-back65.
+Их отсутствие в ранних таблицах выше является историческим состоянием.
+Публикация source, наличие UI и синтетический ответ не заменяют реальный
+сквозной runtime результат.
+
+- Workflow редактор сохраняет и повторно читает exact Draft, показывает
+  серверную диагностику, Markdown и материализованный preview. После изменения
+  входа уже проверенного продолжения Session запуск требует свежего preview.
+- Каталог разрешений показывает server resource scope и disabled reasons.
+  Human Gate открывается через существующие «Решения», без выдуманного фильтра
+  по подключению. Intent/scope/effect preview отображаются из typed DTO.
+- Bug #1075: HTTP mapper `e7566af26` проверен владельцем HTTP; source/SDK shape
+  не менялся. Исполняемый CP checkpoint ещё ожидается. Browser fixture проверяет
+  сохранение literal scope/preview и terminal readback; её новый запуск пока NOT RUN.
+- Write-back contribution browser `84efbd16` прошёл 3/3 локальных сценария
+  390/2900 у исполнителя; подключён в основной набор, теперь 38 тестов.
+- Текущее рабочее дерево: unit 1107/1107, lint, format, production build с
+  typecheck и E2E check PASS. Полный synthetic38 пока NOT RUN.
+- Новые scoped Home 390/2900 последовательно дали 0/2 FAIL: неточный tab label,
+  неоднозначный вложенный summary, затем «Задача» вместо accessible «Задание».
+  Селекторы исправлены без изменения timeout/assertion смысла. После последней
+  правки повтор пока NOT RUN. На последнем запуске Workflow и четыре каталога
+  разрешений были пройдены до ошибки поля продолжения. Renderer crash не было.
+
+Исторические full34/35 FAIL и EDQUOT evidence сохраняются. После scoped исправлений
+и CP1075 нужен полный38 на итоговом SHA. Реальные provider/browser/staging paths,
+полнота исходных 01–61/CFG и review/owner gates ещё не приняты.
 
 ## Проверенная документация библиотек
 

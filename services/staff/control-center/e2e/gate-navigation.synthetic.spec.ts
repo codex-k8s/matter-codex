@@ -18,6 +18,35 @@ for (const width of [390, 2900]) {
       title: "Адресованное решение",
       contextSummary: "Точный контекст",
       consequencesSummary: "Точные последствия",
+      integrationIntent: {
+        connectionRef: "connection_gate",
+        connectionName: "Подключение согласования",
+        definitionKey: "github",
+        capabilityKey: "github.write",
+        operation: "create_issue",
+        resourceScope: {
+          kind: "GITHUB_REPOSITORY",
+          values: { repository: "team/project" },
+          digest: "a".repeat(64),
+        },
+        effectKey: "effect_gate_exact",
+        effectPreview: {
+          inputDigest: "b".repeat(64),
+          inputBytes: 64,
+          risk: "WRITE",
+          approvalPolicy: "HUMAN_EACH_EFFECT",
+          contentComplete: true,
+          fields: [
+            {
+              key: "title",
+              type: "STRING",
+              bytes: 12,
+              opaque: false,
+              value: "TYPE_LITERAL",
+            },
+          ],
+        },
+      },
       requestedBy: { ref: "user_navigation", displayName: "Владелец" },
       state: "OPEN",
       allowedDecisions: ["APPROVE"],
@@ -141,6 +170,11 @@ for (const width of [390, 2900]) {
       "Адресованное решение",
     );
     expect(reads).toContain("gate_addressed");
+    const intent = page.locator(".decision-integration-intent");
+    await expect(intent).toContainText("Подключение согласования");
+    await expect(intent).toContainText("team/project");
+    await expect(intent).toContainText("TYPE_LITERAL");
+    await expect(intent).toContainText("effect_gate_exact");
     await page
       .getByRole("button", {
         name: "Открыть адресованную историю",
@@ -151,6 +185,7 @@ for (const width of [390, 2900]) {
       "Адресованная история",
     );
     await expect(page.locator(".decision-detail")).toContainText("Одобрено");
+    await expect(intent).toContainText("TYPE_LITERAL");
     await expect(page.locator(".decision-toolbar__count")).toContainText("91");
     expect(
       lists.some(
