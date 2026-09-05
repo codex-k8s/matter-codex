@@ -471,6 +471,63 @@ func (e ArtifactSource) Valid() bool {
 	}
 }
 
+// Defines values for ArtifactBindingTargetState.
+const (
+	ArtifactBindingTargetStateARCHIVED ArtifactBindingTargetState = "ARCHIVED"
+	ArtifactBindingTargetStateDISABLED ArtifactBindingTargetState = "DISABLED"
+	ArtifactBindingTargetStateDRAFT    ArtifactBindingTargetState = "DRAFT"
+	ArtifactBindingTargetStateREADY    ArtifactBindingTargetState = "READY"
+	ArtifactBindingTargetStateRUNNING  ArtifactBindingTargetState = "RUNNING"
+)
+
+// Valid indicates whether the value is a known member of the ArtifactBindingTargetState enum.
+func (e ArtifactBindingTargetState) Valid() bool {
+	switch e {
+	case ArtifactBindingTargetStateARCHIVED:
+		return true
+	case ArtifactBindingTargetStateDISABLED:
+		return true
+	case ArtifactBindingTargetStateDRAFT:
+		return true
+	case ArtifactBindingTargetStateREADY:
+		return true
+	case ArtifactBindingTargetStateRUNNING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ArtifactBindingTargetReason.
+const (
+	ArtifactBindingTargetReasonAGENTARCHIVED           ArtifactBindingTargetReason = "AGENT_ARCHIVED"
+	ArtifactBindingTargetReasonAGENTCAPABILITYREQUIRED ArtifactBindingTargetReason = "AGENT_CAPABILITY_REQUIRED"
+	ArtifactBindingTargetReasonALREADYBOUND            ArtifactBindingTargetReason = "ALREADY_BOUND"
+	ArtifactBindingTargetReasonARTIFACTUNAVAILABLE     ArtifactBindingTargetReason = "ARTIFACT_UNAVAILABLE"
+	ArtifactBindingTargetReasonAVAILABLE               ArtifactBindingTargetReason = "AVAILABLE"
+	ArtifactBindingTargetReasonNOTBOUND                ArtifactBindingTargetReason = "NOT_BOUND"
+)
+
+// Valid indicates whether the value is a known member of the ArtifactBindingTargetReason enum.
+func (e ArtifactBindingTargetReason) Valid() bool {
+	switch e {
+	case ArtifactBindingTargetReasonAGENTARCHIVED:
+		return true
+	case ArtifactBindingTargetReasonAGENTCAPABILITYREQUIRED:
+		return true
+	case ArtifactBindingTargetReasonALREADYBOUND:
+		return true
+	case ArtifactBindingTargetReasonARTIFACTUNAVAILABLE:
+		return true
+	case ArtifactBindingTargetReasonAVAILABLE:
+		return true
+	case ArtifactBindingTargetReasonNOTBOUND:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ArtifactImpactAction.
 const (
 	ArtifactImpactActionDELETE ArtifactImpactAction = "DELETE"
@@ -3396,6 +3453,51 @@ func (e RunTitleSource) Valid() bool {
 	}
 }
 
+// Defines values for RunAttachmentEligibilityReason.
+const (
+	RunAttachmentEligibilityReasonAGENTCAPABILITYREQUIRED RunAttachmentEligibilityReason = "AGENT_CAPABILITY_REQUIRED"
+	RunAttachmentEligibilityReasonAVAILABLE               RunAttachmentEligibilityReason = "AVAILABLE"
+	RunAttachmentEligibilityReasonRUNTIMENOTREADY         RunAttachmentEligibilityReason = "RUNTIME_NOT_READY"
+	RunAttachmentEligibilityReasonSESSIONUNAVAILABLE      RunAttachmentEligibilityReason = "SESSION_UNAVAILABLE"
+	RunAttachmentEligibilityReasonTARGETUNAVAILABLE       RunAttachmentEligibilityReason = "TARGET_UNAVAILABLE"
+)
+
+// Valid indicates whether the value is a known member of the RunAttachmentEligibilityReason enum.
+func (e RunAttachmentEligibilityReason) Valid() bool {
+	switch e {
+	case RunAttachmentEligibilityReasonAGENTCAPABILITYREQUIRED:
+		return true
+	case RunAttachmentEligibilityReasonAVAILABLE:
+		return true
+	case RunAttachmentEligibilityReasonRUNTIMENOTREADY:
+		return true
+	case RunAttachmentEligibilityReasonSESSIONUNAVAILABLE:
+		return true
+	case RunAttachmentEligibilityReasonTARGETUNAVAILABLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunAttachmentEligibilityTargetType.
+const (
+	RunAttachmentEligibilityTargetTypeAGENT    RunAttachmentEligibilityTargetType = "AGENT"
+	RunAttachmentEligibilityTargetTypeWORKFLOW RunAttachmentEligibilityTargetType = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the RunAttachmentEligibilityTargetType enum.
+func (e RunAttachmentEligibilityTargetType) Valid() bool {
+	switch e {
+	case RunAttachmentEligibilityTargetTypeAGENT:
+		return true
+	case RunAttachmentEligibilityTargetTypeWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunCommandAction.
 const (
 	RunCommandActionCANCEL RunCommandAction = "CANCEL"
@@ -5036,16 +5138,16 @@ func (e SystemSTTConfigurationPermissionKey) Valid() bool {
 
 // Defines values for SystemSTTParametersChunkingStrategy.
 const (
-	Auto  SystemSTTParametersChunkingStrategy = "auto"
-	Empty SystemSTTParametersChunkingStrategy = ""
+	SystemSTTParametersChunkingStrategyAuto  SystemSTTParametersChunkingStrategy = "auto"
+	SystemSTTParametersChunkingStrategyEmpty SystemSTTParametersChunkingStrategy = ""
 )
 
 // Valid indicates whether the value is a known member of the SystemSTTParametersChunkingStrategy enum.
 func (e SystemSTTParametersChunkingStrategy) Valid() bool {
 	switch e {
-	case Auto:
+	case SystemSTTParametersChunkingStrategyAuto:
 		return true
-	case Empty:
+	case SystemSTTParametersChunkingStrategyEmpty:
 		return true
 	default:
 		return false
@@ -5274,48 +5376,195 @@ func (e TemplateVariableFieldValueType) Valid() bool {
 	}
 }
 
-// Defines values for VFSNodeKind.
+// Defines values for VFSKind.
 const (
-	VFSNodeKindAGENT       VFSNodeKind = "AGENT"
-	VFSNodeKindAUTOMATION  VFSNodeKind = "AUTOMATION"
-	VFSNodeKindAVATAR      VFSNodeKind = "AVATAR"
-	VFSNodeKindDIRECTORY   VFSNodeKind = "DIRECTORY"
-	VFSNodeKindENVIRONMENT VFSNodeKind = "ENVIRONMENT"
-	VFSNodeKindINPUT       VFSNodeKind = "INPUT"
-	VFSNodeKindMEMORY      VFSNodeKind = "MEMORY"
-	VFSNodeKindPROJECT     VFSNodeKind = "PROJECT"
-	VFSNodeKindRESULT      VFSNodeKind = "RESULT"
-	VFSNodeKindRUN         VFSNodeKind = "RUN"
-	VFSNodeKindSKILL       VFSNodeKind = "SKILL"
-	VFSNodeKindWORKFLOW    VFSNodeKind = "WORKFLOW"
+	VFSKindAGENT       VFSKind = "AGENT"
+	VFSKindAUTOMATION  VFSKind = "AUTOMATION"
+	VFSKindAVATAR      VFSKind = "AVATAR"
+	VFSKindDIRECTORY   VFSKind = "DIRECTORY"
+	VFSKindENVIRONMENT VFSKind = "ENVIRONMENT"
+	VFSKindINPUT       VFSKind = "INPUT"
+	VFSKindMEMORY      VFSKind = "MEMORY"
+	VFSKindPROJECT     VFSKind = "PROJECT"
+	VFSKindRESULT      VFSKind = "RESULT"
+	VFSKindRUN         VFSKind = "RUN"
+	VFSKindSKILL       VFSKind = "SKILL"
+	VFSKindWORKFLOW    VFSKind = "WORKFLOW"
 )
 
-// Valid indicates whether the value is a known member of the VFSNodeKind enum.
-func (e VFSNodeKind) Valid() bool {
+// Valid indicates whether the value is a known member of the VFSKind enum.
+func (e VFSKind) Valid() bool {
 	switch e {
-	case VFSNodeKindAGENT:
+	case VFSKindAGENT:
 		return true
-	case VFSNodeKindAUTOMATION:
+	case VFSKindAUTOMATION:
 		return true
-	case VFSNodeKindAVATAR:
+	case VFSKindAVATAR:
 		return true
-	case VFSNodeKindDIRECTORY:
+	case VFSKindDIRECTORY:
 		return true
-	case VFSNodeKindENVIRONMENT:
+	case VFSKindENVIRONMENT:
 		return true
-	case VFSNodeKindINPUT:
+	case VFSKindINPUT:
 		return true
-	case VFSNodeKindMEMORY:
+	case VFSKindMEMORY:
 		return true
-	case VFSNodeKindPROJECT:
+	case VFSKindPROJECT:
 		return true
-	case VFSNodeKindRESULT:
+	case VFSKindRESULT:
 		return true
-	case VFSNodeKindRUN:
+	case VFSKindRUN:
 		return true
-	case VFSNodeKindSKILL:
+	case VFSKindSKILL:
 		return true
-	case VFSNodeKindWORKFLOW:
+	case VFSKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeLifecycleState.
+const (
+	VFSNodeLifecycleStateACTIVE   VFSNodeLifecycleState = "ACTIVE"
+	VFSNodeLifecycleStateARCHIVED VFSNodeLifecycleState = "ARCHIVED"
+	VFSNodeLifecycleStateDELETED  VFSNodeLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeLifecycleState enum.
+func (e VFSNodeLifecycleState) Valid() bool {
+	switch e {
+	case VFSNodeLifecycleStateACTIVE:
+		return true
+	case VFSNodeLifecycleStateARCHIVED:
+		return true
+	case VFSNodeLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeNextActions.
+const (
+	VFSNodeNextActionsARCHIVE  VFSNodeNextActions = "ARCHIVE"
+	VFSNodeNextActionsBIND     VFSNodeNextActions = "BIND"
+	VFSNodeNextActionsDELETE   VFSNodeNextActions = "DELETE"
+	VFSNodeNextActionsDOWNLOAD VFSNodeNextActions = "DOWNLOAD"
+	VFSNodeNextActionsPURGE    VFSNodeNextActions = "PURGE"
+	VFSNodeNextActionsRESTORE  VFSNodeNextActions = "RESTORE"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeNextActions enum.
+func (e VFSNodeNextActions) Valid() bool {
+	switch e {
+	case VFSNodeNextActionsARCHIVE:
+		return true
+	case VFSNodeNextActionsBIND:
+		return true
+	case VFSNodeNextActionsDELETE:
+		return true
+	case VFSNodeNextActionsDOWNLOAD:
+		return true
+	case VFSNodeNextActionsPURGE:
+		return true
+	case VFSNodeNextActionsRESTORE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeResourceKind.
+const (
+	VFSNodeResourceKindARTIFACT     VFSNodeResourceKind = "ARTIFACT"
+	VFSNodeResourceKindEmpty        VFSNodeResourceKind = ""
+	VFSNodeResourceKindMEMORYRECORD VFSNodeResourceKind = "MEMORY_RECORD"
+	VFSNodeResourceKindSKILLBUNDLE  VFSNodeResourceKind = "SKILL_BUNDLE"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeResourceKind enum.
+func (e VFSNodeResourceKind) Valid() bool {
+	switch e {
+	case VFSNodeResourceKindARTIFACT:
+		return true
+	case VFSNodeResourceKindEmpty:
+		return true
+	case VFSNodeResourceKindMEMORYRECORD:
+		return true
+	case VFSNodeResourceKindSKILLBUNDLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeScanState.
+const (
+	VFSNodeScanStateCLEAN       VFSNodeScanState = "CLEAN"
+	VFSNodeScanStateEmpty       VFSNodeScanState = ""
+	VFSNodeScanStateFAILED      VFSNodeScanState = "FAILED"
+	VFSNodeScanStatePENDING     VFSNodeScanState = "PENDING"
+	VFSNodeScanStateQUARANTINED VFSNodeScanState = "QUARANTINED"
+	VFSNodeScanStateSCANNING    VFSNodeScanState = "SCANNING"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeScanState enum.
+func (e VFSNodeScanState) Valid() bool {
+	switch e {
+	case VFSNodeScanStateCLEAN:
+		return true
+	case VFSNodeScanStateEmpty:
+		return true
+	case VFSNodeScanStateFAILED:
+		return true
+	case VFSNodeScanStatePENDING:
+		return true
+	case VFSNodeScanStateQUARANTINED:
+		return true
+	case VFSNodeScanStateSCANNING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeSelectionReason.
+const (
+	ACTIVERUNUSESARTIFACT VFSNodeSelectionReason = "ACTIVE_RUN_USES_ARTIFACT"
+	ARTIFACTHASBINDINGS   VFSNodeSelectionReason = "ARTIFACT_HAS_BINDINGS"
+	ARTIFACTNOTACTIVE     VFSNodeSelectionReason = "ARTIFACT_NOT_ACTIVE"
+	ARTIFACTNOTDELETED    VFSNodeSelectionReason = "ARTIFACT_NOT_DELETED"
+	ARTIFACTUSEDBYSKILL   VFSNodeSelectionReason = "ARTIFACT_USED_BY_SKILL"
+	AVAILABLE             VFSNodeSelectionReason = "AVAILABLE"
+	DIRECTORY             VFSNodeSelectionReason = "DIRECTORY"
+	IMMUTABLECONTEXT      VFSNodeSelectionReason = "IMMUTABLE_CONTEXT"
+	LIFECYCLEBLOCKED      VFSNodeSelectionReason = "LIFECYCLE_BLOCKED"
+	PERMISSIONREQUIRED    VFSNodeSelectionReason = "PERMISSION_REQUIRED"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeSelectionReason enum.
+func (e VFSNodeSelectionReason) Valid() bool {
+	switch e {
+	case ACTIVERUNUSESARTIFACT:
+		return true
+	case ARTIFACTHASBINDINGS:
+		return true
+	case ARTIFACTNOTACTIVE:
+		return true
+	case ARTIFACTNOTDELETED:
+		return true
+	case ARTIFACTUSEDBYSKILL:
+		return true
+	case AVAILABLE:
+		return true
+	case DIRECTORY:
+		return true
+	case IMMUTABLECONTEXT:
+		return true
+	case LIFECYCLEBLOCKED:
+		return true
+	case PERMISSIONREQUIRED:
 		return true
 	default:
 		return false
@@ -5568,6 +5817,24 @@ func (e ArtifactTypeQuery) Valid() bool {
 	case ArtifactTypeQueryIMAGE:
 		return true
 	case ArtifactTypeQueryTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSLifecycleState.
+const (
+	VFSLifecycleStateACTIVE  VFSLifecycleState = "ACTIVE"
+	VFSLifecycleStateDELETED VFSLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the VFSLifecycleState enum.
+func (e VFSLifecycleState) Valid() bool {
+	switch e {
+	case VFSLifecycleStateACTIVE:
+		return true
+	case VFSLifecycleStateDELETED:
 		return true
 	default:
 		return false
@@ -5913,6 +6180,24 @@ func (e ListRoleImageRecipesParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetRunAttachmentEligibilityParamsTargetType.
+const (
+	GetRunAttachmentEligibilityParamsTargetTypeAGENT    GetRunAttachmentEligibilityParamsTargetType = "AGENT"
+	GetRunAttachmentEligibilityParamsTargetTypeWORKFLOW GetRunAttachmentEligibilityParamsTargetType = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the GetRunAttachmentEligibilityParamsTargetType enum.
+func (e GetRunAttachmentEligibilityParamsTargetType) Valid() bool {
+	switch e {
+	case GetRunAttachmentEligibilityParamsTargetTypeAGENT:
+		return true
+	case GetRunAttachmentEligibilityParamsTargetTypeWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListProviderAccountsParamsDefinitionKey.
 const (
 	ListProviderAccountsParamsDefinitionKeyOpenaiCodex ListProviderAccountsParamsDefinitionKey = "openai-codex"
@@ -5948,31 +6233,31 @@ func (e ListRunsParamsTargetType) Valid() bool {
 
 // Defines values for ListRunsParamsStates.
 const (
-	CANCELLED    ListRunsParamsStates = "CANCELLED"
-	CANCELLING   ListRunsParamsStates = "CANCELLING"
-	FAILED       ListRunsParamsStates = "FAILED"
-	QUEUED       ListRunsParamsStates = "QUEUED"
-	RUNNING      ListRunsParamsStates = "RUNNING"
-	SUCCEEDED    ListRunsParamsStates = "SUCCEEDED"
-	WAITINGHUMAN ListRunsParamsStates = "WAITING_HUMAN"
+	ListRunsParamsStatesCANCELLED    ListRunsParamsStates = "CANCELLED"
+	ListRunsParamsStatesCANCELLING   ListRunsParamsStates = "CANCELLING"
+	ListRunsParamsStatesFAILED       ListRunsParamsStates = "FAILED"
+	ListRunsParamsStatesQUEUED       ListRunsParamsStates = "QUEUED"
+	ListRunsParamsStatesRUNNING      ListRunsParamsStates = "RUNNING"
+	ListRunsParamsStatesSUCCEEDED    ListRunsParamsStates = "SUCCEEDED"
+	ListRunsParamsStatesWAITINGHUMAN ListRunsParamsStates = "WAITING_HUMAN"
 )
 
 // Valid indicates whether the value is a known member of the ListRunsParamsStates enum.
 func (e ListRunsParamsStates) Valid() bool {
 	switch e {
-	case CANCELLED:
+	case ListRunsParamsStatesCANCELLED:
 		return true
-	case CANCELLING:
+	case ListRunsParamsStatesCANCELLING:
 		return true
-	case FAILED:
+	case ListRunsParamsStatesFAILED:
 		return true
-	case QUEUED:
+	case ListRunsParamsStatesQUEUED:
 		return true
-	case RUNNING:
+	case ListRunsParamsStatesRUNNING:
 		return true
-	case SUCCEEDED:
+	case ListRunsParamsStatesSUCCEEDED:
 		return true
-	case WAITINGHUMAN:
+	case ListRunsParamsStatesWAITINGHUMAN:
 		return true
 	default:
 		return false
@@ -5988,6 +6273,42 @@ const (
 func (e CommandSystemAssistantJSONBodyAction) Valid() bool {
 	switch e {
 	case RECOVER:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListVFSNodesParamsLifecycleState.
+const (
+	ListVFSNodesParamsLifecycleStateACTIVE  ListVFSNodesParamsLifecycleState = "ACTIVE"
+	ListVFSNodesParamsLifecycleStateDELETED ListVFSNodesParamsLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the ListVFSNodesParamsLifecycleState enum.
+func (e ListVFSNodesParamsLifecycleState) Valid() bool {
+	switch e {
+	case ListVFSNodesParamsLifecycleStateACTIVE:
+		return true
+	case ListVFSNodesParamsLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SearchVFSParamsLifecycleState.
+const (
+	ACTIVE  SearchVFSParamsLifecycleState = "ACTIVE"
+	DELETED SearchVFSParamsLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the SearchVFSParamsLifecycleState enum.
+func (e SearchVFSParamsLifecycleState) Valid() bool {
+	switch e {
+	case ACTIVE:
+		return true
+	case DELETED:
 		return true
 	default:
 		return false
@@ -6399,6 +6720,37 @@ type ArtifactBindingInput struct {
 	AgentRef OpaqueRef `json:"agentRef"`
 	Enabled  bool      `json:"enabled"`
 }
+
+// ArtifactBindingTarget defines model for ArtifactBindingTarget.
+type ArtifactBindingTarget struct {
+	AgentRef     OpaqueRef                   `json:"agentRef"`
+	AgentVersion int64                       `json:"agentVersion"`
+	BindReason   ArtifactBindingTargetReason `json:"bindReason"`
+	Bound        bool                        `json:"bound"`
+	CanBind      bool                        `json:"canBind"`
+	CanUnbind    bool                        `json:"canUnbind"`
+	Name         string                      `json:"name"`
+	State        ArtifactBindingTargetState  `json:"state"`
+	UnbindReason ArtifactBindingTargetReason `json:"unbindReason"`
+}
+
+// ArtifactBindingTargetState defines model for ArtifactBindingTarget.State.
+type ArtifactBindingTargetState string
+
+// ArtifactBindingTargetPage defines model for ArtifactBindingTargetPage.
+type ArtifactBindingTargetPage struct {
+	ArtifactRef     OpaqueRef               `json:"artifactRef"`
+	ArtifactVersion int64                   `json:"artifactVersion"`
+	Digest          string                  `json:"digest"`
+	EvaluatedAt     Timestamp               `json:"evaluatedAt"`
+	Items           []ArtifactBindingTarget `json:"items"`
+	NextPageToken   *string                 `json:"nextPageToken,omitempty"`
+	ProjectRef      OpaqueRef               `json:"projectRef"`
+	Total           int64                   `json:"total"`
+}
+
+// ArtifactBindingTargetReason defines model for ArtifactBindingTargetReason.
+type ArtifactBindingTargetReason string
 
 // ArtifactImpact defines model for ArtifactImpact.
 type ArtifactImpact struct {
@@ -8362,6 +8714,26 @@ type RunState string
 // RunTitleSource defines model for Run.TitleSource.
 type RunTitleSource string
 
+// RunAttachmentEligibility defines model for RunAttachmentEligibility.
+type RunAttachmentEligibility struct {
+	Digest             string                             `json:"digest"`
+	Eligible           bool                               `json:"eligible"`
+	EvaluatedAt        Timestamp                          `json:"evaluatedAt"`
+	ProjectRef         OpaqueRef                          `json:"projectRef"`
+	Reason             RunAttachmentEligibilityReason     `json:"reason"`
+	RunRef             *OpaqueRef                         `json:"runRef,omitempty"`
+	RunVersion         int64                              `json:"runVersion"`
+	TargetRef          OpaqueRef                          `json:"targetRef"`
+	TargetType         RunAttachmentEligibilityTargetType `json:"targetType"`
+	WorkflowVersionRef *OpaqueRef                         `json:"workflowVersionRef,omitempty"`
+}
+
+// RunAttachmentEligibilityReason defines model for RunAttachmentEligibility.Reason.
+type RunAttachmentEligibilityReason string
+
+// RunAttachmentEligibilityTargetType defines model for RunAttachmentEligibility.TargetType.
+type RunAttachmentEligibilityTargetType string
+
 // RunCommand defines model for RunCommand.
 type RunCommand struct {
 	Action RunCommandAction `json:"action"`
@@ -9651,24 +10023,48 @@ type UserSummary struct {
 	Ref         OpaqueRef `json:"ref"`
 }
 
+// VFSKind defines model for VFSKind.
+type VFSKind string
+
 // VFSNode defines model for VFSNode.
 type VFSNode struct {
-	Digest     string      `json:"digest"`
-	Directory  bool        `json:"directory"`
-	EntityRef  string      `json:"entityRef"`
-	Kind       VFSNodeKind `json:"kind"`
-	ModifiedAt *Timestamp  `json:"modifiedAt,omitempty"`
-	Name       string      `json:"name"`
-	ParentPath string      `json:"parentPath"`
-	Path       string      `json:"path"`
-	ProjectRef string      `json:"projectRef"`
-	Ref        string      `json:"ref"`
-	RunRef     string      `json:"runRef"`
-	SizeBytes  int64       `json:"sizeBytes"`
+	Digest          string                 `json:"digest"`
+	Directory       bool                   `json:"directory"`
+	EntityRef       string                 `json:"entityRef"`
+	Kind            VFSKind                `json:"kind"`
+	LifecycleState  VFSNodeLifecycleState  `json:"lifecycleState"`
+	ModifiedAt      *Timestamp             `json:"modifiedAt,omitempty"`
+	Name            string                 `json:"name"`
+	NextActions     []VFSNodeNextActions   `json:"nextActions"`
+	ParentPath      string                 `json:"parentPath"`
+	Path            string                 `json:"path"`
+	ProjectRef      string                 `json:"projectRef"`
+	Ref             string                 `json:"ref"`
+	ResourceKind    VFSNodeResourceKind    `json:"resourceKind"`
+	Revision        int64                  `json:"revision"`
+	RevisionRef     string                 `json:"revisionRef"`
+	RunRef          string                 `json:"runRef"`
+	ScanState       VFSNodeScanState       `json:"scanState"`
+	Selectable      bool                   `json:"selectable"`
+	SelectionReason VFSNodeSelectionReason `json:"selectionReason"`
+	SizeBytes       int64                  `json:"sizeBytes"`
+	Version         int64                  `json:"version"`
 }
 
-// VFSNodeKind defines model for VFSNode.Kind.
-type VFSNodeKind string
+// VFSNodeLifecycleState defines model for VFSNode.LifecycleState.
+type VFSNodeLifecycleState string
+
+// VFSNodeNextActions defines model for VFSNode.NextActions.
+type VFSNodeNextActions string
+
+// VFSNodeResourceKind defines model for VFSNode.ResourceKind.
+type VFSNodeResourceKind string
+
+// VFSNodeScanState defines model for VFSNode.ScanState.
+type VFSNodeScanState string
+
+// VFSNodeSelectionReason defines model for VFSNode.SelectionReason.
+type VFSNodeSelectionReason string
 
 // VFSNodePage defines model for VFSNodePage.
 type VFSNodePage struct {
@@ -9935,6 +10331,12 @@ type TemplateAgentRef = OpaqueRef
 
 // TemplateRuntimeRevisionRef defines model for TemplateRuntimeRevisionRef.
 type TemplateRuntimeRevisionRef = OpaqueRef
+
+// VFSKinds defines model for VFSKinds.
+type VFSKinds = []VFSKind
+
+// VFSLifecycleState defines model for VFSLifecycleState.
+type VFSLifecycleState string
 
 // VFSPageToken defines model for VFSPageToken.
 type VFSPageToken = string
@@ -10250,6 +10652,13 @@ type DeleteArtifactParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// ListArtifactBindingTargetsParams defines parameters for ListArtifactBindingTargets.
+type ListArtifactBindingTargetsParams struct {
+	Query     *string       `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize     `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *VFSPageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ChangeArtifactBindingParams defines parameters for ChangeArtifactBinding.
@@ -10966,6 +11375,16 @@ type ListRoleImageRecipeRevisionsParams struct {
 	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// GetRunAttachmentEligibilityParams defines parameters for GetRunAttachmentEligibility.
+type GetRunAttachmentEligibilityParams struct {
+	TargetType GetRunAttachmentEligibilityParamsTargetType `form:"targetType" json:"targetType"`
+	TargetRef  OpaqueRef                                   `form:"targetRef" json:"targetRef"`
+	RunRef     *OpaqueRef                                  `form:"runRef,omitempty" json:"runRef,omitempty"`
+}
+
+// GetRunAttachmentEligibilityParamsTargetType defines parameters for GetRunAttachmentEligibility.
+type GetRunAttachmentEligibilityParamsTargetType string
 
 // CreateRuntimeEnvironmentDraftParams defines parameters for CreateRuntimeEnvironmentDraft.
 type CreateRuntimeEnvironmentDraftParams struct {
@@ -11720,19 +12139,31 @@ type ValidateSystemSTTConfigurationDraftParams struct {
 
 // ListVFSNodesParams defines parameters for ListVFSNodes.
 type ListVFSNodesParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Path       *string          `form:"path,omitempty" json:"path,omitempty"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *VFSPageToken    `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	ProjectRef     *ProjectRefQuery                  `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Path           *string                           `form:"path,omitempty" json:"path,omitempty"`
+	Query          *string                           `form:"query,omitempty" json:"query,omitempty"`
+	LifecycleState *ListVFSNodesParamsLifecycleState `form:"lifecycleState,omitempty" json:"lifecycleState,omitempty"`
+	Kinds          *VFSKinds                         `form:"kinds,omitempty" json:"kinds,omitempty"`
+	PageSize       *PageSize                         `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken      *VFSPageToken                     `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListVFSNodesParamsLifecycleState defines parameters for ListVFSNodes.
+type ListVFSNodesParamsLifecycleState string
 
 // SearchVFSParams defines parameters for SearchVFS.
 type SearchVFSParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Query      string           `form:"query" json:"query"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *VFSPageToken    `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	ProjectRef     *ProjectRefQuery               `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Query          string                         `form:"query" json:"query"`
+	Path           *string                        `form:"path,omitempty" json:"path,omitempty"`
+	LifecycleState *SearchVFSParamsLifecycleState `form:"lifecycleState,omitempty" json:"lifecycleState,omitempty"`
+	Kinds          *VFSKinds                      `form:"kinds,omitempty" json:"kinds,omitempty"`
+	PageSize       *PageSize                      `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken      *VFSPageToken                  `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// SearchVFSParamsLifecycleState defines parameters for SearchVFS.
+type SearchVFSParamsLifecycleState string
 
 // ListOrganizationWorkflowsParams defines parameters for ListOrganizationWorkflows.
 type ListOrganizationWorkflowsParams struct {
@@ -12248,6 +12679,9 @@ type ServerInterface interface {
 	// (GET /api/v1/artifacts/{artifactRef})
 	GetArtifact(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef)
 
+	// (GET /api/v1/artifacts/{artifactRef}/binding-targets)
+	ListArtifactBindingTargets(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef, params ListArtifactBindingTargetsParams)
+
 	// (POST /api/v1/artifacts/{artifactRef}/bindings)
 	ChangeArtifactBinding(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef, params ChangeArtifactBindingParams)
 
@@ -12544,6 +12978,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/revisions)
 	ListRoleImageRecipeRevisions(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, recipeRef RecipeRef, params ListRoleImageRecipeRevisionsParams)
+
+	// (GET /api/v1/projects/{projectRef}/run-attachment-eligibility)
+	GetRunAttachmentEligibility(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, params GetRunAttachmentEligibilityParams)
 
 	// (POST /api/v1/projects/{projectRef}/runtime-environment-drafts)
 	CreateRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, params CreateRuntimeEnvironmentDraftParams)
@@ -16997,6 +17434,80 @@ func (siw *ServerInterfaceWrapper) GetArtifact(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetArtifact(w, r, artifactRef)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListArtifactBindingTargets operation middleware
+func (siw *ServerInterfaceWrapper) ListArtifactBindingTargets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "artifactRef" -------------
+	var artifactRef ArtifactRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "artifactRef", r.PathValue("artifactRef"), &artifactRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifactRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListArtifactBindingTargetsParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListArtifactBindingTargets(w, r, artifactRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -25879,6 +26390,80 @@ func (siw *ServerInterfaceWrapper) ListRoleImageRecipeRevisions(w http.ResponseW
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListRoleImageRecipeRevisions(w, r, projectRef, recipeRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRunAttachmentEligibility operation middleware
+func (siw *ServerInterfaceWrapper) GetRunAttachmentEligibility(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "projectRef" -------------
+	var projectRef ProjectRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectRef", r.PathValue("projectRef"), &projectRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunAttachmentEligibilityParams
+
+	// ------------- Required query parameter "targetType" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "targetType", r.URL.Query(), &params.TargetType, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetType"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetType", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "targetRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "targetRef", r.URL.Query(), &params.TargetRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "runRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "runRef", r.URL.Query(), &params.RunRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "runRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runRef", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunAttachmentEligibility(w, r, projectRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -36116,6 +36701,45 @@ func (siw *ServerInterfaceWrapper) ListVFSNodes(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lifecycleState" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lifecycleState", r.URL.Query(), &params.LifecycleState, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lifecycleState"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lifecycleState", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "kinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kinds", r.URL.Query(), &params.Kinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kinds", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "pageSize" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
@@ -36190,6 +36814,45 @@ func (siw *ServerInterfaceWrapper) SearchVFS(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lifecycleState" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lifecycleState", r.URL.Query(), &params.LifecycleState, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lifecycleState"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lifecycleState", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "kinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kinds", r.URL.Query(), &params.Kinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kinds", Err: err})
 		}
 		return
 	}
@@ -36723,6 +37386,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/artifacts", wrapper.UploadOrganizationArtifact)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}", wrapper.DeleteArtifact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}", wrapper.GetArtifact)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/binding-targets", wrapper.ListArtifactBindingTargets)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/bindings", wrapper.ChangeArtifactBinding)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/content", wrapper.DownloadArtifact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/impact", wrapper.GetArtifactImpact)
@@ -36822,6 +37486,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/commands", wrapper.CommandRoleImageRecipe)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/promotions", wrapper.PromoteRoleImage)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/revisions", wrapper.ListRoleImageRecipeRevisions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/run-attachment-eligibility", wrapper.GetRunAttachmentEligibility)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environment-drafts", wrapper.CreateRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environments", wrapper.ListRuntimeEnvironmentSets)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environments", wrapper.CreateRuntimeEnvironmentSet)

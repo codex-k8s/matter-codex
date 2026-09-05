@@ -897,12 +897,50 @@ export type InstructionCommand = {
     publishedInstructionRef?: OpaqueRef;
 };
 
+export type ArtifactBindingTargetReason = 'AVAILABLE' | 'ALREADY_BOUND' | 'NOT_BOUND' | 'AGENT_CAPABILITY_REQUIRED' | 'AGENT_ARCHIVED' | 'ARTIFACT_UNAVAILABLE';
+
+export type ArtifactBindingTarget = {
+    agentRef: OpaqueRef;
+    agentVersion: number;
+    name: string;
+    state: 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
+    bound: boolean;
+    canBind: boolean;
+    canUnbind: boolean;
+    bindReason: ArtifactBindingTargetReason;
+    unbindReason: ArtifactBindingTargetReason;
+};
+
+export type ArtifactBindingTargetPage = {
+    artifactRef: OpaqueRef;
+    artifactVersion: number;
+    projectRef: OpaqueRef;
+    items: Array<ArtifactBindingTarget>;
+    total: number;
+    nextPageToken?: string;
+    digest: string;
+    evaluatedAt: Timestamp;
+};
+
+export type RunAttachmentEligibility = {
+    projectRef: OpaqueRef;
+    targetType: 'AGENT' | 'WORKFLOW';
+    targetRef: OpaqueRef;
+    runRef?: OpaqueRef;
+    runVersion: number;
+    workflowVersionRef?: OpaqueRef;
+    eligible: boolean;
+    reason: 'AVAILABLE' | 'TARGET_UNAVAILABLE' | 'RUNTIME_NOT_READY' | 'AGENT_CAPABILITY_REQUIRED' | 'SESSION_UNAVAILABLE';
+    digest: string;
+    evaluatedAt: Timestamp;
+};
+
 export type VfsNode = {
     ref: string;
     path: string;
     parentPath: string;
     name: string;
-    kind: 'DIRECTORY' | 'PROJECT' | 'AGENT' | 'WORKFLOW' | 'RUN' | 'INPUT' | 'RESULT' | 'SKILL' | 'MEMORY' | 'AUTOMATION' | 'ENVIRONMENT' | 'AVATAR';
+    kind: VfsKind;
     directory: boolean;
     projectRef: string;
     entityRef: string;
@@ -910,7 +948,18 @@ export type VfsNode = {
     sizeBytes: number;
     digest: string;
     modifiedAt?: Timestamp;
+    version: number;
+    revisionRef: string;
+    revision: number;
+    lifecycleState: 'ACTIVE' | 'DELETED' | 'ARCHIVED';
+    scanState: '' | 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANTINED' | 'FAILED';
+    resourceKind: '' | 'ARTIFACT' | 'SKILL_BUNDLE' | 'MEMORY_RECORD';
+    selectable: boolean;
+    selectionReason: 'AVAILABLE' | 'DIRECTORY' | 'PERMISSION_REQUIRED' | 'IMMUTABLE_CONTEXT' | 'LIFECYCLE_BLOCKED' | 'ARTIFACT_USED_BY_SKILL' | 'ARTIFACT_NOT_ACTIVE' | 'ARTIFACT_NOT_DELETED' | 'ARTIFACT_HAS_BINDINGS' | 'ACTIVE_RUN_USES_ARTIFACT';
+    nextActions: Array<'DOWNLOAD' | 'DELETE' | 'RESTORE' | 'PURGE' | 'ARCHIVE' | 'BIND'>;
 };
+
+export type VfsKind = 'DIRECTORY' | 'PROJECT' | 'AGENT' | 'WORKFLOW' | 'RUN' | 'INPUT' | 'RESULT' | 'SKILL' | 'MEMORY' | 'AUTOMATION' | 'ENVIRONMENT' | 'AVATAR';
 
 export type VfsNodePage = {
     items: Array<VfsNode>;
@@ -3082,6 +3131,10 @@ export type PageToken = string;
 
 export type VfsPageToken = string;
 
+export type VfsLifecycleState = 'ACTIVE' | 'DELETED';
+
+export type VfsKinds = Array<VfsKind>;
+
 export type DeleteOwnerSessionData = {
     body?: never;
     headers: {
@@ -4025,6 +4078,9 @@ export type ListVfsNodesData = {
     query?: {
         projectRef?: OpaqueRef;
         path?: string;
+        query?: string;
+        lifecycleState?: 'ACTIVE' | 'DELETED';
+        kinds?: Array<VfsKind>;
         pageSize?: number;
         pageToken?: string;
     };
@@ -4055,6 +4111,9 @@ export type SearchVfsData = {
     query: {
         projectRef?: OpaqueRef;
         query: string;
+        path?: string;
+        lifecycleState?: 'ACTIVE' | 'DELETED';
+        kinds?: Array<VfsKind>;
         pageSize?: number;
         pageToken?: string;
     };
@@ -8016,6 +8075,68 @@ export type UploadOrganizationArtifactResponses = {
 };
 
 export type UploadOrganizationArtifactResponse = UploadOrganizationArtifactResponses[keyof UploadOrganizationArtifactResponses];
+
+export type ListArtifactBindingTargetsData = {
+    body?: never;
+    path: {
+        artifactRef: OpaqueRef;
+    };
+    query?: {
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/artifacts/{artifactRef}/binding-targets';
+};
+
+export type ListArtifactBindingTargetsErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListArtifactBindingTargetsError = ListArtifactBindingTargetsErrors[keyof ListArtifactBindingTargetsErrors];
+
+export type ListArtifactBindingTargetsResponses = {
+    /**
+     * Доступные цели связи и текущие полномочия
+     */
+    200: ArtifactBindingTargetPage;
+};
+
+export type ListArtifactBindingTargetsResponse = ListArtifactBindingTargetsResponses[keyof ListArtifactBindingTargetsResponses];
+
+export type GetRunAttachmentEligibilityData = {
+    body?: never;
+    path: {
+        projectRef: OpaqueRef;
+    };
+    query: {
+        targetType: 'AGENT' | 'WORKFLOW';
+        targetRef: OpaqueRef;
+        runRef?: OpaqueRef;
+    };
+    url: '/api/v1/projects/{projectRef}/run-attachment-eligibility';
+};
+
+export type GetRunAttachmentEligibilityErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetRunAttachmentEligibilityError = GetRunAttachmentEligibilityErrors[keyof GetRunAttachmentEligibilityErrors];
+
+export type GetRunAttachmentEligibilityResponses = {
+    /**
+     * Текущая доступность вложений для выбранной цели
+     */
+    200: RunAttachmentEligibility;
+};
+
+export type GetRunAttachmentEligibilityResponse = GetRunAttachmentEligibilityResponses[keyof GetRunAttachmentEligibilityResponses];
 
 export type DeleteArtifactData = {
     body?: never;
