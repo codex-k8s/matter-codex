@@ -621,6 +621,15 @@ fresh eligibility, forged/stale receipts, неизвестные результ�
 [file transcription guide](https://developers.openai.com/api/docs/guides/speech-to-text).
 Модель и параметры выбирает опубликованная owner configuration.
 
+На exact code `e49f963282baf005e11b389abc8fc02c55780c1d` локально
+**PASS**: `make test-stt-http-acceptance`9/9,
+`make test-runtime-workspace-acceptance`38/38,
+`make test-full-local-e2e-entrypoint`, Node syntax, Prettier и diff check.
+Общий bounded response reader теперь отменяет stream и при отклонении
+завышенного/неверного Content-Length до чтения body. Log
+`stt-http-exact.log` хранится в приватном evidence-каталоге.
+Прямой OpenAI, protected deployed HTTP и реальный browser — **NOT RUN**.
+
 ## Образы и пакеты
 
 Этот принятый блок не имеет отдельного номера MVP-UI и не теряется при
