@@ -75,6 +75,9 @@ func testManagedRuntimeCapabilityAuthority(t *testing.T, ctx context.Context, re
 			t.Fatal(err)
 		}
 	}
+	testIntegrationGrantSelectors(t, ctx, service, owner, *project.Project, agent, allowed)
+	testIntegrationGrantWorkflow(t, ctx, service, owner, *project.Project, agent, allowed)
+	testIntegrationGrantRevocation(t, ctx, repository, service, owner, *project.Project, agent, allowed)
 	input := platformrepo.ProofPrincipalInput{ExternalActorID: "20000000-0000-4000-8000-000000004632", ExternalTenantID: "20000000-0000-4000-8000-000000000002", ExternalDisplayName: "Exact connection writer", CallerWorkload: "control-api-gateway", Operation: "platform.query.agent-effective-capabilities.get"}
 	if _, err := repository.ResolveProofAuthority(ctx, input); !errors.Is(err, errs.ErrForbidden) {
 		t.Fatalf("unbound writer: %v", err)
