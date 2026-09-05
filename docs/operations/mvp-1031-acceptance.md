@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.7.0
+version: 1.8.0
 updated: 2026-09-06
 ---
 
@@ -82,7 +82,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `e271f2c4034355bd9766c443d72ebc940ffa4f5a` включены следующие
+На `b6a841cb2f73a3a421c798846b270cb620acb0d2` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
@@ -92,8 +92,8 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 | Secret Broker #1068, PR #1069 | `af227acc60d9ca1bd0207429c6d8088fb9496af7` | Encrypted staged lifecycle и protected account model observer, fresh remote provenance, bounded actual Codex process и отказ refresh под read authority. |
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
-| HTTP/SDK #1045, PR #1066 | `e9d8c550dcaa57120d67ec69f7c9b28f334a210f` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK. |
-| PWA #1022, PR #1067 | `76cf061130cb66e28dc20c42ecfd9fb718cbf195` | D2/TOML, Git source/overlay lifecycle, effective capability projection, Home/NewRun server Session catalog, RoleImage lineage/filters и unbind после отзыва capability. Aggregate attachment/binding eligibility и новые VFS/prompt/writeback consumers ещё завершаются. |
+| HTTP/SDK #1045, PR #1066 | `4c8dc9184cf358c1abfae057404aed541a149bf9` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Exact integration grant/use candidates72 ещё завершаются. |
+| PWA #1022, PR #1067 | `29787d8239696095ae596d1e9343878910bed95a` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage. Files67 использует owner binding targets, stale recovery, modal/search/total и единый group sourceKinds cursor. Потребление полного641/643/644/645/70 SDK и нового72 ещё продолжается. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
 | Agent-runner #1026, PR #1058 | `e204788846450901f14742dd85d3c5f4101c9b9c` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
@@ -117,7 +117,7 @@ admission policy/binding с закрытым отказом. Предыдущи�
 
 На `e271f2c4034355bd9766c443d72ebc940ffa4f5a` canonical Go/TS OpenAPI replay
 локально **PASS**; regenerated файлы совпадают. Это не полный baseline.
-PWA пока на прежнем включённом SHA и ещё потребляет consolidated SDK в #1067.
+PWA ещё потребляет consolidated SDK в #1067.
 Полный новый PWA build, общий baseline и вся сквозная приёмка — **NOT RUN**.
 
 Spool ограничивается самим controller двумя файлами по512MiB и deadline.
@@ -125,6 +125,43 @@ Kubelet periodic scan не учитывает открытые unlink-файлы
 и `ephemeral-storage` не заменяют внутренний лимит. Правило проверено через
 Context7 по официальной документации
 [Kubernetes ephemeral storage](https://kubernetes.io/docs/concepts/storage/ephemeral-storage/).
+
+На PWA unit `29787d8239696095ae596d1e9343878910bed95a` локально **PASS**:
+1037 unit, lint/format/build/typecheck и E2E TypeScript. Scoped browser —
+**FAIL**,1/2:390 прошёл,2900 завершился Chromium `Target crashed` при EMAIL
+select до Files. Исторический full35 на50d5810 —34/35 **FAIL** с тем же crash
+на2560. Диагностический одиночный2900 прошёл, но причина не доказана и
+полный FAIL не снимается. Общий browser baseline нового SDK ещё **NOT RUN**.
+
+## Настоящий файловый запуск в приёмке
+
+В code `d52cb2321ae278668f19f0c3e1a239f1f1074da9` RoleImage phase после exact
+image/imageID readback ждёт terminal Run и проверяет результат настоящего
+provider/agent. `tools/dev/runtime-workspace-acceptance.mjs` передаёт модели
+точный synthetic Node.js probe: create/read/atomic replace/read/delete своего
+файла и отдельные отказы записи в input/source/context/Skills/Memory/credential,
+symlink/traversal и путь вне workspace. Значения защищённых файлов не читаются.
+Перед launch явно выдаётся Artifact capability и закрепляется разрешённый
+account с точными catalogRevision/catalogDigest/providerDefinitionKey из fresh
+account catalog; default reasoning effort не отправляется как входное поле.
+
+Проверка требует успешный native `CODEX_SHELL` event, два synthetic artifact
+и созданный runner `workspace-write-result.json`. HTTP download сверяется с
+owner Artifact metadata, digest/size, Run/Project/Session и `AGENT_RESULT`;
+provenance сравнивается с публичной authoritative RuntimeRevision identity
+и текущей attempt. Чужой или quarantined artifact закрыто отклоняется,
+pending scan ожидается в ограниченном бюджете. Содержимое, transcript,
+credentials и сырые команды не попадают в итоговый evidence.
+
+`make test-runtime-workspace-acceptance` локально **PASS**:22 проверки,
+включая выполнение точного probe в non-root disposable mount. Также **PASS**
+`make test-full-local-e2e-entrypoint`, shell/Node syntax и форматирование.
+Эти проверки используют fixtures и не доказывают live provider acceptance.
+Настоящий staging запуск ещё **NOT RUN**. Отдельный live quota phase пока
+не реализован: evidence явно сохраняет `quota: NOT RUN`; это обязательный
+незавершённый пункт MVP-UI-61, который нельзя закрыть общим `passed` RoleImage.
+Контракт Node.js24 проверен через Context7 по официальной
+[документации fs](https://nodejs.org/docs/latest-v24.x/api/fs.html).
 
 На code SHA `17c120887754cee3813a6974ce36d59b7476f2a8` локально **PASS**:
 Go/TS SDK и Proto source generation/clean replay, policy65 codegen,
