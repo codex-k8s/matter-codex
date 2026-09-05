@@ -6516,6 +6516,33 @@ func (e ListOrganizationArtifactsParamsSourceKind) Valid() bool {
 	}
 }
 
+// Defines values for ListOrganizationArtifactsParamsSourceKinds.
+const (
+	ListOrganizationArtifactsParamsSourceKindsAGENTRESULT           ListOrganizationArtifactsParamsSourceKinds = "AGENT_RESULT"
+	ListOrganizationArtifactsParamsSourceKindsCONTROLCENTER         ListOrganizationArtifactsParamsSourceKinds = "CONTROL_CENTER"
+	ListOrganizationArtifactsParamsSourceKindsINTEGRATIONRESULT     ListOrganizationArtifactsParamsSourceKinds = "INTEGRATION_RESULT"
+	ListOrganizationArtifactsParamsSourceKindsINTERACTIONATTACHMENT ListOrganizationArtifactsParamsSourceKinds = "INTERACTION_ATTACHMENT"
+	ListOrganizationArtifactsParamsSourceKindsKNOWLEDGESOURCE       ListOrganizationArtifactsParamsSourceKinds = "KNOWLEDGE_SOURCE"
+)
+
+// Valid indicates whether the value is a known member of the ListOrganizationArtifactsParamsSourceKinds enum.
+func (e ListOrganizationArtifactsParamsSourceKinds) Valid() bool {
+	switch e {
+	case ListOrganizationArtifactsParamsSourceKindsAGENTRESULT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsCONTROLCENTER:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsINTEGRATIONRESULT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsINTERACTIONATTACHMENT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsKNOWLEDGESOURCE:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DownloadArtifactParamsPurpose.
 const (
 	DOWNLOAD DownloadArtifactParamsPurpose = "DOWNLOAD"
@@ -6713,15 +6740,42 @@ func (e ListArtifactsParamsScanState) Valid() bool {
 
 // Defines values for ListArtifactsParamsSourceKind.
 const (
-	AGENTRESULT           ListArtifactsParamsSourceKind = "AGENT_RESULT"
-	CONTROLCENTER         ListArtifactsParamsSourceKind = "CONTROL_CENTER"
-	INTEGRATIONRESULT     ListArtifactsParamsSourceKind = "INTEGRATION_RESULT"
-	INTERACTIONATTACHMENT ListArtifactsParamsSourceKind = "INTERACTION_ATTACHMENT"
-	KNOWLEDGESOURCE       ListArtifactsParamsSourceKind = "KNOWLEDGE_SOURCE"
+	ListArtifactsParamsSourceKindAGENTRESULT           ListArtifactsParamsSourceKind = "AGENT_RESULT"
+	ListArtifactsParamsSourceKindCONTROLCENTER         ListArtifactsParamsSourceKind = "CONTROL_CENTER"
+	ListArtifactsParamsSourceKindINTEGRATIONRESULT     ListArtifactsParamsSourceKind = "INTEGRATION_RESULT"
+	ListArtifactsParamsSourceKindINTERACTIONATTACHMENT ListArtifactsParamsSourceKind = "INTERACTION_ATTACHMENT"
+	ListArtifactsParamsSourceKindKNOWLEDGESOURCE       ListArtifactsParamsSourceKind = "KNOWLEDGE_SOURCE"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsSourceKind enum.
 func (e ListArtifactsParamsSourceKind) Valid() bool {
+	switch e {
+	case ListArtifactsParamsSourceKindAGENTRESULT:
+		return true
+	case ListArtifactsParamsSourceKindCONTROLCENTER:
+		return true
+	case ListArtifactsParamsSourceKindINTEGRATIONRESULT:
+		return true
+	case ListArtifactsParamsSourceKindINTERACTIONATTACHMENT:
+		return true
+	case ListArtifactsParamsSourceKindKNOWLEDGESOURCE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListArtifactsParamsSourceKinds.
+const (
+	AGENTRESULT           ListArtifactsParamsSourceKinds = "AGENT_RESULT"
+	CONTROLCENTER         ListArtifactsParamsSourceKinds = "CONTROL_CENTER"
+	INTEGRATIONRESULT     ListArtifactsParamsSourceKinds = "INTEGRATION_RESULT"
+	INTERACTIONATTACHMENT ListArtifactsParamsSourceKinds = "INTERACTION_ATTACHMENT"
+	KNOWLEDGESOURCE       ListArtifactsParamsSourceKinds = "KNOWLEDGE_SOURCE"
+)
+
+// Valid indicates whether the value is a known member of the ListArtifactsParamsSourceKinds enum.
+func (e ListArtifactsParamsSourceKinds) Valid() bool {
 	switch e {
 	case AGENTRESULT:
 		return true
@@ -11161,6 +11215,9 @@ type ArtifactScanStateQuery string
 // ArtifactSourceKindQuery defines model for ArtifactSourceKindQuery.
 type ArtifactSourceKindQuery string
 
+// ArtifactSourceKindsQuery defines model for ArtifactSourceKindsQuery.
+type ArtifactSourceKindsQuery = []string
+
 // ArtifactTypeQuery defines model for ArtifactTypeQuery.
 type ArtifactTypeQuery string
 
@@ -11579,9 +11636,12 @@ type ListOrganizationArtifactsParams struct {
 	Type           *ListOrganizationArtifactsParamsType           `form:"type,omitempty" json:"type,omitempty"`
 	ScanState      *ListOrganizationArtifactsParamsScanState      `form:"scanState,omitempty" json:"scanState,omitempty"`
 	SourceKind     *ListOrganizationArtifactsParamsSourceKind     `form:"sourceKind,omitempty" json:"sourceKind,omitempty"`
-	Query          *Query                                         `form:"query,omitempty" json:"query,omitempty"`
-	PageSize       *PageSize                                      `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken      *PageToken                                     `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+
+	// SourceKinds Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+	SourceKinds *ArtifactSourceKindsQuery `form:"sourceKinds,omitempty" json:"sourceKinds,omitempty"`
+	Query       *Query                    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize    *PageSize                 `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken   *PageToken                `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListOrganizationArtifactsParamsLifecycleState defines parameters for ListOrganizationArtifacts.
@@ -11595,6 +11655,9 @@ type ListOrganizationArtifactsParamsScanState string
 
 // ListOrganizationArtifactsParamsSourceKind defines parameters for ListOrganizationArtifacts.
 type ListOrganizationArtifactsParamsSourceKind string
+
+// ListOrganizationArtifactsParamsSourceKinds defines parameters for ListOrganizationArtifacts.
+type ListOrganizationArtifactsParamsSourceKinds string
 
 // UploadOrganizationArtifactParams defines parameters for UploadOrganizationArtifact.
 type UploadOrganizationArtifactParams struct {
@@ -12250,9 +12313,12 @@ type ListArtifactsParams struct {
 	Type           *ListArtifactsParamsType           `form:"type,omitempty" json:"type,omitempty"`
 	ScanState      *ListArtifactsParamsScanState      `form:"scanState,omitempty" json:"scanState,omitempty"`
 	SourceKind     *ListArtifactsParamsSourceKind     `form:"sourceKind,omitempty" json:"sourceKind,omitempty"`
-	Query          *Query                             `form:"query,omitempty" json:"query,omitempty"`
-	PageSize       *PageSize                          `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken      *PageToken                         `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+
+	// SourceKinds Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+	SourceKinds *ArtifactSourceKindsQuery `form:"sourceKinds,omitempty" json:"sourceKinds,omitempty"`
+	Query       *Query                    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize    *PageSize                 `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken   *PageToken                `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListArtifactsParamsLifecycleState defines parameters for ListArtifacts.
@@ -12266,6 +12332,9 @@ type ListArtifactsParamsScanState string
 
 // ListArtifactsParamsSourceKind defines parameters for ListArtifacts.
 type ListArtifactsParamsSourceKind string
+
+// ListArtifactsParamsSourceKinds defines parameters for ListArtifacts.
+type ListArtifactsParamsSourceKinds string
 
 // UploadArtifactParams defines parameters for UploadArtifact.
 type UploadArtifactParams struct {
@@ -18217,6 +18286,19 @@ func (siw *ServerInterfaceWrapper) ListOrganizationArtifacts(w http.ResponseWrit
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKind"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sourceKinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sourceKinds", r.URL.Query(), &params.SourceKinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKinds", Err: err})
 		}
 		return
 	}
@@ -26563,6 +26645,19 @@ func (siw *ServerInterfaceWrapper) ListArtifacts(w http.ResponseWriter, r *http.
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKind"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sourceKinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sourceKinds", r.URL.Query(), &params.SourceKinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKinds", Err: err})
 		}
 		return
 	}

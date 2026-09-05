@@ -326,13 +326,14 @@ func (server *Server) ListArtifacts(w http.ResponseWriter, r *http.Request, ref 
 	artifactType, artifactTypeOK := artifactTypeFilter(p.Type)
 	scanState, scanStateOK := artifactScanStateFilter(p.ScanState)
 	sourceKind, sourceKindOK := artifactSourceFilter(p.SourceKind)
-	if !lifecycleStateOK || !artifactTypeOK || !scanStateOK || !sourceKindOK {
+	sourceKinds, sourceKindsOK := artifactSourceGroupFilter(p.SourceKinds, sourceKind)
+	if !lifecycleStateOK || !artifactTypeOK || !scanStateOK || !sourceKindOK || !sourceKindsOK {
 		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
 		return
 	}
 	response, err := server.control.Query.ListArtifacts(r.Context(), &controlplanev1.ListArtifactsRequest{
 		ProjectRef: ref, RunRef: stringValue(p.RunRef), Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query),
-		LifecycleState: lifecycleState, Type: artifactType, ScanState: scanState, SourceKind: sourceKind,
+		LifecycleState: lifecycleState, Type: artifactType, ScanState: scanState, SourceKind: sourceKind, SourceKinds: sourceKinds,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
@@ -354,13 +355,14 @@ func (server *Server) ListOrganizationArtifacts(w http.ResponseWriter, r *http.R
 	artifactType, artifactTypeOK := artifactTypeFilter(p.Type)
 	scanState, scanStateOK := artifactScanStateFilter(p.ScanState)
 	sourceKind, sourceKindOK := artifactSourceFilter(p.SourceKind)
-	if !lifecycleStateOK || !artifactTypeOK || !scanStateOK || !sourceKindOK {
+	sourceKinds, sourceKindsOK := artifactSourceGroupFilter(p.SourceKinds, sourceKind)
+	if !lifecycleStateOK || !artifactTypeOK || !scanStateOK || !sourceKindOK || !sourceKindsOK {
 		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
 		return
 	}
 	response, err := server.control.Query.ListArtifacts(r.Context(), &controlplanev1.ListArtifactsRequest{
 		Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query),
-		LifecycleState: lifecycleState, Type: artifactType, ScanState: scanState, SourceKind: sourceKind,
+		LifecycleState: lifecycleState, Type: artifactType, ScanState: scanState, SourceKind: sourceKind, SourceKinds: sourceKinds,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
@@ -402,7 +404,27 @@ func artifactSourceFilter[T ~string](value *T) (controlplanev1.ArtifactSource, b
 		return controlplanev1.ArtifactSource_ARTIFACT_SOURCE_UNSPECIFIED, true
 	}
 	raw, ok := controlplanev1.ArtifactSource_value["ARTIFACT_SOURCE_"+string(*value)]
-	return controlplanev1.ArtifactSource(raw), ok
+	return controlplanev1.ArtifactSource(raw), ok && raw != 0
+}
+
+func artifactSourceGroupFilter[T ~string](values *[]T, single controlplanev1.ArtifactSource) ([]controlplanev1.ArtifactSource, bool) {
+	if values == nil || len(*values) == 0 {
+		return nil, true
+	}
+	if len(*values) > 5 || single != controlplanev1.ArtifactSource_ARTIFACT_SOURCE_UNSPECIFIED {
+		return nil, false
+	}
+	result := make([]controlplanev1.ArtifactSource, 0, len(*values))
+	seen := make(map[controlplanev1.ArtifactSource]bool, len(*values))
+	for _, value := range *values {
+		kind, ok := artifactSourceFilter(&value)
+		if !ok || seen[kind] {
+			return nil, false
+		}
+		seen[kind] = true
+		result = append(result, kind)
+	}
+	return result, true
 }
 func (server *Server) GetArtifact(w http.ResponseWriter, r *http.Request, ref generated.ArtifactRef) {
 	response, err := server.control.Query.GetArtifact(r.Context(), &controlplanev1.GetArtifactRequest{ArtifactRef: ref})

@@ -2356,7 +2356,7 @@ paths:
     get:
       tags: [Artifacts]
       operationId: listArtifacts
-      parameters: [{ $ref: '#/components/parameters/RunRefQuery' }, { $ref: '#/components/parameters/ArtifactLifecycleStateQuery' }, { $ref: '#/components/parameters/ArtifactTypeQuery' }, { $ref: '#/components/parameters/ArtifactScanStateQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindQuery' }, { $ref: '#/components/parameters/Query' }, { $ref: '#/components/parameters/PageSize' }, { $ref: '#/components/parameters/PageToken' }]
+      parameters: [{ $ref: '#/components/parameters/RunRefQuery' }, { $ref: '#/components/parameters/ArtifactLifecycleStateQuery' }, { $ref: '#/components/parameters/ArtifactTypeQuery' }, { $ref: '#/components/parameters/ArtifactScanStateQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindsQuery' }, { $ref: '#/components/parameters/Query' }, { $ref: '#/components/parameters/PageSize' }, { $ref: '#/components/parameters/PageToken' }]
       responses:
         '200':
           description: Файлы и результаты
@@ -2499,7 +2499,7 @@ paths:
     get:
       tags: [Artifacts]
       operationId: listOrganizationArtifacts
-      parameters: [{ $ref: '#/components/parameters/ArtifactLifecycleStateQuery' }, { $ref: '#/components/parameters/ArtifactTypeQuery' }, { $ref: '#/components/parameters/ArtifactScanStateQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindQuery' }, { $ref: '#/components/parameters/Query' }, { $ref: '#/components/parameters/PageSize' }, { $ref: '#/components/parameters/PageToken' }]
+      parameters: [{ $ref: '#/components/parameters/ArtifactLifecycleStateQuery' }, { $ref: '#/components/parameters/ArtifactTypeQuery' }, { $ref: '#/components/parameters/ArtifactScanStateQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindQuery' }, { $ref: '#/components/parameters/ArtifactSourceKindsQuery' }, { $ref: '#/components/parameters/Query' }, { $ref: '#/components/parameters/PageSize' }, { $ref: '#/components/parameters/PageToken' }]
       responses:
         '200':
           description: Общий каталог всех доступных файлов проектов и личной области без обхода проектов клиентом
@@ -4607,6 +4607,20 @@ components:
       schema:
         type: string
         enum: [CONTROL_CENTER, AGENT_RESULT, INTEGRATION_RESULT, KNOWLEDGE_SOURCE, INTERACTION_ATTACHMENT]
+    ArtifactSourceKindsQuery:
+      name: sourceKinds
+      in: query
+      required: false
+      description: Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+      style: form
+      explode: true
+      schema:
+        type: array
+        maxItems: 5
+        uniqueItems: true
+        items:
+          type: string
+          enum: [CONTROL_CENTER, AGENT_RESULT, INTEGRATION_RESULT, KNOWLEDGE_SOURCE, INTERACTION_ATTACHMENT]
     ScheduleRef:
       name: scheduleRef
       in: path

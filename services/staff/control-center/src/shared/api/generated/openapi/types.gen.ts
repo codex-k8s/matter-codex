@@ -3409,6 +3409,11 @@ export type ArtifactScanStateQuery = 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANT
 
 export type ArtifactSourceKindQuery = 'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT';
 
+/**
+ * Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+ */
+export type ArtifactSourceKindsQuery = Array<'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT'>;
+
 export type ScheduleRef = OpaqueRef;
 
 export type ConnectionRef = OpaqueRef;
@@ -8155,6 +8160,10 @@ export type ListArtifactsData = {
         type?: 'TEXT' | 'DOCUMENT' | 'IMAGE';
         scanState?: 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANTINED' | 'FAILED';
         sourceKind?: 'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT';
+        /**
+         * Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+         */
+        sourceKinds?: Array<'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT'>;
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -8411,6 +8420,10 @@ export type ListOrganizationArtifactsData = {
         type?: 'TEXT' | 'DOCUMENT' | 'IMAGE';
         scanState?: 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANTINED' | 'FAILED';
         sourceKind?: 'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT';
+        /**
+         * Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+         */
+        sourceKinds?: Array<'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT'>;
         query?: string;
         pageSize?: number;
         pageToken?: string;
