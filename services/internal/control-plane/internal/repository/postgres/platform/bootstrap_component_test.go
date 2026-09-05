@@ -5655,6 +5655,31 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if err != nil || secondTotal != 2 || len(secondPage) != 1 || secondPage[0].Ref != secondRef || finalPageToken != "" {
 		t.Fatalf("second artifact cursor page is unstable: artifacts=%#v next=%q err=%v", secondPage, finalPageToken, err)
 	}
+	group := query.Filter{ProjectRef: project.Project.Ref, SourceKinds: []string{"INTEGRATION_RESULT", "CONTROL_CENTER"}, Page: query.Page{Size: 1}}
+	groupFirst, groupTotal, groupCursor, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupFirst) != 1 || groupCursor == "" {
+		t.Fatalf("artifact source group count/page: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER", "INTEGRATION_RESULT"}
+	group.Page.Token = groupCursor
+	groupSecond, groupTotal, groupEnd, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupSecond) != 1 || groupSecond[0].Ref == groupFirst[0].Ref || groupEnd != "" {
+		t.Fatalf("artifact source group canonical cursor: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER"}
+	if _, _, _, groupErr = service.ListArtifacts(ctx, owner, group); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+		t.Fatalf("artifact source group cursor accepted changed filter: %v", groupErr)
+	}
+	for _, invalid := range []query.Filter{
+		{SourceKind: "CONTROL_CENTER", SourceKinds: []string{"CONTROL_CENTER"}},
+		{SourceKinds: []string{"CONTROL_CENTER", "CONTROL_CENTER"}},
+		{SourceKinds: []string{"UNKNOWN"}},
+		{SourceKinds: []string{""}},
+	} {
+		if _, _, _, groupErr = service.ListArtifacts(ctx, owner, invalid); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+			t.Fatalf("artifact source group invalid filter accepted: %v", groupErr)
+		}
+	}
 	if _, _, _, err := service.ListArtifacts(ctx, owner, query.Filter{
 		ProjectRef: project.Project.Ref, ArtifactType: "EXECUTABLE", Page: query.Page{Size: 1},
 	}); !errors.Is(err, domainerrs.ErrInvalid) {

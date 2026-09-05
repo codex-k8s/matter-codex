@@ -2201,6 +2201,7 @@ message ListArtifactsRequest {
   ArtifactType type = 6;
   ArtifactScanState scan_state = 7;
   ArtifactSource source_kind = 8;
+  repeated ArtifactSource source_kinds = 9;
 }
 message ListArtifactsResponse {
   repeated Artifact artifacts = 1;

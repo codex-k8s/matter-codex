@@ -1351,6 +1351,17 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 	if sourceKind != "" && !contains([]string{"CONTROL_CENTER", "AGENT_RESULT", "INTEGRATION_RESULT", "KNOWLEDGE_SOURCE", "INTERACTION_ATTACHMENT"}, sourceKind) {
 		return nil, 0, "", errs.ErrInvalid
 	}
+	if len(filter.SourceKinds) > 5 || (sourceKind != "" && len(filter.SourceKinds) > 0) {
+		return nil, 0, "", errs.ErrInvalid
+	}
+	sourceKinds := append([]string{}, filter.SourceKinds...)
+	for i, source := range sourceKinds {
+		if !contains([]string{"CONTROL_CENTER", "AGENT_RESULT", "INTEGRATION_RESULT", "KNOWLEDGE_SOURCE", "INTERACTION_ATTACHMENT"}, source) || contains(sourceKinds[:i], source) {
+			return nil, 0, "", errs.ErrInvalid
+		}
+	}
+	sort.Strings(sourceKinds)
+	filter.SourceKinds = sourceKinds
 	filter.ProjectRef = strings.TrimSpace(filter.ProjectRef)
 	filter.ResourceRef = strings.TrimSpace(filter.ResourceRef)
 	filter.Query = strings.TrimSpace(filter.Query)
@@ -1369,6 +1380,7 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 				"artifact_type":     artifactType,
 				"scan_state":        scanState,
 				"source_kind":       sourceKind,
+				"source_kinds":      sourceKinds,
 				"cursor_ref":        cursorRef,
 				"limit":             limit,
 			})
@@ -1399,7 +1411,7 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 				"authority_project": scope.authorityProjectID, "organization_id": scope.organizationID,
 				"project_ref": filter.ProjectRef, "run_ref": filter.ResourceRef, "actor_id": scope.actorID,
 				"query": filter.Query, "lifecycle_state": lifecycleState, "artifact_type": artifactType,
-				"scan_state": scanState, "source_kind": sourceKind,
+				"scan_state": scanState, "source_kind": sourceKind, "source_kinds": sourceKinds,
 			}).Scan(&total)
 			if err != nil {
 				return 0, errs.ErrUnavailable
