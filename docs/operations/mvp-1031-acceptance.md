@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.10.0
+version: 1.11.0
 updated: 2026-09-06
 ---
 
@@ -82,7 +82,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `aef53fff5b3e8993f437f63eb25d33792ebca907` включены следующие
+На `29607deede87f906c46a90ff23ed2dc5f76e3ff3` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
@@ -93,7 +93,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
 | HTTP/SDK #1045, PR #1066 | `e66ab918d48b37f5354c9d8ebe526a53312e7076` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Четыре typed integration candidates72 endpoint проверяют GRANT/USE, exact prefix/context/pins, reason/boolean/schema и pagination. |
-| PWA #1022, PR #1067 | `29787d8239696095ae596d1e9343878910bed95a` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage. Files67 использует owner binding targets, stale recovery, modal/search/total и единый group sourceKinds cursor. Потребление полного641/643/644/645/70 SDK и нового72 ещё продолжается. |
+| PWA #1022, PR #1067 | `d21add2dd9e69d61d146f65e90eb7f9f060940fb` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage, Files67 owner binding targets. Добавлены RoleImage643/revision644 impact, Instructions70 publication и binding645, explicit selected references и восстановление исходного immutable intent после неизвестного результата. Полные641/72 и Git write-back UI, актуализация raw E2E продолжаются. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
 | Agent-runner #1026, PR #1058 | `5613b045c4d63956de96819d8e42fc7b2c13b8d9` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Native effects и Usage сохраняются при post-execution failure. #1072 согласует canary/publish/reset/prompt межпроцессным bounded lock; #1073 сохраняет расход пяти failure branches и callback retry. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
@@ -130,8 +130,14 @@ admission policy/binding с закрытым отказом. Предыдущи�
 
 На `e271f2c4034355bd9766c443d72ebc940ffa4f5a` canonical Go/TS OpenAPI replay
 локально **PASS**; regenerated файлы совпадают. Это не полный baseline.
-PWA ещё потребляет consolidated SDK в #1067.
-Полный новый PWA build, общий baseline и вся сквозная приёмка — **NOT RUN**.
+При объединении PWA d21 возник конфликт generated SDK. Исходный OpenAPI
+сохранил полный контракт HTT Pe66, включая четыре72 endpoint; Go/TS повторно
+сгенерированы из этого источника, а не выбраны из конфликтующей стороны.
+На `29607deede87f906c46a90ff23ed2dc5f76e3ff3` production build с typecheck
+и canonical Go/TS clean replay — **PASS**. Сохраняется предупреждение Vite
+о chunk более500kB. Безопасные логи: `integration-296-pwa-build.log` и
+`integration-296-openapi-replay.log` в приватном evidence-каталоге.
+Общий baseline и вся сквозная приёмка — **NOT RUN**.
 
 Spool ограничивается самим controller двумя файлами по512MiB и deadline.
 Kubelet periodic scan не учитывает открытые unlink-файлы; `emptyDir.sizeLimit`
@@ -139,12 +145,17 @@ Kubelet periodic scan не учитывает открытые unlink-файлы
 Context7 по официальной документации
 [Kubernetes ephemeral storage](https://kubernetes.io/docs/concepts/storage/ephemeral-storage/).
 
-На PWA unit `29787d8239696095ae596d1e9343878910bed95a` локально **PASS**:
-1037 unit, lint/format/build/typecheck и E2E TypeScript. Scoped browser —
-**FAIL**,1/2:390 прошёл,2900 завершился Chromium `Target crashed` при EMAIL
-select до Files. Исторический full35 на50d5810 —34/35 **FAIL** с тем же crash
-на2560. Диагностический одиночный2900 прошёл, но причина не доказана и
-полный FAIL не снимается. Общий browser baseline нового SDK ещё **NOT RUN**.
+На PWA unit `d21add2dd9e69d61d146f65e90eb7f9f060940fb` локально **PASS**:
+1055 unit в201 файле, lint/format/build/typecheck и E2E TypeScript. Сохранены
+исторические **FAIL**: scoped29787 —1/2 (390 прошёл,2900 Chromium crash при
+EMAIL), full35 на50d5810 —34/35 с crash на2560. Установлена исчерпанная
+пользовательская квота `/tmp`: запись4096 bytes дала EDQUOT122 при наличии
+свободного места файловой системы. Playwright создавал profile/artifacts через
+`os.tmpdir()`. На private disk TMPDIR неизменённый2900 сценарий прошёл
+за55.1s, Chromium завершился с0. Browser flags и timeout не ослаблены.
+Доказательства и точная команда записаны в PWA README; это устранение
+проблемы среды, а не полный browser PASS. Полный35 повторяется после всех
+оставшихся consumers; общий browser baseline нового SDK — **NOT RUN**.
 
 ## Настоящий файловый запуск в приёмке
 
