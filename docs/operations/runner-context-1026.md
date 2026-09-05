@@ -210,3 +210,48 @@ Canary проверяет create/read/atomic-replace/read/delete в writable д�
 не маскируется положительным health. Init и completion используют тот же
 ограниченный helper. Проверки non-root записи, cancellation/cleanup,
 timeout/kill/Wait и отсутствия I/O в readiness входят в runner race suite.
+
+## Учёт расхода после ответа провайдера (#1073)
+
+Источником Usage является завершённый ответ provider broker. Последующий
+локальный отказ не отменяет уже потраченные input/output/cache/reasoning tokens.
+`runTurn` сохраняет native timeline, затем передаёт исходный Result в завершение
+turn. Все локальные FAILED callbacks используют исходный Usage; коды ошибок
+остаются прежними, включая нормализацию workspace failure в
+`RUNTIME_INPUT_INVALID`.
+
+| Путь | Terminal callback | Usage и восстановление |
+| --- | --- | --- |
+| Отказ до ответа провайдера | FAILED с прежним безопасным кодом | Нулевой, расход не выдумывается |
+| Отказ workspace/quota после ответа | FAILED / RUNTIME_INPUT_INVALID | Из Result, также после отмены контекста |
+| Непригодное final message | FAILED / PROVIDER_RESPONSE_INVALID | Из Result; пустота, размер и UTF-8 проверяются до публикации |
+| Отказ PublishResult | FAILED / RUNTIME_INPUT_INVALID | Из Result, успешные artifacts не объявляются |
+| Отказ сбора artifacts либо completion validation | FAILED / PROVIDER_RESPONSE_INVALID | Из Result; непригодные artifacts/archive не передаются |
+| Terminal provider failure либо успех | Существующий FAILED/SUCCEEDED | Исходный Usage сохраняется |
+| Потеря ACK completion | Повтор того же bounded callback | Байты payload и Usage не меняются; новый provider turn не запускается |
+
+Authority пути не меняется: exact execution ticket и mTLS → существующий
+controller completion endpoint → owner receipt/runtime transition. Runner не
+публикует новое событие и не меняет owner schema. Owner-side effect/receipt
+дедупликация остаётся у controller/CP; локальная оснастка не выдаётся за проверку
+их PostgreSQL реализации.
+
+`TestExecutedTurnFailurePreservesUsageInRetriedCallback` проверяет эти ветки
+через фактический TLS client, exact revision/attempt headers и callback fixture,
+которая сохраняет receipt, возвращает временную ошибку вместо ACK и сравнивает
+повтор побайтно. PublishResult и сбор artifacts исполняются на настоящем
+временном workspace. Workspace-check передаётся как внутренний port; production
+использует прежний bounded helper без изменения его deadline или safeErrorCode.
+
+Публичная проверка: `make test-agent-runner`; отдельная race-регрессия:
+`go test -race ./internal/app -run TestExecutedTurnFailurePreservesUsageInRetriedCallback -count=1`
+из каталога runner. Ручная проверка после интеграции: получить известный Usage,
+вызвать post-provider отказ и сверить FAILED receipt с исходным расходом.
+Live provider и развёртывание этим локальным тестом не проверяются.
+
+Локальный результат #1073: targeted callback race PASS 6.696s; полный runner
+race PASS (app 15.846s), vet/build PASS; `make test-agent-runner` PASS, включая
+runtimecontract, runner и schema/RBAC/NetworkPolicy render. Первый полный race
+упал на AF_UNIX limit из-за длинного private TMPDIR, повтор с коротким каталогом
+прошёл без изменения production либо тестовых assertions. Live provider,
+новый Docker image и staging/production для исправления не запускались.
