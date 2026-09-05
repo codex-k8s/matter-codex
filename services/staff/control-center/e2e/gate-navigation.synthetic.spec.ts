@@ -53,8 +53,8 @@ for (const width of [390, 2900]) {
       decisionConsequences: [
         {
           decision: "APPROVE",
-          safeSummary: "Продолжить",
-          executesExternalEffect: false,
+          safeSummary: "i18n:GATE_CONSEQUENCE_EXTERNAL_EFFECT",
+          executesExternalEffect: true,
           terminalForRun: false,
         },
       ],
@@ -175,6 +175,10 @@ for (const width of [390, 2900]) {
     await expect(intent).toContainText("team/project");
     await expect(intent).toContainText("TYPE_LITERAL");
     await expect(intent).toContainText("effect_gate_exact");
+    await expect(page.locator(".decision-option")).toContainText(
+      "Результат будет подтверждён отдельной квитанцией.",
+    );
+    await expect(page.locator(".decision-option")).not.toContainText("i18n:");
     await page
       .getByRole("button", {
         name: "Открыть адресованную историю",

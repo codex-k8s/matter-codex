@@ -388,10 +388,12 @@ function decisionConsequence(
   const exact = gate.decisionConsequences.find(
     (consequence) => consequence.decision === decision,
   );
-  if (exact?.safeSummary.trim()) return exact.safeSummary;
+  if (exact?.safeSummary.trim()) return serverMessage(exact.safeSummary);
   if (decision === "APPROVE")
     return (
-      gate.consequencesSummary.trim() || t("decisions.consequencesUnavailable")
+      (gate.consequencesSummary.trim() &&
+        serverMessage(gate.consequencesSummary)) ||
+      t("decisions.consequencesUnavailable")
     );
   if (decision === "REQUEST_CHANGES") return t("decisions.changesConsequence");
   if (decision === "REJECT") return t("decisions.rejectConsequence");

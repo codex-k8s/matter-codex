@@ -6,6 +6,31 @@ import {
 
 // Закрытый реестр безопасных сообщений владельца состояния: ru, en.
 export const serverTokenTranslations = {
+  GATE_CONSEQUENCE_CONTINUE: [
+    "Разрешить продолжение работы.",
+    "Allow work to continue.",
+  ],
+  GATE_CONSEQUENCE_EXTERNAL_EFFECT: [
+    "Разрешить указанное внешнее действие после повторной проверки полномочий. Результат будет подтверждён отдельной квитанцией.",
+    "Allow the specified external action after a fresh authority check. A separate receipt will confirm its result.",
+  ],
+  GATE_CONSEQUENCE_REJECT_RUN: [
+    "Отклонить результат и завершить запуск с ошибкой.",
+    "Reject the result and finish the run with an error.",
+  ],
+  GATE_CONSEQUENCE_REJECT_EFFECT: [
+    "Отклонить только внешнее действие. Запуск не завершается.",
+    "Reject only the external action. The run does not terminate.",
+  ],
+  GATE_CONSEQUENCE_CANCEL_RUN: ["Отменить запуск.", "Cancel the run."],
+  GATE_CONSEQUENCE_CANCEL_EFFECT: [
+    "Отменить только внешнее действие. Запуск не завершается.",
+    "Cancel only the external action. The run does not terminate.",
+  ],
+  GATE_CONSEQUENCE_REQUEST_CHANGES: [
+    "Продолжить предыдущий шаг с замечаниями, без немедленного внешнего действия.",
+    "Continue the previous step with feedback, without an immediate external action.",
+  ],
   RUNTIME_ARTIFACT_READ: [
     "Прочитан файл рабочего окружения",
     "Runtime file read",
