@@ -69,6 +69,73 @@ func TestWorkflowDraftPreservesBoundedInputFields(t *testing.T) {
 	}
 }
 
+func TestWorkflowRevisionPinsFollowSelectedBody(t *testing.T) {
+	for _, test := range []struct {
+		name             string
+		draft, published bool
+	}{
+		{"draft", true, false}, {"published", false, true}, {"both", true, true}, {"neither", false, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			workflow := &controlplanev1.Workflow{Ref: "wfl_fixture", Version: 4}
+			if test.draft {
+				workflow.DraftVersion = &controlplanev1.WorkflowVersion{Ref: "wfv_draft", Version: 3, Revision: 3, State: controlplanev1.WorkflowState_WORKFLOW_STATE_DRAFT, Steps: []*controlplanev1.WorkflowStep{{Ref: "draft_step"}}}
+			}
+			if test.published {
+				workflow.PublishedVersion = &controlplanev1.WorkflowVersion{Ref: "wfv_published", Version: 2, Revision: 2, State: controlplanev1.WorkflowState_WORKFLOW_STATE_PUBLISHED, Steps: []*controlplanev1.WorkflowStep{{Ref: "published_step"}}}
+			}
+			view, err := messageMap(&controlplanev1.GetWorkflowResponse{Workflow: workflow})
+			if err != nil {
+				t.Fatal(err)
+			}
+			body := view["workflow"].(map[string]any)
+			if _, exists := body["draftRevisionRef"]; exists != test.draft {
+				t.Fatal("draft presence changed")
+			}
+			if _, exists := body["publishedRevisionRef"]; exists != test.published {
+				t.Fatal("published presence changed")
+			}
+			if test.draft && body["draftRevisionRef"] != "wfv_draft" {
+				t.Fatal("draft pin changed")
+			}
+			if test.published && body["publishedRevisionRef"] != "wfv_published" {
+				t.Fatal("published pin changed")
+			}
+			selected, step := "wfv_draft", "draft_step"
+			if test.published {
+				selected, step = "wfv_published", "published_step"
+			}
+			if test.draft || test.published {
+				if body["revisionRef"] != selected || body["steps"].([]any)[0].(map[string]any)["ref"] != step {
+					t.Fatal("body and revision pin disagree")
+				}
+			} else if _, exists := body["revisionRef"]; exists {
+				t.Fatal("invented revision pin")
+			}
+			if _, exists := body["draftVersion"]; exists {
+				t.Fatal("private source shape leaked")
+			}
+		})
+	}
+}
+
+func TestWorkflowRevisionRejectsInvalidOwnerPin(t *testing.T) {
+	for _, ref := range []string{"", "short", "wfv/invalid"} {
+		for _, published := range []bool{false, true} {
+			workflow := &controlplanev1.Workflow{Ref: "wfl_fixture"}
+			version := &controlplanev1.WorkflowVersion{Ref: ref, Revision: 7}
+			if published {
+				workflow.PublishedVersion = version
+			} else {
+				workflow.DraftVersion = version
+			}
+			if _, err := messageMap(&controlplanev1.GetWorkflowResponse{Workflow: workflow}); err == nil {
+				t.Fatal("invalid owner pin accepted")
+			}
+		}
+	}
+}
+
 func TestNormalizeWorkflowInputFieldAddsEmptyOptions(t *testing.T) {
 	t.Parallel()
 

@@ -1,5 +1,13 @@
 INTERNAL:
   other: Internal error
+AGENT_INSTRUCTIONS_IMPACT_PREPARED:
+  other: Instruction publication impact plan prepared
+PROMPT_TEMPLATE_IMPACT_PREPARED:
+  other: Prompt template publication impact plan prepared
+RUNTIME_ENVIRONMENT_IMPACT_PREPARED:
+  other: Runtime environment publication impact plan prepared
+RUNTIME_ARTIFACT_READ:
+  other: Runtime artifact read
 INVALID_REQUEST:
   other: Check the request data
 UNAUTHENTICATED:

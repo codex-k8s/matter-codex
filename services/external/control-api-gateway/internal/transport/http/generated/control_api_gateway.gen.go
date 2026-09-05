@@ -6277,6 +6277,30 @@ func (e WorkflowCommandAction) Valid() bool {
 	}
 }
 
+// Defines values for WorkflowDraftSnapshotState.
+const (
+	WorkflowDraftSnapshotStateARCHIVED  WorkflowDraftSnapshotState = "ARCHIVED"
+	WorkflowDraftSnapshotStateDRAFT     WorkflowDraftSnapshotState = "DRAFT"
+	WorkflowDraftSnapshotStatePUBLISHED WorkflowDraftSnapshotState = "PUBLISHED"
+	WorkflowDraftSnapshotStateVALID     WorkflowDraftSnapshotState = "VALID"
+)
+
+// Valid indicates whether the value is a known member of the WorkflowDraftSnapshotState enum.
+func (e WorkflowDraftSnapshotState) Valid() bool {
+	switch e {
+	case WorkflowDraftSnapshotStateARCHIVED:
+		return true
+	case WorkflowDraftSnapshotStateDRAFT:
+		return true
+	case WorkflowDraftSnapshotStatePUBLISHED:
+		return true
+	case WorkflowDraftSnapshotStateVALID:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for WorkflowInputFieldValueType.
 const (
 	WorkflowInputFieldValueTypeBOOLEAN  WorkflowInputFieldValueType = "BOOLEAN"
@@ -7287,22 +7311,22 @@ func (e SearchVFSParamsLifecycleState) Valid() bool {
 
 // Defines values for ListOrganizationWorkflowsParamsState.
 const (
-	ARCHIVED  ListOrganizationWorkflowsParamsState = "ARCHIVED"
-	DRAFT     ListOrganizationWorkflowsParamsState = "DRAFT"
-	PUBLISHED ListOrganizationWorkflowsParamsState = "PUBLISHED"
-	VALID     ListOrganizationWorkflowsParamsState = "VALID"
+	ListOrganizationWorkflowsParamsStateARCHIVED  ListOrganizationWorkflowsParamsState = "ARCHIVED"
+	ListOrganizationWorkflowsParamsStateDRAFT     ListOrganizationWorkflowsParamsState = "DRAFT"
+	ListOrganizationWorkflowsParamsStatePUBLISHED ListOrganizationWorkflowsParamsState = "PUBLISHED"
+	ListOrganizationWorkflowsParamsStateVALID     ListOrganizationWorkflowsParamsState = "VALID"
 )
 
 // Valid indicates whether the value is a known member of the ListOrganizationWorkflowsParamsState enum.
 func (e ListOrganizationWorkflowsParamsState) Valid() bool {
 	switch e {
-	case ARCHIVED:
+	case ListOrganizationWorkflowsParamsStateARCHIVED:
 		return true
-	case DRAFT:
+	case ListOrganizationWorkflowsParamsStateDRAFT:
 		return true
-	case PUBLISHED:
+	case ListOrganizationWorkflowsParamsStatePUBLISHED:
 		return true
-	case VALID:
+	case ListOrganizationWorkflowsParamsStateVALID:
 		return true
 	default:
 		return false
@@ -11597,22 +11621,34 @@ type VFSNodePage struct {
 
 // Workflow defines model for Workflow.
 type Workflow struct {
-	CompletionCriteria  *string              `json:"completionCriteria,omitempty"`
-	CoordinatorAgentRef *OpaqueRef           `json:"coordinatorAgentRef,omitempty"`
-	InputFields         []WorkflowInputField `json:"inputFields"`
-	MaxConcurrency      *int                 `json:"maxConcurrency,omitempty"`
-	Name                string               `json:"name"`
-	NextActions         []NextAction         `json:"nextActions"`
-	ProjectRef          OpaqueRef            `json:"projectRef"`
-	Purpose             string               `json:"purpose"`
-	Ref                 OpaqueRef            `json:"ref"`
-	Revision            *int                 `json:"revision,omitempty"`
-	State               WorkflowState        `json:"state"`
-	Steps               []WorkflowStep       `json:"steps"`
-	TimeoutSeconds      *int                 `json:"timeoutSeconds,omitempty"`
-	UpdatedAt           Timestamp            `json:"updatedAt"`
-	ValidationMessages  []string             `json:"validationMessages"`
-	Version             int64                `json:"version"`
+	CompletionCriteria  *string    `json:"completionCriteria,omitempty"`
+	CoordinatorAgentRef *OpaqueRef `json:"coordinatorAgentRef,omitempty"`
+
+	// Draft Сохранённый draft для редактора; все поля и ref происходят из одной owner revision. Не подменяет опубликованный основной вид Workflow.
+	Draft *WorkflowDraftSnapshot `json:"draft,omitempty"`
+
+	// DraftRevisionRef Точная сохранённая draft revision владельца; отсутствует без draft.
+	DraftRevisionRef *OpaqueRef           `json:"draftRevisionRef,omitempty"`
+	InputFields      []WorkflowInputField `json:"inputFields"`
+	MaxConcurrency   *int                 `json:"maxConcurrency,omitempty"`
+	Name             string               `json:"name"`
+	NextActions      []NextAction         `json:"nextActions"`
+	ProjectRef       OpaqueRef            `json:"projectRef"`
+
+	// PublishedRevisionRef Точная опубликованная revision владельца; отсутствует до публикации.
+	PublishedRevisionRef *OpaqueRef `json:"publishedRevisionRef,omitempty"`
+	Purpose              string     `json:"purpose"`
+	Ref                  OpaqueRef  `json:"ref"`
+	Revision             *int       `json:"revision,omitempty"`
+
+	// RevisionRef Точная owner revision отображаемых steps/inputFields; опубликованная, иначе сохранённый draft. Отсутствует без обеих revisions.
+	RevisionRef        *OpaqueRef     `json:"revisionRef,omitempty"`
+	State              WorkflowState  `json:"state"`
+	Steps              []WorkflowStep `json:"steps"`
+	TimeoutSeconds     *int           `json:"timeoutSeconds,omitempty"`
+	UpdatedAt          Timestamp      `json:"updatedAt"`
+	ValidationMessages []string       `json:"validationMessages"`
+	Version            int64          `json:"version"`
 }
 
 // WorkflowState defines model for Workflow.State.
@@ -11625,6 +11661,24 @@ type WorkflowCommand struct {
 
 // WorkflowCommandAction defines model for WorkflowCommand.Action.
 type WorkflowCommandAction string
+
+// WorkflowDraftSnapshot Сохранённый draft для редактора; все поля и ref происходят из одной owner revision. Не подменяет опубликованный основной вид Workflow.
+type WorkflowDraftSnapshot struct {
+	CompletionCriteria  *string                    `json:"completionCriteria,omitempty"`
+	CoordinatorAgentRef *OpaqueRef                 `json:"coordinatorAgentRef,omitempty"`
+	InputFields         []WorkflowInputField       `json:"inputFields"`
+	MaxConcurrency      *int                       `json:"maxConcurrency,omitempty"`
+	Ref                 OpaqueRef                  `json:"ref"`
+	Revision            int                        `json:"revision"`
+	State               WorkflowDraftSnapshotState `json:"state"`
+	Steps               []WorkflowStep             `json:"steps"`
+	TimeoutSeconds      *int                       `json:"timeoutSeconds,omitempty"`
+	ValidationMessages  []string                   `json:"validationMessages"`
+	Version             int64                      `json:"version"`
+}
+
+// WorkflowDraftSnapshotState defines model for WorkflowDraftSnapshot.State.
+type WorkflowDraftSnapshotState string
 
 // WorkflowInput defines model for WorkflowInput.
 type WorkflowInput struct {

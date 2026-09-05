@@ -1,3 +1,11 @@
+AGENT_INSTRUCTIONS_IMPACT_PREPARED:
+  other: Подготовлен план применения публикации инструкций
+PROMPT_TEMPLATE_IMPACT_PREPARED:
+  other: Подготовлен план применения публикации шаблона промпта
+RUNTIME_ENVIRONMENT_IMPACT_PREPARED:
+  other: Подготовлен план применения публикации среды выполнения
+RUNTIME_ARTIFACT_READ:
+  other: Артефакт прочитан при выполнении
 INTERNAL:
   other: Внутренняя ошибка
 INVALID_REQUEST:

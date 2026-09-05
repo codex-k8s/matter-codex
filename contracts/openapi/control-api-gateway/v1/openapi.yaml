@@ -7621,6 +7621,16 @@ components:
         purpose: { type: string, maxLength: 1000 }
         state: { type: string, enum: [DRAFT, VALID, PUBLISHED, ARCHIVED] }
         revision: { type: integer, minimum: 1 }
+        revisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная owner revision отображаемых steps/inputFields; опубликованная, иначе сохранённый draft. Отсутствует без обеих revisions.
+        draftRevisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная сохранённая draft revision владельца; отсутствует без draft.
+        publishedRevisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная опубликованная revision владельца; отсутствует до публикации.
+        draft: { $ref: '#/components/schemas/WorkflowDraftSnapshot' }
         coordinatorAgentRef: { $ref: '#/components/schemas/OpaqueRef' }
         inputFields: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/WorkflowInputField' } }
         steps: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/WorkflowStep' } }
@@ -7630,6 +7640,23 @@ components:
         validationMessages: { type: array, maxItems: 100, items: { type: string, maxLength: 300 } }
         updatedAt: { $ref: '#/components/schemas/Timestamp' }
         nextActions: { type: array, items: { $ref: '#/components/schemas/NextAction' } }
+    WorkflowDraftSnapshot:
+      type: object
+      additionalProperties: false
+      description: Сохранённый draft для редактора; все поля и ref происходят из одной owner revision. Не подменяет опубликованный основной вид Workflow.
+      required: [ref, version, revision, state, inputFields, steps, validationMessages]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        revision: { type: integer, minimum: 1 }
+        state: { type: string, enum: [DRAFT, VALID, PUBLISHED, ARCHIVED] }
+        coordinatorAgentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        inputFields: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/WorkflowInputField' } }
+        steps: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/WorkflowStep' } }
+        maxConcurrency: { type: integer, minimum: 1, maximum: 100 }
+        timeoutSeconds: { type: integer, minimum: 1, maximum: 604800 }
+        completionCriteria: { type: string, maxLength: 2000 }
+        validationMessages: { type: array, maxItems: 100, items: { type: string, maxLength: 300 } }
     WorkflowInput:
       type: object
       additionalProperties: false
