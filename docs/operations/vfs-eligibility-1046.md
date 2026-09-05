@@ -31,9 +31,29 @@ Query/count/page исполняются в одной ограниченной �
 не содержит полного query/content, credentials или transcript.
 
 Context7 `/jackc/pgx`: BeginTx, read-only RepeatableRead, StrictNamedArgs,
-Close/Rollback и отмена context проверены. Targeted race, vet/build и полный
-disposable PostgreSQL Bootstrap проверяют текущую реализацию; exact checkpoint
-и результаты фиксируются следующим документационным commit.
+Close/Rollback и отмена context проверены.
+
+## Проверки checkpoint
+
+Code SHA `43c318b24426da3ae3d0f6fec8e88207f732adce`; следующий commit меняет
+только этот документ. На идентичном проверенном code tree локально **PASS**:
+
+- Race: repository/platform, domain/service/platform и transport/grpc;
+  полный service vet и build `./cmd/...`.
+- SQL boundary, Proto lint/build/clean replay и policy65 codegen.
+- Полный disposable PostgreSQL `TestBootstrapComponent`: 22.332s.
+  Exact resource role читает и скачивает только разрешённый Artifact;
+  после revoke закрываются GET/download/VFS и вложенные Run/Graph/Event/receipt
+  refs. Проверены literal search, cursor scope/kinds/lifecycle, metadata,
+  active/trash и отказ удаления source file, удерживаемого Skill.
+
+Исторические **FAIL** сохранены: широкое разрешение legacy membership в VFS
+показывало Agent без `agent.view` (исправлено до первого PASS19.572s);
+новая receipt fixture пропускала canonical ResolvePrincipal и получила
+`forbidden` (fixture исправлена без ослабления owner boundary, повтор PASS
+22.332s). Логи `vfs-envelope-full-pg.log`, `vfs-final-full-pg.log`,
+`vfs-envelope-race.log`, `vfs-final-contracts.log`, `vfs-final-vet.log` и
+`vfs-final-build.log` находятся только в приватном локальном evidence-каталоге.
 
 Это вклад в незавершённый unit. Дополнение иерархии, полный Runtime MCP producer
 и consumer, HTTP/SDK/PWA новых полей, live/runtime acceptance — NOT RUN.
