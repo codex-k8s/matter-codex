@@ -67,6 +67,10 @@ service PlatformQueryService {
   rpc GetProviderAccount(GetProviderAccountRequest) returns (GetProviderAccountResponse);
   rpc ListIntegrationDefinitions(ListIntegrationDefinitionsRequest) returns (ListIntegrationDefinitionsResponse);
   rpc ListIntegrationConnections(ListIntegrationConnectionsRequest) returns (ListIntegrationConnectionsResponse);
+  rpc ListIntegrationGrantConnectionCandidates(ListIntegrationGrantConnectionCandidatesRequest) returns (ListIntegrationGrantConnectionCandidatesResponse);
+  rpc ListIntegrationGrantProjectCandidates(ListIntegrationGrantProjectCandidatesRequest) returns (ListIntegrationGrantProjectCandidatesResponse);
+  rpc ListIntegrationGrantRecipientCandidates(ListIntegrationGrantRecipientCandidatesRequest) returns (ListIntegrationGrantRecipientCandidatesResponse);
+  rpc ListIntegrationGrantCapabilityCandidates(ListIntegrationGrantCapabilityCandidatesRequest) returns (ListIntegrationGrantCapabilityCandidatesResponse);
   rpc GetIntegrationConnection(GetIntegrationConnectionRequest) returns (GetIntegrationConnectionResponse);
   rpc GetAdministration(GetAdministrationRequest) returns (GetAdministrationResponse);
   rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse);
@@ -2446,6 +2450,133 @@ message ListIntegrationConnectionsRequest {
 message ListIntegrationConnectionsResponse {
   repeated IntegrationConnection connections = 1;
   PageInfo page = 2;
+}
+enum IntegrationCandidatePurpose {
+  INTEGRATION_CANDIDATE_PURPOSE_UNSPECIFIED = 0;
+  INTEGRATION_CANDIDATE_PURPOSE_GRANT = 1;
+  INTEGRATION_CANDIDATE_PURPOSE_USE = 2;
+}
+enum IntegrationGrantRecipientKind {
+  INTEGRATION_GRANT_RECIPIENT_KIND_UNSPECIFIED = 0;
+  INTEGRATION_GRANT_RECIPIENT_KIND_AGENT = 1;
+  INTEGRATION_GRANT_RECIPIENT_KIND_WORKFLOW = 2;
+}
+enum IntegrationCandidateReason {
+  INTEGRATION_CANDIDATE_REASON_UNSPECIFIED = 0;
+  INTEGRATION_CANDIDATE_REASON_READY = 1;
+  INTEGRATION_CANDIDATE_REASON_CONNECTION_UNAVAILABLE = 2;
+  INTEGRATION_CANDIDATE_REASON_RECIPIENT_UNAVAILABLE = 3;
+  INTEGRATION_CANDIDATE_REASON_PACKAGE_UNAVAILABLE = 4;
+  INTEGRATION_CANDIDATE_REASON_GRANT_UNAVAILABLE = 5;
+  INTEGRATION_CANDIDATE_REASON_WORKFLOW_EXCLUDED = 6;
+}
+message IntegrationGrantCandidateContext {
+  string connection_ref = 1;
+  string project_ref = 2;
+  IntegrationGrantRecipientKind recipient_kind = 3;
+  string recipient_ref = 4;
+  string capability_key = 5;
+  string workflow_ref = 6;
+  string step_key = 7;
+}
+message IntegrationGrantCandidatePins {
+  string context_digest = 1;
+  int64 connection_version = 2;
+  string definition_version = 3;
+  string definition_digest = 4;
+  int64 project_version = 5;
+  int64 recipient_version = 6;
+  string workflow_revision_ref = 7;
+}
+message IntegrationGrantConnectionCandidate {
+  string connection_ref = 1;
+  string name = 2;
+  string definition_key = 3;
+  string provider_name = 4;
+  string credential_kind = 5;
+  string project_ref = 6;
+  map<string, string> resource_scope = 7;
+  bool grantable = 8;
+  bool usable = 9;
+  IntegrationCandidateReason reason = 10;
+  IntegrationGrantCandidatePins pins = 11;
+}
+message IntegrationGrantProjectCandidate {
+  string project_ref = 1;
+  string name = 2;
+  bool grantable = 3;
+  IntegrationCandidateReason reason = 4;
+  IntegrationGrantCandidatePins pins = 5;
+}
+message IntegrationGrantRecipientCandidate {
+  string recipient_ref = 1;
+  string name = 2;
+  IntegrationGrantRecipientKind recipient_kind = 3;
+  string project_ref = 4;
+  bool grantable = 5;
+  IntegrationCandidateReason reason = 6;
+  IntegrationGrantCandidatePins pins = 7;
+}
+message IntegrationGrantCapabilityCandidate {
+  IntegrationCapability capability = 1;
+  bool grantable = 2;
+  IntegrationCandidateReason reason = 3;
+  string current_grant_ref = 4;
+  int64 current_grant_version = 5;
+  IntegrationGrantCandidatePins pins = 6;
+}
+message ListIntegrationGrantConnectionCandidatesRequest {
+  IntegrationCandidatePurpose purpose = 1;
+  IntegrationGrantCandidateContext context = 2;
+  string query = 3;
+  PageRequest page = 4;
+}
+message ListIntegrationGrantConnectionCandidatesResponse {
+  repeated IntegrationGrantConnectionCandidate items = 1;
+  PageInfo page = 2;
+  int64 total = 3;
+  string context_digest = 4;
+  IntegrationGrantCandidateContext context = 5;
+  IntegrationGrantCandidatePins pins = 6;
+}
+message ListIntegrationGrantProjectCandidatesRequest {
+  IntegrationGrantCandidateContext context = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message ListIntegrationGrantProjectCandidatesResponse {
+  repeated IntegrationGrantProjectCandidate items = 1;
+  PageInfo page = 2;
+  int64 total = 3;
+  string context_digest = 4;
+  IntegrationGrantCandidateContext context = 5;
+  IntegrationGrantCandidatePins pins = 6;
+}
+message ListIntegrationGrantRecipientCandidatesRequest {
+  IntegrationGrantCandidateContext context = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message ListIntegrationGrantRecipientCandidatesResponse {
+  repeated IntegrationGrantRecipientCandidate items = 1;
+  PageInfo page = 2;
+  int64 total = 3;
+  string context_digest = 4;
+  IntegrationGrantCandidateContext context = 5;
+  IntegrationGrantCandidatePins pins = 6;
+}
+message ListIntegrationGrantCapabilityCandidatesRequest {
+  IntegrationGrantCandidateContext context = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message ListIntegrationGrantCapabilityCandidatesResponse {
+  repeated IntegrationGrantCapabilityCandidate items = 1;
+  PageInfo page = 2;
+  int64 total = 3;
+  string context_digest = 4;
+  IntegrationGrantCandidateContext context = 5;
+  IntegrationGrantCandidatePins pins = 6;
 }
 message GetIntegrationConnectionRequest {
   string connection_ref = 1;
