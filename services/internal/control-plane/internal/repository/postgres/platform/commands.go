@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/errs"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/command"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/entity"
@@ -330,6 +329,8 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		return repository.applyAccessCommand(ctx, tx, scope, input)
 	case command.ConfigureRoleImageGitSource, command.ConfigureIntegrationDefinitionGitSource, command.RefreshRoleImageGitSource, command.RefreshIntegrationDefinitionGitSource:
 		return repository.changeConfigurationSource(ctx, tx, scope, input)
+	case command.PrepareRoleImageGitWriteBack, command.PrepareIntegrationDefinitionGitWriteBack, command.ApproveManagedConfigurationGitWriteBack, command.RejectManagedConfigurationGitWriteBack, command.CancelManagedConfigurationGitWriteBack:
+		return repository.changeConfigurationWriteBack(ctx, tx, scope, input)
 	case command.CreateEmailMailboxDraft, command.SaveEmailMailboxDraft, command.ValidateEmailMailboxDraft,
 		command.PublishEmailMailboxDraft, command.DiscardEmailMailboxDraft:
 		return repository.changeEmailMailbox(ctx, tx, scope, input)
@@ -346,7 +347,7 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		command.SaveSystemSTTConfigurationDraft,
 		command.DiscardSystemSTTConfigurationDraft,
 		command.CreateRoleImageRevisionDraft, command.ValidateRoleImageRevision,
-		command.PublishRoleImageRevision, command.RebindRoleImage,
+		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan,
 		command.CreateIntegrationDefinition, command.ValidateIntegrationDefinition,
 		command.PublishIntegrationDefinition, command.RebindIntegrationDefinition,
 		command.CreateSystemSTTDraft, command.ValidateSystemSTTDraft,
@@ -1479,7 +1480,7 @@ func (repository *Repository) launchRunWithAttachmentPolicy(ctx context.Context,
 		return commandOutcome{}, err
 	}
 	if attachmentSet.ID != "" {
-		allowed, err := repository.agentsHaveCapabilities(ctx, tx, scope.organizationID, projectID, targetAgentRefs, []string{runtimecontract.ArtifactCapability})
+		allowed, err := repository.attachmentAgentsAllowed(ctx, tx, scope.organizationID, projectID, targetAgentRefs)
 		if err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
 		}
@@ -2059,6 +2060,9 @@ func (repository *Repository) addSessionTurn(ctx context.Context, tx pgx.Tx, sco
 	nested := input
 	nested.Kind = command.LaunchRun
 	nested.Payload = launch
+	if err := repository.authorizeCommand(ctx, tx, scope, nested); err != nil {
+		return commandOutcome{}, err
+	}
 	outcome, err := repository.launchRun(ctx, tx, scope, nested)
 	if err != nil {
 		return commandOutcome{}, err

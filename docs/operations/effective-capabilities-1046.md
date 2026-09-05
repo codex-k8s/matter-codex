@@ -67,3 +67,12 @@ principal); регрессия кода ошибки неизвестной capa
 HTTP/SDK/PWA consumer, новый browser сценарий, общий baseline, live runtime и
 staging — NOT RUN в этом CP checkpoint. Временная вклад-ветка относится к
 #1046 и не получает отдельный PR.
+
+## Включение в основной unit
+
+Источник вклада — `0912f568d390465b747dad99f8575c3a31611cf0`.
+Изменения включены поверх RoleImage checkpoint
+`b9402939a3ccdcef384d44cc2c04dfa5554f73b5` с повторной канонической генерацией
+Proto и policy64. Повторный локальный race repository/domain/transport прошёл;
+совместная PostgreSQL проверка этого дерева пока NOT RUN. Предыдущая проверка
+вклада не подменяет проверку объединённого runtime.

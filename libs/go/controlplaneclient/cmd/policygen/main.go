@@ -183,7 +183,7 @@ func main() {
 		Operations: controlplaneclient.SecretDraftGatewayOperations(), AuthoritySources: []string{"OIDC_SESSION", "DOMAIN_STATE"},
 		TargetWorkloadID: secretBrokerID, TargetSPIFFEID: secretBrokerPeer, TargetAudience: secretBrokerAudience, TargetTLSServerName: secretBrokerTLS,
 	})
-	value := document{Version: 1, PolicyRevision: 64, Policy: policy{
+	value := document{Version: 1, PolicyRevision: 68, Policy: policy{
 		AuthorityABIVersion: 2,
 		TrustDomain:         "kodex.local", DefaultDecision: "DENY", TokenTTLSeconds: 30,
 		AllowedClockSkewSeconds: 5, MaxCompactJWSBytes: 8192,
@@ -281,7 +281,7 @@ func requiredProjects(operations map[string]string) map[string]struct{} {
 
 func operationRequestProfile(operationID, fullMethod string) requestProfile {
 	mode := "UNARY_PROTO_SHA256"
-	if strings.HasPrefix(operationID, "platform.runtime-secret-drafts.") || strings.HasPrefix(operationID, "platform.configuration-sources.work.") {
+	if strings.HasPrefix(operationID, "platform.runtime-secret-drafts.") || strings.HasPrefix(operationID, "platform.configuration-sources.work.") || strings.HasPrefix(operationID, "platform.configuration-writebacks.work.") {
 		return requestProfile{Mode: mode, Resource: "FORBIDDEN", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
 	}
 	if operationID == "platform.command.runtime-secret-drafts.save" {
@@ -297,6 +297,12 @@ func operationRequestProfile(operationID, fullMethod string) requestProfile {
 		return "FORBIDDEN"
 	}
 	switch operationID {
+	case "platform.query.artifact-binding-targets.list", "platform.query.run-attachment-eligibility.get":
+		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
+	case "platform.query.configuration-writebacks.get", "platform.query.configuration-writebacks.list":
+		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
+	case "platform.command.role-image-writebacks.prepare", "platform.command.integration-definition-writebacks.prepare", "platform.command.configuration-writebacks.approve", "platform.command.configuration-writebacks.reject", "platform.command.configuration-writebacks.cancel":
+		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "REQUIRED", Attempt: "FORBIDDEN", Idempotency: "REQUIRED"}
 	case "platform.query.config-overlays.revisions.list", "platform.query.config-overlays.revisions.get":
 		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
 	case "platform.command.role-image-sources.configure", "platform.command.role-image-sources.refresh", "platform.command.integration-definition-sources.configure", "platform.command.integration-definition-sources.refresh":
@@ -324,7 +330,7 @@ func operationRequestProfile(operationID, fullMethod string) requestProfile {
 	case "platform.provider-credentials.device-authorize.get":
 		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "REQUIRED", Idempotency: "FORBIDDEN"}
 	}
-	resource := operationID == "platform.command.runtime-secret-drafts.impact.prepare" || operationID == "platform.query.runtime-revisions.diff" || strings.Contains(operationID, ".get") || strings.Contains(operationID, ".update") || strings.Contains(operationID, ".delete") ||
+	resource := operationID == "platform.command.role-image-impact-plans.prepare" || operationID == "platform.command.runtime-secret-drafts.impact.prepare" || operationID == "platform.query.runtime-revisions.diff" || strings.Contains(operationID, ".get") || strings.Contains(operationID, ".update") || strings.Contains(operationID, ".delete") ||
 		strings.Contains(operationID, ".save") || strings.Contains(operationID, ".discard") ||
 		strings.Contains(operationID, ".validate") || strings.Contains(operationID, ".publish") || strings.Contains(operationID, ".rebind") ||
 		strings.Contains(operationID, ".detach") || strings.Contains(operationID, ".copy") || strings.Contains(operationID, "device-")
