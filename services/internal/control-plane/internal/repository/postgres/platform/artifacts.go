@@ -639,7 +639,10 @@ func (repository *Repository) changeArtifactBinding(ctx context.Context, tx pgx.
 	}
 	var agentID string
 	var canManageArtifacts bool
-	if err := tx.QueryRow(ctx, queryArtifactsChangeartifactbindingSelectAgentsOrganizationIdProjectIdRef, scope.organizationID, projectID, payload.AgentRef, runtimecontract.ArtifactCapability).Scan(&agentID, &canManageArtifacts); err != nil {
+	if err := tx.QueryRow(ctx, queryArtifactsChangeartifactbindingSelectAgentsOrganizationIdProjectIdRef, pgx.StrictNamedArgs{
+		"organization_id": scope.organizationID, "project_id": projectID, "agent_ref": payload.AgentRef,
+		"capability": runtimecontract.ArtifactCapability, "artifact_id": artifactID, "enabled": payload.Enabled,
+	}).Scan(&agentID, &canManageArtifacts); err != nil {
 		return commandOutcome{}, errs.ErrNotFound
 	}
 	if payload.Enabled && !canManageArtifacts {

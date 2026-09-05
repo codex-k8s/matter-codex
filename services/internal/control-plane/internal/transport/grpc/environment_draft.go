@@ -62,7 +62,7 @@ func (server *Server) ValidateRuntimeEnvironmentDraft(ctx context.Context, reque
 }
 func (server *Server) PublishRuntimeEnvironmentDraft(ctx context.Context, request *controlplanev1.PublishRuntimeEnvironmentDraftRequest) (*controlplanev1.PublishRuntimeEnvironmentDraftResponse, error) {
 	result, err := execute(ctx, server.service, controlplanev1.PlatformCommandService_PublishRuntimeEnvironmentDraft_FullMethodName,
-		command.PublishRuntimeEnvironmentDraft, request.GetMutation(), command.RuntimeEnvironmentDraftInput{DraftRef: request.GetDraftRef()})
+		command.PublishRuntimeEnvironmentDraft, request.GetMutation(), command.RuntimeEnvironmentDraftInput{DraftRef: request.GetDraftRef(), PlanRef: request.GetPlanRef(), SelectedItemRefs: append([]string{}, request.GetSelectedItemRefs()...)})
 	if err != nil {
 		return nil, err
 	}
@@ -72,10 +72,15 @@ func (server *Server) PublishRuntimeEnvironmentDraft(ctx context.Context, reques
 func castPublishedEnvironmentDraft(result command.Result) (*controlplanev1.PublishRuntimeEnvironmentDraftResponse, error) {
 	if result.RuntimeEnvironment == nil || result.RuntimeEnvironmentDraft == nil || result.RuntimeEnvironment.Ref == "" ||
 		result.RuntimeEnvironment.Version < 1 || result.RuntimeEnvironmentDraft.Version < 1 || result.RuntimeEnvironmentDraft.ValidationDigest == "" ||
-		result.RuntimeEnvironmentDraft.State != "PUBLISHED" || result.RuntimeEnvironmentDraft.PublishedEnvironmentRef != result.RuntimeEnvironment.Ref {
+		result.RuntimeEnvironmentDraft.State != "PUBLISHED" || result.RuntimeEnvironmentDraft.PublishedEnvironmentRef != result.RuntimeEnvironment.Ref ||
+		result.RevisionImpactPlan == nil || result.RevisionImpactPlan.Ref == "" || result.RevisionImpactPlan.Digest == "" || result.RevisionImpactPlan.State != "APPLIED" || result.RevisionImpactPlan.Version != 2 ||
+		result.RevisionImpactPlan.Kind != "RUNTIME_ENVIRONMENT" || result.RevisionImpactPlan.DraftRef != result.RuntimeEnvironmentDraft.Ref ||
+		result.RevisionImpactPlan.DraftVersion != result.RuntimeEnvironmentDraft.Version-1 ||
+		result.RevisionImpactPlan.PublishedRevisionRef != result.RuntimeEnvironment.CurrentVersion.Ref ||
+		result.RevisionImpactPlan.TargetDigest != result.RuntimeEnvironment.CurrentVersion.Digest || result.RevisionImpactPlan.TargetDigest != result.RuntimeEnvironmentDraft.ValidationDigest {
 		return nil, status.Error(codes.Internal, "runtime environment publication result is incomplete")
 	}
-	return &controlplanev1.PublishRuntimeEnvironmentDraftResponse{Draft: castEnvironmentDraft(result.RuntimeEnvironmentDraft), Environment: castRuntimeEnvironment(*result.RuntimeEnvironment)}, nil
+	return &controlplanev1.PublishRuntimeEnvironmentDraftResponse{Draft: castEnvironmentDraft(result.RuntimeEnvironmentDraft), Environment: castRuntimeEnvironment(*result.RuntimeEnvironment), Plan: castRevisionImpactPlan(result.RevisionImpactPlan)}, nil
 }
 func (server *Server) DiscardRuntimeEnvironmentDraft(ctx context.Context, request *controlplanev1.DiscardRuntimeEnvironmentDraftRequest) (*controlplanev1.DiscardRuntimeEnvironmentDraftResponse, error) {
 	result, err := execute(ctx, server.service, controlplanev1.PlatformCommandService_DiscardRuntimeEnvironmentDraft_FullMethodName,

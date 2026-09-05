@@ -66,3 +66,15 @@ FAIL; доказательство получено полным Bootstrap, не
 Это вклад в незавершённый unit. Полный Runtime MCP producer
 и consumer, HTTP/SDK/PWA новых полей, live/runtime acceptance — NOT RUN.
 Документ не объявляет MVP-UI-37/61 полностью выполненными.
+
+## Объединение в основной unit
+
+Вклад `43c318b24426da3ae3d0f6fec8e88207f732adce` и его ledger
+`52a2eb696de832c9909f96a5fe8330e0a36b4282` объединены с CP
+`2f5090c18f8134dcfd48413779b6049616f7c61f`. Сохранены resumable Sessions
+и текущая ADD_TURN projection событий; resumable catalog использует общий
+`readRunWithIncidents`, поэтому также закрывает отозванные Artifact refs.
+На объединённом дереве полный Bootstrap PASS22.693s, три package race,
+full vet/build, SQL boundary, Proto lint/build/generation и policy65 PASS.
+Первый disposable запуск не дошёл до тестов из-за занятого случайного TCP
+порта RootlessKit; повтор с новым выделенным портом завершился успешно.

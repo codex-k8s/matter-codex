@@ -168,6 +168,8 @@ func TestBootstrapComponent(t *testing.T) {
 	t.Run("model catalog is version bound", func(t *testing.T) { testModelCatalogVersion(t, ctx, repository) })
 	t.Run("config overlay published history and rollback", func(t *testing.T) { testConfigOverlayHistory(t, ctx, repository) })
 	t.Run("effective capabilities use current exact authority", func(t *testing.T) { testEffectiveCapabilities(t, ctx, repository) })
+	t.Run("file binding target authority and tombstone cleanup", func(t *testing.T) { testFileBindingTargets(t, ctx, repository) })
+	t.Run("prompt context preview before launch", func(t *testing.T) { testPromptContextPreview(t, ctx, repository) })
 	t.Run("STT catalog requires organization management before configuration", func(t *testing.T) { testSTTCatalogAuthority(t, ctx, repository) })
 	t.Run("authority proof revision keeps platform cursor stable", func(t *testing.T) {
 		var platformBefore, proofBefore int64
@@ -681,9 +683,8 @@ LIMIT 1`, ownerScope.organizationID).Scan(&environmentRef, &environmentProjectRe
 		CallerWorkload: "runtime-controller", Operation: "platform.runtime.role-image-configuration.get",
 	}, "runtime-controller")
 	roleImageBinding, err := service.GetEffectiveManagedConfiguration(ctx, runtimeReader, "ROLE_IMAGE", "RUNTIME_ENVIRONMENT", environmentRef)
-	if err != nil || roleImageBinding.Revision.Ref != roleImage.ManagedRevision.Ref ||
-		roleImageBinding.Configuration.Ref != roleImage.ManagedConfiguration.Ref || roleImageBinding.ConsumerRef != environmentRef {
-		t.Fatalf("read pinned role image configuration: binding=%#v err=%v", roleImageBinding, err)
+	if err == nil || roleImageBinding.Ref != "" || roleImage.ManagedRevision.State != "PUBLISHED" {
+		t.Fatalf("unpromoted recipe became an effective image binding: binding=%#v err=%v", roleImageBinding, err)
 	}
 	foreignRuntimeReader := runtimeReader
 	foreignRuntimeReader.AuthorityTenant = "ffffffff-ffff-4fff-8fff-ffffffffffff"
@@ -959,6 +960,16 @@ func publishAndRebindManagedConfiguration(
 			RevisionRef: created.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
 		t.Fatalf("publish %s draft: result=%#v err=%v", key, published, err)
+	}
+	if rebindKind == command.RebindRoleImage {
+		version = published.ManagedConfiguration.Version
+		if _, err = service.Execute(ctx, command.Command{Kind: rebindKind, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-legacy-rebind", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref, Consumers: []entity.ManagedConfigurationConsumer{consumer}}}); err == nil {
+			t.Fatal("metadata-only role image rebind accepted")
+		}
+		if _, err = service.Execute(ctx, command.Command{Kind: command.PrepareRoleImageImpactPlan, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-unpromoted-plan", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}}); !errors.Is(err, domainerrs.ErrConflict) {
+			t.Fatalf("unpromoted role image plan: %v", err)
+		}
+		return published
 	}
 	impact, err := service.GetManagedConfigurationImpact(ctx, principal, created.ManagedConfiguration.Ref, created.ManagedRevision.Ref, query.Filter{})
 	if err != nil || impact.Digest == "" {
@@ -1784,6 +1795,7 @@ func testSessionProviderAffinityAfterPolicyMutation(
 		t.Fatalf("launch provider affinity run: run=%#v err=%v", launched.Run, err)
 	}
 	publishFixedPolicy("provider-affinity-policy-secondary", secondaryAccountRef)
+	testResumableSessionCatalog(t, ctx, service, owner, *launched.Run, false)
 
 	claimed, err := service.Execute(ctx, command.Command{Kind: command.ClaimExecution, Principal: worker,
 		Mutation: value.Mutation{IdempotencyKey: "provider-affinity-claim"},
@@ -1853,6 +1865,10 @@ func testSessionProviderAffinityAfterPolicyMutation(
 		t.Fatalf("managed refresh reused stale observation: %v", err)
 	}
 	seedObservedCatalogFixture(t, ctx, repository)
+	testResumableSessionCatalog(t, ctx, service, owner, *launched.Run, true)
+	testResumableTargetChange(t, ctx, repository, service, owner, *launched.Run)
+	resumableReader := testResumableSessionAuthority(t, ctx, repository, service, owner, *launched.Run)
+	testResumableSessionPagination(t, ctx, repository, service, owner, worker, resumableReader, *launched.Run)
 
 	continued, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "provider-affinity-continuation"}, Payload: command.SessionTurnInput{
@@ -1862,6 +1878,7 @@ func testSessionProviderAffinityAfterPolicyMutation(
 	if err != nil || continued.Run == nil {
 		t.Fatalf("continue provider affinity Session: run=%#v err=%v", continued.Run, err)
 	}
+	testResumableSessionCatalog(t, ctx, service, owner, *launched.Run, false)
 
 	restored := false
 	defer func() {
@@ -1951,6 +1968,7 @@ func testSessionProviderAffinityAfterPolicyMutation(
 	}); !errors.Is(err, domainerrs.ErrVersionMismatch) {
 		t.Fatalf("changed capabilities reused Session pin: %v", err)
 	}
+	testResumableSessionCatalog(t, ctx, service, owner, *launched.Run, false)
 	publishFixedPolicy("provider-affinity-republish-default", primaryAccountRef)
 	next, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "provider-affinity-new-default-turn"},
@@ -3844,6 +3862,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || created.Schedule == nil || created.Schedule.CronExpression != "30 9 * * 1-5" || created.Schedule.TimeOfDay != "09:30" || created.Schedule.NextRunAt == nil {
 		t.Fatalf("create normalized schedule: schedule=%#v err=%v", created.Schedule, err)
 	}
+	capturedTemplateRef := bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-captured-template", `Captured {{.task}} / {{.run.ref}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentMakeScheduleDueQuery, created.Schedule.Ref); err != nil {
 		t.Fatalf("make schedule due: %v", err)
 	}
@@ -3859,6 +3878,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 		t.Fatalf("claim due schedule: claims=%#v err=%v", claims, err)
 	}
 	staleClaim := claims[0]
+	bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-changed-template", `Changed {{.task}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentExpireScheduleClaimQuery, stringMap(staleClaim, "occurrenceRef")); err != nil {
 		t.Fatalf("expire schedule claim: %v", err)
 	}
@@ -3901,7 +3921,12 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || len(duplicateClaims) != 0 {
 		t.Fatalf("active schedule occurrence was claimed twice: claims=%#v err=%v", duplicateClaims, err)
 	}
-	runVersion := materialized.Run.Version
+	checkCapturedScheduleRuntime(t, ctx, repository, service, materialized.Run.Ref, capturedTemplateRef)
+	currentScheduledRun, _, err := service.GetRunGraph(ctx, owner, materialized.Run.Ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runVersion := currentScheduledRun.Version
 	cancelled, err := service.Execute(ctx, command.Command{
 		Kind: command.CancelRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "schedule-run-cancel", ExpectedVersion: &runVersion},
@@ -5689,6 +5714,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	runAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"RUN_INPUT", "lifecycle-run-attachment-set", secondRevision.Ref)
+	testReadonlyArtifactClaim(t, ctx, repository, service, owner, worker, runtimeReader, project.Project.Ref, agent.Agent.Ref, runAttachmentSetRef, secondRevision.Ref)
 	launch, err := service.Execute(ctx, command.Command{Kind: command.LaunchRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-launch-1"}, Payload: command.LaunchRunInput{
 			ProjectRef: project.Project.Ref, Title: "Answer customer", TitleSource: "USER_EDITED", Task: "Prepare an answer about delivery status.",
@@ -5767,10 +5793,36 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	outputAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"SESSION_TURN", "lifecycle-output-reuse-set", completed.CreatedRefs[0])
+	continuationContext := query.PromptPreviewContext{Task: "Add a concise follow-up for the customer.", AttachmentSetRef: outputAttachmentSetRef}
+	prospective, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, "")
+	if err != nil || prospective.RuntimeDiff == nil || prospective.ContextPin.Digest == "" {
+		t.Fatalf("prospective continuation preview missing: %v", err)
+	}
+	if prospective.RuntimeDiff.CurrentRevisionRef != "" || prospective.RuntimeDiff.TurnRef != "" || prospective.RuntimeDiff.Attempt != 0 {
+		t.Fatal("prelaunch continuation fabricated runtime identity")
+	}
+	previewAgain, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, prospective.ContextPin.Digest)
+	if err != nil || previewAgain.RuntimeDiff == nil || previewAgain.RuntimeDiff.Digest != prospective.RuntimeDiff.Digest {
+		t.Fatalf("prospective continuation preview changed without mutation: %v", err)
+	}
+	for _, rejected := range []struct {
+		pin      string
+		expected error
+	}{{"malformed", domainerrs.ErrInvalid}, {strings.Repeat("f", 64), domainerrs.ErrVersionMismatch}} {
+		_, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
+			Mutation: value.Mutation{IdempotencyKey: "lifecycle-rejected-preview-" + rejected.pin[:3]}, Payload: command.SessionTurnInput{
+				SessionRef: launch.Run.SessionRef, Task: continuationContext.Task, AttachmentSetRef: outputAttachmentSetRef, ExpectedPromptContextDigest: rejected.pin}})
+		if !errors.Is(err, rejected.expected) {
+			t.Fatalf("invalid continuation preview pin accepted: %v", err)
+		}
+	}
 	continued, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-continuation-1"}, Payload: command.SessionTurnInput{
 			SessionRef: launch.Run.SessionRef, RunRef: launch.Run.Ref, Task: "Add a concise follow-up for the customer.",
-			AttachmentSetRef: outputAttachmentSetRef,
+			AttachmentSetRef:            outputAttachmentSetRef,
+			ExpectedPromptContextDigest: prospective.ContextPin.Digest,
 		}})
 	if err != nil || continued.Run == nil || continued.Graph == nil || continued.Run.State != "RUNNING" {
 		t.Fatalf("continue session: run=%#v graph=%#v err=%v", continued.Run, continued.Graph, err)
@@ -5812,6 +5864,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 		t.Fatalf("retry cancelled run: run=%#v graph=%#v err=%v", retried.Run, retried.Graph, err)
 	}
 	completedRetry := claimAndCompleteRun(t, ctx, service, worker, retried.Run.Ref, "lifecycle-retry", false)
+	assertContinuationNoticeReadback(t, ctx, repository, retried.Run.Ref)
 	events, currentSequence, complete, err := service.ListRunEvents(ctx, owner, query.Filter{ResourceRef: completedRetry.Run.Ref, Limit: 100})
 	if err != nil || !complete || len(events) == 0 || currentSequence != events[len(events)-1].Sequence {
 		t.Fatalf("read retry event stream: events=%d sequence=%d complete=%v err=%v", len(events), currentSequence, complete, err)

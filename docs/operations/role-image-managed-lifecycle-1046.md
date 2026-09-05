@@ -35,11 +35,18 @@ filter, total/cursor и безопасную связь source/revision/build. S
 успешную сборку или promotion. Исторический BASELINE mapping635 содержит
 фактический snapshot; неизвестные старые pins не изобретаются.
 
-Git write-back остаётся отдельным обязательным owner lifecycle с Human Gate,
-exact base commit/path и effect receipt; read-only SourceWork его не заменяет.
-Эта матрица задаёт полный scope. Actual selective promoted-artifact rebind
-и Git write-back пока остаются NOT RUN; metadata binding не считается
-переключением исполняемого образа.
+Git write-back использует отдельный owner lifecycle с Human Gate, exact base
+commit/path и двумя effect receipts: proposal branch и PR/MR. Source branch
+не изменяется; runtime получает новую revision только после merge и обычного
+SourceWork sync. Исполняемый consumer #1028 зафиксирован в
+`b889673f04bd431788ac7553e1a80b033852e431`; реальные GitHub/GitLab и deployed
+acceptance остаются NOT RUN.
+
+Actual selective promoted-artifact rebind реализован через migration643,
+Prepare/GetRoleImageImpactPlan и специализированный RebindRoleImageConsumers.
+Точная матрица, per-item outcomes и выполненные проверки приведены в
+`role-image-impact-plan-1046.md`. Metadata binding фиксируется вместе с
+реальным Environment effect и не заменяет переключение исполняемого образа.
 
 Public additive contract: ListRoleImageRecipes получает literal `query` и
 `state` (пусто либо ACTIVE/ARCHIVED), response `total` считает все видимые

@@ -125,6 +125,8 @@ SELECT n.id::text,
                  JOIN control_plane.artifacts knowledge_artifact ON knowledge_artifact.id=knowledge_binding.artifact_id
                  WHERE knowledge_binding.target_kind='KNOWLEDGE'
                    AND knowledge_binding.target_ref=a.ref
+                   AND knowledge_artifact.organization_id=r.organization_id
+                   AND knowledge_artifact.project_id=r.project_id
                    AND knowledge_artifact.scan_state='CLEAN'
                    AND knowledge_artifact.lifecycle_state='ACTIVE'),'{}')
        ELSE '{}'::text[] END,
@@ -136,7 +138,8 @@ SELECT n.id::text,
                'targetRef', occurrence.target_ref, 'targetVersion', occurrence.target_version,
                'targetDigest', occurrence.target_digest, 'text', occurrence.automation_text,
                'textDigest', occurrence.automation_text_digest, 'promptInputs', occurrence.prompt_inputs,
-               'promptInputsDigest', occurrence.prompt_inputs_digest))
+               'promptInputsDigest', occurrence.prompt_inputs_digest, 'promptInputFormat', occurrence.prompt_input_format,
+               'promptInputsRaw', occurrence.prompt_inputs::text))
            FROM control_plane.schedule_occurrences occurrence
            JOIN control_plane.schedules schedule ON schedule.id = occurrence.schedule_id
            JOIN control_plane.schedule_revisions revision ON revision.id = occurrence.schedule_revision_id

@@ -312,9 +312,8 @@ func (input RunnerInput) Validate() error {
 	if err != nil || environmentDigest != input.RuntimeEnvironmentDigest {
 		return errors.New("runner environment binding is invalid")
 	}
-	if len(input.InputArtifacts) > 0 && !containsString(input.Capabilities, ArtifactCapability) {
-		return errors.New("runner artifact capability is missing")
-	}
+	// Exact owner-selected artifacts и manifest являются отдельным immutable
+	// read context grant; ArtifactCapability разрешает managed write/catalog.
 	for _, grant := range input.IntegrationGrants {
 		if !containsString(input.Capabilities, grant.CapabilityKey) {
 			return errors.New("runner integration grant is outside effective capabilities")

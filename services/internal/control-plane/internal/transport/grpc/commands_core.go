@@ -256,7 +256,7 @@ func launchRunTitleSource(title string) string {
 }
 
 func (server *Server) AddSessionTurn(ctx context.Context, request *controlplanev1.AddSessionTurnRequest) (*controlplanev1.AddSessionTurnResponse, error) {
-	payload := command.SessionTurnInput{SessionRef: request.GetSessionRef(), RunRef: request.GetRunRef(), NodeRef: request.GetNodeRef(), Task: request.GetTask(), AttachmentSetRef: request.GetAttachmentSetRef()}
+	payload := command.SessionTurnInput{SessionRef: request.GetSessionRef(), RunRef: request.GetRunRef(), NodeRef: request.GetNodeRef(), Task: request.GetTask(), AttachmentSetRef: request.GetAttachmentSetRef(), ExpectedPromptContextDigest: request.GetExpectedPromptContextDigest()}
 	result, err := execute(ctx, server.service, controlplanev1.PlatformCommandService_AddSessionTurn_FullMethodName, command.AddSessionTurn, request.GetMutation(), payload)
 	if err != nil {
 		return nil, err

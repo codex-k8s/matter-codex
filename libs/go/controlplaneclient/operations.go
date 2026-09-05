@@ -35,6 +35,10 @@ func STTPolicyProjectionOperations() map[string]string {
 // ControlAPIGatewayOperations возвращает закрытый owner-facing реестр.
 func ControlAPIGatewayOperations() map[string]string {
 	return map[string]string{
+		"platform.command.role-image-impact-plans.prepare":           controlplanev1.PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName,
+		"platform.command.environment-draft-impact.prepare":          controlplanev1.PlatformCommandService_PrepareEnvironmentDraftImpact_FullMethodName,
+		"platform.query.revision-impact-plans.get":                   controlplanev1.PlatformQueryService_GetRevisionImpactPlan_FullMethodName,
+		"platform.query.role-image-impact-plans.get":                 controlplanev1.PlatformQueryService_GetRoleImageImpactPlan_FullMethodName,
 		"platform.command.role-image-writebacks.prepare":             controlplanev1.PlatformCommandService_PrepareRoleImageGitWriteBack_FullMethodName,
 		"platform.command.integration-definition-writebacks.prepare": controlplanev1.PlatformCommandService_PrepareIntegrationDefinitionGitWriteBack_FullMethodName,
 		"platform.command.configuration-writebacks.approve":          controlplanev1.PlatformCommandService_ApproveManagedConfigurationGitWriteBack_FullMethodName,
@@ -170,6 +174,8 @@ func ControlAPIGatewayOperations() map[string]string {
 		"platform.access.bindings.revoke":                            controlplanev1.AccessService_RevokeAccessBinding_FullMethodName,
 		"platform.query.agent-runtime-configuration.get":             controlplanev1.PlatformQueryService_GetAgentRuntimeConfiguration_FullMethodName,
 		"platform.query.agent-effective-capabilities.get":            controlplanev1.PlatformQueryService_GetAgentEffectiveCapabilities_FullMethodName,
+		"platform.query.artifact-binding-targets.list":               controlplanev1.PlatformQueryService_ListArtifactBindingTargets_FullMethodName,
+		"platform.query.run-attachment-eligibility.get":              controlplanev1.PlatformQueryService_GetRunAttachmentEligibility_FullMethodName,
 		"platform.query.config-overlays.revisions.list":              controlplanev1.PlatformQueryService_ListConfigOverlayRevisions_FullMethodName,
 		"platform.query.config-overlays.revisions.get":               controlplanev1.PlatformQueryService_GetConfigOverlayRevision_FullMethodName,
 		"platform.query.agent-runtime-configuration-versions.list":   controlplanev1.PlatformQueryService_ListAgentRuntimeConfigurationVersions_FullMethodName,

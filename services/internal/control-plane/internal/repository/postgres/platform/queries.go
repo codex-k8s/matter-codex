@@ -835,6 +835,12 @@ func (repository *Repository) ListRuns(ctx context.Context, principal value.Prin
 	if err != nil {
 		return nil, 0, "", err
 	}
+	if filter.ResumableSessionsOnly {
+		return repository.listResumableSessions(ctx, scope, filter)
+	}
+	if filter.TargetType != "" || filter.TargetRef != "" {
+		return nil, 0, "", errs.ErrInvalid
+	}
 	return authorizedCatalogWithTotal(ctx, repository, scope, "RUN", filter,
 		func(ctx context.Context, tx pgx.Tx, cursor string, limit int32) ([]entity.Run, error) {
 			rows, err := tx.Query(ctx, queryQueriesListrunsSelectRunsOrganizationIdRefProjectId, scope.organizationID, filter.ProjectRef,
@@ -1023,6 +1029,9 @@ func (repository *Repository) applyResultActionPermissions(
 	}
 	if result.Run != nil {
 		result.Run.NextActions = runActions(result.Run.State, permissions.canCancelRuns, permissions.canLaunchRuns)
+		if err := repository.applyContinuationAction(ctx, runner, scope, result.Run); err != nil {
+			return err
+		}
 	}
 	if result.Graph != nil {
 		for index := range result.Graph.Nodes {
@@ -1037,6 +1046,9 @@ func (repository *Repository) applyResultActionPermissions(
 	}
 	if result.Event != nil {
 		applyEventActionPermissions(result.Event, permissions)
+		if err := repository.applyContinuationEventAction(ctx, runner, scope, result.Event); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -1126,6 +1138,9 @@ func (repository *Repository) readRunWithIncidents(ctx context.Context, runner q
 	}
 	if err := rows.Err(); err != nil {
 		return entity.Run{}, errs.ErrUnavailable
+	}
+	if err := repository.applyContinuationAction(ctx, runner, scope, &item); err != nil {
+		return entity.Run{}, err
 	}
 	return item, nil
 }
@@ -1266,6 +1281,9 @@ func (repository *Repository) ListRunEvents(ctx context.Context, principal value
 	if err := projectArtifactResults(ctx, tx, scope, projections...); err != nil {
 		return nil, 0, false, err
 	}
+	for index := range result {
+		result[index].Delta.Run.NextActions = runActions(result[index].Delta.Run.State, permissions.canCancelRuns, slices.Contains(run.NextActions, "ADD_TURN"))
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, 0, false, errs.ErrUnavailable
 	}
@@ -1367,9 +1385,9 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 			return result, nil
 		}, func(item entity.Artifact) entity.AccessScope {
 			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "ARTIFACT", ResourceRef: item.Ref, ProjectRef: item.ProjectRef}
-		}, func(_ pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
+		}, func(tx pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
 			item.NextActions = permittedArtifactActions(item.ScanState, item.LifecycleState, allowed)
-			return nil
+			return projectArtifactBindingRefs(ctx, tx, scope, item)
 		}, func(ctx context.Context, tx pgx.Tx) (int64, error) {
 			var total int64
 			err := tx.QueryRow(ctx, queryCatalogArtifactsCount, pgx.StrictNamedArgs{

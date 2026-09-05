@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/errs"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/command"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/entity"
@@ -254,6 +253,8 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 	case command.CreateRuntimeEnvironmentDraft, command.SaveRuntimeEnvironmentDraft, command.ValidateRuntimeEnvironmentDraft,
 		command.PublishRuntimeEnvironmentDraft, command.DiscardRuntimeEnvironmentDraft:
 		return repository.changeRuntimeEnvironmentDraft(ctx, tx, scope, input)
+	case command.PrepareEnvironmentDraftImpact:
+		return repository.prepareEnvironmentDraftImpact(ctx, tx, scope, input)
 	case command.RebindRuntimeEnvironment:
 		return repository.rebindRuntimeEnvironment(ctx, tx, scope, input)
 	case command.RebindRuntimeSecret:
@@ -348,7 +349,7 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		command.SaveSystemSTTConfigurationDraft,
 		command.DiscardSystemSTTConfigurationDraft,
 		command.CreateRoleImageRevisionDraft, command.ValidateRoleImageRevision,
-		command.PublishRoleImageRevision, command.RebindRoleImage,
+		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan,
 		command.CreateIntegrationDefinition, command.ValidateIntegrationDefinition,
 		command.PublishIntegrationDefinition, command.RebindIntegrationDefinition,
 		command.CreateSystemSTTDraft, command.ValidateSystemSTTDraft,
@@ -980,10 +981,24 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 			state = "INVALID"
 			problems = append(problems, "i18n:INSTRUCTIONS_TOO_SHORT")
 		}
+		if err := repository.validateAgentPromptContextTx(ctx, tx, scope, payload.Ref, content, false); err != nil {
+			if !errors.Is(err, errs.ErrInvalid) {
+				return commandOutcome{}, err
+			}
+			state = "INVALID"
+			problems = append(problems, "PROMPT_CONTEXT_INVALID")
+		}
 		if _, err := tx.Exec(ctx, queryCommandsChangeinstructionsUpdateInstructionVersionsStateValidationProblems, ref, state, asJSON(problems)); err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
 		}
 	case command.PublishInstructions:
+		var draftRef, draftContent string
+		if err := tx.QueryRow(ctx, queryCommandsChangeinstructionsSelectCurrentDraft, agentID).Scan(&draftRef, &draftContent); err != nil {
+			return commandOutcome{}, errs.ErrNotFound
+		}
+		if err := repository.validateAgentPromptContextTx(ctx, tx, scope, payload.Ref, draftContent, false); err != nil {
+			return commandOutcome{}, err
+		}
 		tag, err := tx.Exec(ctx, queryCommandsChangeinstructionsUpdateInstructionVersionsStatePublishedAt, agentID)
 		if err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
@@ -995,6 +1010,9 @@ func (repository *Repository) changeInstructions(ctx context.Context, tx pgx.Tx,
 		var content string
 		if err := tx.QueryRow(ctx, queryCommandsChangeinstructionsSelectInstructionVersionsAgentIdRefState, agentID, payload.Instructions).Scan(&content); errors.Is(err, pgx.ErrNoRows) {
 			return commandOutcome{}, errs.ErrNotFound
+		}
+		if err := repository.validateAgentPromptContextTx(ctx, tx, scope, payload.Ref, content, false); err != nil {
+			return commandOutcome{}, err
 		}
 		var number int32
 		if err := tx.QueryRow(ctx, queryCommandsChangeinstructionsSelectNextRollbackVersion, agentID).Scan(&number); err != nil {
@@ -1481,7 +1499,7 @@ func (repository *Repository) launchRunWithAttachmentPolicy(ctx context.Context,
 		return commandOutcome{}, err
 	}
 	if attachmentSet.ID != "" {
-		allowed, err := repository.agentsHaveCapabilities(ctx, tx, scope.organizationID, projectID, targetAgentRefs, []string{runtimecontract.ArtifactCapability})
+		allowed, err := repository.attachmentAgentsAllowed(ctx, tx, scope.organizationID, projectID, targetAgentRefs)
 		if err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
 		}
@@ -2057,13 +2075,29 @@ func (repository *Repository) addSessionTurn(ctx context.Context, tx pgx.Tx, sco
 	if err := tx.QueryRow(ctx, queryCommandsAddsessionturnSelectSessionsOrganizationIdRefState, scope.organizationID, payload.SessionRef).Scan(&projectID, &projectRef, &targetType, &targetRef); err != nil {
 		return commandOutcome{}, errs.ErrNotFound
 	}
+	promptPin, err := repository.checkContinuationPreviewPinTx(ctx, tx, scope, payload)
+	if err != nil {
+		return commandOutcome{}, err
+	}
 	launch := command.LaunchRunInput{ProjectRef: projectRef, Title: "i18n:SESSION_CONTINUATION", Task: payload.Task, SessionRef: payload.SessionRef, Source: "CONTROL_CENTER", Target: entity.RunTarget{Type: targetType, Ref: targetRef}, AttachmentSetRef: payload.AttachmentSetRef, AttachmentPurpose: "SESSION_TURN"}
 	nested := input
 	nested.Kind = command.LaunchRun
 	nested.Payload = launch
+	if err := repository.authorizeCommand(ctx, tx, scope, nested); err != nil {
+		return commandOutcome{}, err
+	}
 	outcome, err := repository.launchRun(ctx, tx, scope, nested)
 	if err != nil {
 		return commandOutcome{}, err
+	}
+	if promptPin.Digest != "" {
+		if outcome.result.Run == nil {
+			return commandOutcome{}, errs.ErrUnavailable
+		}
+		updated, err := tx.Exec(ctx, queryPromptContinuationPinTurn, pgx.StrictNamedArgs{"organization_id": scope.organizationID, "run_ref": outcome.result.Run.Ref, "context_digest": promptPin.Digest, "dependency_digest": promptPin.DependencyDigest})
+		if err != nil || updated.RowsAffected() != 1 {
+			return commandOutcome{}, errs.ErrConflict
+		}
 	}
 	if outcome.result.Run != nil && payload.RunRef != "" {
 		var previousRootID, newRootID, previousNodeID, newNodeID string

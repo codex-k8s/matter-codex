@@ -12,6 +12,8 @@ import (
 
 func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, current scope, input command.Command) error {
 	switch input.Kind {
+	case command.PrepareRoleImageImpactPlan, command.RebindRoleImage:
+		return repository.authorizeRoleImageImpact(ctx, tx, current, input)
 	case command.PrepareRoleImageGitWriteBack, command.PrepareIntegrationDefinitionGitWriteBack, command.ApproveManagedConfigurationGitWriteBack, command.RejectManagedConfigurationGitWriteBack, command.CancelManagedConfigurationGitWriteBack:
 		_, err := repository.writeBackCommandAuthority(ctx, tx, current, input)
 		return err
@@ -66,6 +68,16 @@ func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, c
 	}
 	if err := repository.requireAccess(ctx, tx, current, permission, target); err != nil {
 		return errs.ErrNotFound
+	}
+	if input.Kind == command.PrepareEnvironmentDraftImpact || input.Kind == command.PublishRuntimeEnvironmentDraft {
+		return repository.authorizeEnvironmentDraftImpact(ctx, tx, current, input)
+	}
+	if input.Kind == command.ChangeArtifactBinding {
+		payload, ok := input.Payload.(command.ArtifactBindingInput)
+		if !ok {
+			return errs.ErrInvalid
+		}
+		return repository.authorizeFileBindingTarget(ctx, tx, current, payload)
 	}
 	// Receipt не сохраняет отозванное право выдавать capability.
 	if input.Kind == command.ChangeAgentCapability || input.Kind == command.ChangeAgentGrant {
