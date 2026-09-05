@@ -21,6 +21,14 @@ func catalogRequest(w http.ResponseWriter, r *http.Request, projectRef, query *s
 	return r, true
 }
 
+func catalogStateFilter[T ~string](state *T, values map[string]int32, prefix string) (int32, bool) {
+	if state == nil {
+		return 0, true
+	}
+	value, ok := values[prefix+string(*state)]
+	return value, ok && value != 0
+}
+
 func (server *Server) ListOrganizationProjectMemberships(w http.ResponseWriter, r *http.Request, p generated.ListOrganizationProjectMembershipsParams) {
 	r, ok := catalogRequest(w, r, p.ProjectRef, p.Query, p.PageSize, p.PageToken)
 	if !ok {
@@ -41,8 +49,13 @@ func (server *Server) ListOrganizationAgents(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
+	state, stateOK := catalogStateFilter(p.State, controlplanev1.AgentState_value, "AGENT_STATE_")
+	if !stateOK {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
 	response, err := server.control.Query.ListAgents(r.Context(), &controlplanev1.ListAgentsRequest{
-		ProjectRef: stringValue(p.ProjectRef), Query: stringValue(p.Query), Page: page(p.PageSize, p.PageToken),
+		ProjectRef: stringValue(p.ProjectRef), State: controlplanev1.AgentState(state), Query: stringValue(p.Query), Page: page(p.PageSize, p.PageToken),
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
@@ -56,8 +69,13 @@ func (server *Server) ListOrganizationWorkflows(w http.ResponseWriter, r *http.R
 	if !ok {
 		return
 	}
+	state, stateOK := catalogStateFilter(p.State, controlplanev1.WorkflowState_value, "WORKFLOW_STATE_")
+	if !stateOK {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
 	response, err := server.control.Query.ListWorkflows(r.Context(), &controlplanev1.ListWorkflowsRequest{
-		ProjectRef: stringValue(p.ProjectRef), Query: stringValue(p.Query), Page: page(p.PageSize, p.PageToken),
+		ProjectRef: stringValue(p.ProjectRef), State: controlplanev1.WorkflowState(state), Query: stringValue(p.Query), Page: page(p.PageSize, p.PageToken),
 	})
 	if err != nil {
 		writeRPCProblem(w, err)

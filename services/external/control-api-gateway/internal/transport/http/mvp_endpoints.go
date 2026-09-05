@@ -177,8 +177,13 @@ func (server *Server) ListProviderDefinitions(w http.ResponseWriter, r *http.Req
 }
 
 func (server *Server) ListProviderAccounts(w http.ResponseWriter, r *http.Request, p generated.ListProviderAccountsParams) {
+	state, stateOK := catalogStateFilter(p.State, controlplanev1.ProviderAccountState_value, "PROVIDER_ACCOUNT_STATE_")
+	if !stateOK {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
 	response, err := server.control.Query.ListProviderAccounts(r.Context(), &controlplanev1.ListProviderAccountsRequest{
-		Page: page(p.PageSize, p.PageToken), Query: stringValue(p.Query), DefinitionKey: stringValue(p.DefinitionKey),
+		Page: page(p.PageSize, p.PageToken), State: controlplanev1.ProviderAccountState(state), Query: stringValue(p.Query), DefinitionKey: stringValue(p.DefinitionKey),
 	})
 	if err != nil {
 		writeRPCProblem(w, err)

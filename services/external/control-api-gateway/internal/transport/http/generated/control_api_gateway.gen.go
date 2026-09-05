@@ -3327,40 +3327,40 @@ func (e ProviderAccountDefinitionKey) Valid() bool {
 
 // Defines values for ProviderAccountSafeStatusReason.
 const (
-	ACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
-	ACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
-	ACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
-	AUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
-	CREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
-	CREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
-	DEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
-	DEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
-	DEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
-	REAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
+	ProviderAccountSafeStatusReasonACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
+	ProviderAccountSafeStatusReasonACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
+	ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
+	ProviderAccountSafeStatusReasonAUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
+	ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
+	ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
+	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
+	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
+	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
+	ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
 )
 
 // Valid indicates whether the value is a known member of the ProviderAccountSafeStatusReason enum.
 func (e ProviderAccountSafeStatusReason) Valid() bool {
 	switch e {
-	case ACCOUNTDISABLED:
+	case ProviderAccountSafeStatusReasonACCOUNTDISABLED:
 		return true
-	case ACCOUNTREVOKED:
+	case ProviderAccountSafeStatusReasonACCOUNTREVOKED:
 		return true
-	case ACCOUNTSTATEUNKNOWN:
+	case ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN:
 		return true
-	case AUTHORIZED:
+	case ProviderAccountSafeStatusReasonAUTHORIZED:
 		return true
-	case CREDENTIALCONFIGURATIONREQUIRED:
+	case ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED:
 		return true
-	case CREDENTIALMATERIALIZATIONFAILED:
+	case ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED:
 		return true
-	case DEVICEAUTHORIZATIONEXPIRED:
+	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED:
 		return true
-	case DEVICEAUTHORIZATIONFAILED:
+	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED:
 		return true
-	case DEVICEAUTHORIZATIONPENDING:
+	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING:
 		return true
-	case REAUTHORIZATIONREQUIRED:
+	case ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED:
 		return true
 	default:
 		return false
@@ -6301,6 +6301,33 @@ func (e WorkflowStepInputGateDecisions) Valid() bool {
 	}
 }
 
+// Defines values for AgentStateQuery.
+const (
+	AgentStateQueryARCHIVED AgentStateQuery = "ARCHIVED"
+	AgentStateQueryDISABLED AgentStateQuery = "DISABLED"
+	AgentStateQueryDRAFT    AgentStateQuery = "DRAFT"
+	AgentStateQueryREADY    AgentStateQuery = "READY"
+	AgentStateQueryRUNNING  AgentStateQuery = "RUNNING"
+)
+
+// Valid indicates whether the value is a known member of the AgentStateQuery enum.
+func (e AgentStateQuery) Valid() bool {
+	switch e {
+	case AgentStateQueryARCHIVED:
+		return true
+	case AgentStateQueryDISABLED:
+		return true
+	case AgentStateQueryDRAFT:
+		return true
+	case AgentStateQueryREADY:
+		return true
+	case AgentStateQueryRUNNING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ArtifactLifecycleStateQuery.
 const (
 	ArtifactLifecycleStateQueryACTIVE       ArtifactLifecycleStateQuery = "ACTIVE"
@@ -6400,6 +6427,33 @@ func (e ArtifactTypeQuery) Valid() bool {
 	}
 }
 
+// Defines values for ProviderAccountStateQuery.
+const (
+	ProviderAccountStateQueryAUTHORIZED              ProviderAccountStateQuery = "AUTHORIZED"
+	ProviderAccountStateQueryDISABLED                ProviderAccountStateQuery = "DISABLED"
+	ProviderAccountStateQueryPENDINGAUTHORIZATION    ProviderAccountStateQuery = "PENDING_AUTHORIZATION"
+	ProviderAccountStateQueryREAUTHORIZATIONREQUIRED ProviderAccountStateQuery = "REAUTHORIZATION_REQUIRED"
+	ProviderAccountStateQueryREVOKED                 ProviderAccountStateQuery = "REVOKED"
+)
+
+// Valid indicates whether the value is a known member of the ProviderAccountStateQuery enum.
+func (e ProviderAccountStateQuery) Valid() bool {
+	switch e {
+	case ProviderAccountStateQueryAUTHORIZED:
+		return true
+	case ProviderAccountStateQueryDISABLED:
+		return true
+	case ProviderAccountStateQueryPENDINGAUTHORIZATION:
+		return true
+	case ProviderAccountStateQueryREAUTHORIZATIONREQUIRED:
+		return true
+	case ProviderAccountStateQueryREVOKED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for VFSLifecycleState.
 const (
 	VFSLifecycleStateACTIVE  VFSLifecycleState = "ACTIVE"
@@ -6412,6 +6466,57 @@ func (e VFSLifecycleState) Valid() bool {
 	case VFSLifecycleStateACTIVE:
 		return true
 	case VFSLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for WorkflowStateQuery.
+const (
+	WorkflowStateQueryARCHIVED  WorkflowStateQuery = "ARCHIVED"
+	WorkflowStateQueryDRAFT     WorkflowStateQuery = "DRAFT"
+	WorkflowStateQueryPUBLISHED WorkflowStateQuery = "PUBLISHED"
+	WorkflowStateQueryVALID     WorkflowStateQuery = "VALID"
+)
+
+// Valid indicates whether the value is a known member of the WorkflowStateQuery enum.
+func (e WorkflowStateQuery) Valid() bool {
+	switch e {
+	case WorkflowStateQueryARCHIVED:
+		return true
+	case WorkflowStateQueryDRAFT:
+		return true
+	case WorkflowStateQueryPUBLISHED:
+		return true
+	case WorkflowStateQueryVALID:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListOrganizationAgentsParamsState.
+const (
+	ListOrganizationAgentsParamsStateARCHIVED ListOrganizationAgentsParamsState = "ARCHIVED"
+	ListOrganizationAgentsParamsStateDISABLED ListOrganizationAgentsParamsState = "DISABLED"
+	ListOrganizationAgentsParamsStateDRAFT    ListOrganizationAgentsParamsState = "DRAFT"
+	ListOrganizationAgentsParamsStateREADY    ListOrganizationAgentsParamsState = "READY"
+	ListOrganizationAgentsParamsStateRUNNING  ListOrganizationAgentsParamsState = "RUNNING"
+)
+
+// Valid indicates whether the value is a known member of the ListOrganizationAgentsParamsState enum.
+func (e ListOrganizationAgentsParamsState) Valid() bool {
+	switch e {
+	case ListOrganizationAgentsParamsStateARCHIVED:
+		return true
+	case ListOrganizationAgentsParamsStateDISABLED:
+		return true
+	case ListOrganizationAgentsParamsStateDRAFT:
+		return true
+	case ListOrganizationAgentsParamsStateREADY:
+		return true
+	case ListOrganizationAgentsParamsStateRUNNING:
 		return true
 	default:
 		return false
@@ -6667,6 +6772,33 @@ func (e ListOwnerGatesParamsStates) Valid() bool {
 	}
 }
 
+// Defines values for ListAgentsParamsState.
+const (
+	ListAgentsParamsStateARCHIVED ListAgentsParamsState = "ARCHIVED"
+	ListAgentsParamsStateDISABLED ListAgentsParamsState = "DISABLED"
+	ListAgentsParamsStateDRAFT    ListAgentsParamsState = "DRAFT"
+	ListAgentsParamsStateREADY    ListAgentsParamsState = "READY"
+	ListAgentsParamsStateRUNNING  ListAgentsParamsState = "RUNNING"
+)
+
+// Valid indicates whether the value is a known member of the ListAgentsParamsState enum.
+func (e ListAgentsParamsState) Valid() bool {
+	switch e {
+	case ListAgentsParamsStateARCHIVED:
+		return true
+	case ListAgentsParamsStateDISABLED:
+		return true
+	case ListAgentsParamsStateDRAFT:
+		return true
+	case ListAgentsParamsStateREADY:
+		return true
+	case ListAgentsParamsStateRUNNING:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListArtifactsParamsLifecycleState.
 const (
 	ListArtifactsParamsLifecycleStateACTIVE       ListArtifactsParamsLifecycleState = "ACTIVE"
@@ -6829,6 +6961,57 @@ func (e GetRunAttachmentEligibilityParamsTargetType) Valid() bool {
 	}
 }
 
+// Defines values for ListWorkflowsParamsState.
+const (
+	ListWorkflowsParamsStateARCHIVED  ListWorkflowsParamsState = "ARCHIVED"
+	ListWorkflowsParamsStateDRAFT     ListWorkflowsParamsState = "DRAFT"
+	ListWorkflowsParamsStatePUBLISHED ListWorkflowsParamsState = "PUBLISHED"
+	ListWorkflowsParamsStateVALID     ListWorkflowsParamsState = "VALID"
+)
+
+// Valid indicates whether the value is a known member of the ListWorkflowsParamsState enum.
+func (e ListWorkflowsParamsState) Valid() bool {
+	switch e {
+	case ListWorkflowsParamsStateARCHIVED:
+		return true
+	case ListWorkflowsParamsStateDRAFT:
+		return true
+	case ListWorkflowsParamsStatePUBLISHED:
+		return true
+	case ListWorkflowsParamsStateVALID:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListProviderAccountsParamsState.
+const (
+	AUTHORIZED              ListProviderAccountsParamsState = "AUTHORIZED"
+	DISABLED                ListProviderAccountsParamsState = "DISABLED"
+	PENDINGAUTHORIZATION    ListProviderAccountsParamsState = "PENDING_AUTHORIZATION"
+	REAUTHORIZATIONREQUIRED ListProviderAccountsParamsState = "REAUTHORIZATION_REQUIRED"
+	REVOKED                 ListProviderAccountsParamsState = "REVOKED"
+)
+
+// Valid indicates whether the value is a known member of the ListProviderAccountsParamsState enum.
+func (e ListProviderAccountsParamsState) Valid() bool {
+	switch e {
+	case AUTHORIZED:
+		return true
+	case DISABLED:
+		return true
+	case PENDINGAUTHORIZATION:
+		return true
+	case REAUTHORIZATIONREQUIRED:
+		return true
+	case REVOKED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListProviderAccountsParamsDefinitionKey.
 const (
 	ListProviderAccountsParamsDefinitionKeyOpenaiCodex ListProviderAccountsParamsDefinitionKey = "openai-codex"
@@ -6930,16 +7113,40 @@ func (e ListVFSNodesParamsLifecycleState) Valid() bool {
 
 // Defines values for SearchVFSParamsLifecycleState.
 const (
-	ACTIVE  SearchVFSParamsLifecycleState = "ACTIVE"
-	DELETED SearchVFSParamsLifecycleState = "DELETED"
+	SearchVFSParamsLifecycleStateACTIVE  SearchVFSParamsLifecycleState = "ACTIVE"
+	SearchVFSParamsLifecycleStateDELETED SearchVFSParamsLifecycleState = "DELETED"
 )
 
 // Valid indicates whether the value is a known member of the SearchVFSParamsLifecycleState enum.
 func (e SearchVFSParamsLifecycleState) Valid() bool {
 	switch e {
-	case ACTIVE:
+	case SearchVFSParamsLifecycleStateACTIVE:
 		return true
-	case DELETED:
+	case SearchVFSParamsLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListOrganizationWorkflowsParamsState.
+const (
+	ARCHIVED  ListOrganizationWorkflowsParamsState = "ARCHIVED"
+	DRAFT     ListOrganizationWorkflowsParamsState = "DRAFT"
+	PUBLISHED ListOrganizationWorkflowsParamsState = "PUBLISHED"
+	VALID     ListOrganizationWorkflowsParamsState = "VALID"
+)
+
+// Valid indicates whether the value is a known member of the ListOrganizationWorkflowsParamsState enum.
+func (e ListOrganizationWorkflowsParamsState) Valid() bool {
+	switch e {
+	case ARCHIVED:
+		return true
+	case DRAFT:
+		return true
+	case PUBLISHED:
+		return true
+	case VALID:
 		return true
 	default:
 		return false
@@ -11234,6 +11441,9 @@ type AccessRoleRef = OpaqueRef
 // AgentRef defines model for AgentRef.
 type AgentRef = OpaqueRef
 
+// AgentStateQuery defines model for AgentStateQuery.
+type AgentStateQuery string
+
 // ArtifactLifecycleStateQuery defines model for ArtifactLifecycleStateQuery.
 type ArtifactLifecycleStateQuery string
 
@@ -11254,6 +11464,12 @@ type ArtifactTypeQuery string
 
 // AttachmentSetRef defines model for AttachmentSetRef.
 type AttachmentSetRef = string
+
+// AuditActionQuery defines model for AuditActionQuery.
+type AuditActionQuery = string
+
+// AuditOutcomeQuery defines model for AuditOutcomeQuery.
+type AuditOutcomeQuery = string
 
 // ConfigurationRef defines model for ConfigurationRef.
 type ConfigurationRef = OpaqueRef
@@ -11327,6 +11543,9 @@ type ProjectRefQuery = OpaqueRef
 // ProviderAccountRef defines model for ProviderAccountRef.
 type ProviderAccountRef = OpaqueRef
 
+// ProviderAccountStateQuery defines model for ProviderAccountStateQuery.
+type ProviderAccountStateQuery string
+
 // Query defines model for Query.
 type Query = string
 
@@ -11386,6 +11605,9 @@ type VFSPageToken = string
 
 // WorkflowRef defines model for WorkflowRef.
 type WorkflowRef = OpaqueRef
+
+// WorkflowStateQuery defines model for WorkflowStateQuery.
+type WorkflowStateQuery string
 
 // WriteBackProposalRef defines model for WriteBackProposalRef.
 type WriteBackProposalRef = OpaqueRef
@@ -11510,11 +11732,15 @@ type ListPlatformMembershipCandidatesParams struct {
 
 // ListOrganizationAgentsParams defines parameters for ListOrganizationAgents.
 type ListOrganizationAgentsParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Query      *Query           `form:"query,omitempty" json:"query,omitempty"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *PageToken       `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	State      *ListOrganizationAgentsParamsState `form:"state,omitempty" json:"state,omitempty"`
+	ProjectRef *ProjectRefQuery                   `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Query      *Query                             `form:"query,omitempty" json:"query,omitempty"`
+	PageSize   *PageSize                          `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken  *PageToken                         `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListOrganizationAgentsParamsState defines parameters for ListOrganizationAgents.
+type ListOrganizationAgentsParamsState string
 
 // UpdateAgentParams defines parameters for UpdateAgent.
 type UpdateAgentParams struct {
@@ -11900,10 +12126,12 @@ type RemoveAttachmentSetItemsParams struct {
 
 // ListAuditEventsParams defines parameters for ListAuditEvents.
 type ListAuditEventsParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Query      *Query           `form:"query,omitempty" json:"query,omitempty"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *PageToken       `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	Outcome    *AuditOutcomeQuery `form:"outcome,omitempty" json:"outcome,omitempty"`
+	Action     *AuditActionQuery  `form:"action,omitempty" json:"action,omitempty"`
+	ProjectRef *ProjectRefQuery   `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Query      *Query             `form:"query,omitempty" json:"query,omitempty"`
+	PageSize   *PageSize          `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken  *PageToken         `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ReconcileEmailEffectParams defines parameters for ReconcileEmailEffect.
@@ -11950,9 +12178,10 @@ type ValidateEmailMailboxDraftParams struct {
 
 // ListIntegrationConnectionsParams defines parameters for ListIntegrationConnections.
 type ListIntegrationConnectionsParams struct {
-	Query     *Query     `form:"query,omitempty" json:"query,omitempty"`
-	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	DefinitionKey *string    `form:"definitionKey,omitempty" json:"definitionKey,omitempty"`
+	Query         *Query     `form:"query,omitempty" json:"query,omitempty"`
+	PageSize      *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken     *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // CreateIntegrationConnectionParams defines parameters for CreateIntegrationConnection.
@@ -12330,10 +12559,14 @@ type UpdateProjectParams struct {
 
 // ListAgentsParams defines parameters for ListAgents.
 type ListAgentsParams struct {
-	Query     *Query     `form:"query,omitempty" json:"query,omitempty"`
-	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	State     *ListAgentsParamsState `form:"state,omitempty" json:"state,omitempty"`
+	Query     *Query                 `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize              `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken             `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListAgentsParamsState defines parameters for ListAgents.
+type ListAgentsParamsState string
 
 // CreateAgentParams defines parameters for CreateAgent.
 type CreateAgentParams struct {
@@ -12572,10 +12805,14 @@ type ListTemplateVariablesParams struct {
 
 // ListWorkflowsParams defines parameters for ListWorkflows.
 type ListWorkflowsParams struct {
-	Query     *Query     `form:"query,omitempty" json:"query,omitempty"`
-	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	State     *ListWorkflowsParamsState `form:"state,omitempty" json:"state,omitempty"`
+	Query     *Query                    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize                 `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken                `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListWorkflowsParamsState defines parameters for ListWorkflows.
+type ListWorkflowsParamsState string
 
 // CreateWorkflowParams defines parameters for CreateWorkflow.
 type CreateWorkflowParams struct {
@@ -12659,11 +12896,15 @@ type ValidatePromptTemplateParams struct {
 
 // ListProviderAccountsParams defines parameters for ListProviderAccounts.
 type ListProviderAccountsParams struct {
+	State         *ListProviderAccountsParamsState         `form:"state,omitempty" json:"state,omitempty"`
 	DefinitionKey *ListProviderAccountsParamsDefinitionKey `form:"definitionKey,omitempty" json:"definitionKey,omitempty"`
 	Query         *Query                                   `form:"query,omitempty" json:"query,omitempty"`
 	PageSize      *PageSize                                `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 	PageToken     *PageToken                               `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListProviderAccountsParamsState defines parameters for ListProviderAccounts.
+type ListProviderAccountsParamsState string
 
 // ListProviderAccountsParamsDefinitionKey defines parameters for ListProviderAccounts.
 type ListProviderAccountsParamsDefinitionKey string
@@ -13318,11 +13559,15 @@ type SearchVFSParamsLifecycleState string
 
 // ListOrganizationWorkflowsParams defines parameters for ListOrganizationWorkflows.
 type ListOrganizationWorkflowsParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Query      *Query           `form:"query,omitempty" json:"query,omitempty"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *PageToken       `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	State      *ListOrganizationWorkflowsParamsState `form:"state,omitempty" json:"state,omitempty"`
+	ProjectRef *ProjectRefQuery                      `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Query      *Query                                `form:"query,omitempty" json:"query,omitempty"`
+	PageSize   *PageSize                             `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken  *PageToken                            `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListOrganizationWorkflowsParamsState defines parameters for ListOrganizationWorkflows.
+type ListOrganizationWorkflowsParamsState string
 
 // UpdateWorkflowDraftParams defines parameters for UpdateWorkflowDraft.
 type UpdateWorkflowDraftParams struct {
@@ -16115,6 +16360,19 @@ func (siw *ServerInterfaceWrapper) ListOrganizationAgents(w http.ResponseWriter,
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListOrganizationAgentsParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
 
 	// ------------- Optional query parameter "projectRef" -------------
 
@@ -20701,6 +20959,32 @@ func (siw *ServerInterfaceWrapper) ListAuditEvents(w http.ResponseWriter, r *htt
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListAuditEventsParams
 
+	// ------------- Optional query parameter "outcome" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "outcome", r.URL.Query(), &params.Outcome, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "outcome"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "outcome", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "action" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "action", r.URL.Query(), &params.Action, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "action"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "action", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "projectRef" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "projectRef", r.URL.Query(), &params.ProjectRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -21479,6 +21763,19 @@ func (siw *ServerInterfaceWrapper) ListIntegrationConnections(w http.ResponseWri
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListIntegrationConnectionsParams
+
+	// ------------- Optional query parameter "definitionKey" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "definitionKey", r.URL.Query(), &params.DefinitionKey, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "definitionKey"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "definitionKey", Err: err})
+		}
+		return
+	}
 
 	// ------------- Optional query parameter "query" -------------
 
@@ -26516,6 +26813,19 @@ func (siw *ServerInterfaceWrapper) ListAgents(w http.ResponseWriter, r *http.Req
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListAgentsParams
 
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "query" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -29344,6 +29654,19 @@ func (siw *ServerInterfaceWrapper) ListWorkflows(w http.ResponseWriter, r *http.
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListWorkflowsParams
 
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "query" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -30531,6 +30854,19 @@ func (siw *ServerInterfaceWrapper) ListProviderAccounts(w http.ResponseWriter, r
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListProviderAccountsParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
 
 	// ------------- Optional query parameter "definitionKey" -------------
 
@@ -39474,6 +39810,19 @@ func (siw *ServerInterfaceWrapper) ListOrganizationWorkflows(w http.ResponseWrit
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params ListOrganizationWorkflowsParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
 
 	// ------------- Optional query parameter "projectRef" -------------
 
