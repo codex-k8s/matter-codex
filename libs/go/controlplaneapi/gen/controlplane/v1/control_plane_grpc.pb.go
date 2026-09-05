@@ -11399,6 +11399,7 @@ const (
 	RuntimeWorkService_ClaimExecution_FullMethodName                                  = "/controlplane.v1.RuntimeWorkService/ClaimExecution"
 	RuntimeWorkService_GetRuntimeEnvironmentRoleImageConfiguration_FullMethodName     = "/controlplane.v1.RuntimeWorkService/GetRuntimeEnvironmentRoleImageConfiguration"
 	RuntimeWorkService_ReadExecutionArtifact_FullMethodName                           = "/controlplane.v1.RuntimeWorkService/ReadExecutionArtifact"
+	RuntimeWorkService_StreamExecutionArtifact_FullMethodName                         = "/controlplane.v1.RuntimeWorkService/StreamExecutionArtifact"
 	RuntimeWorkService_SearchExecutionFiles_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/SearchExecutionFiles"
 	RuntimeWorkService_GetExecutionFileMetadata_FullMethodName                        = "/controlplane.v1.RuntimeWorkService/GetExecutionFileMetadata"
 	RuntimeWorkService_PreviewExecutionFile_FullMethodName                            = "/controlplane.v1.RuntimeWorkService/PreviewExecutionFile"
@@ -11440,6 +11441,9 @@ type RuntimeWorkServiceClient interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(ctx context.Context, in *GetRuntimeEnvironmentRoleImageConfigurationRequest, opts ...grpc.CallOption) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(ctx context.Context, in *ReadExecutionArtifactRequest, opts ...grpc.CallOption) (*ReadExecutionArtifactResponse, error)
+	// Единственный initial request связан с canonical Proto digest; body идёт
+	// bounded chunks после owner resolution exact input/Skill/catalog grant.
+	StreamExecutionArtifact(ctx context.Context, in *StreamExecutionArtifactRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamExecutionArtifactResponse], error)
 	SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error)
 	GetExecutionFileMetadata(ctx context.Context, in *GetExecutionFileMetadataRequest, opts ...grpc.CallOption) (*GetExecutionFileMetadataResponse, error)
 	PreviewExecutionFile(ctx context.Context, in *PreviewExecutionFileRequest, opts ...grpc.CallOption) (*PreviewExecutionFileResponse, error)
@@ -11547,6 +11551,25 @@ func (c *runtimeWorkServiceClient) ReadExecutionArtifact(ctx context.Context, in
 	}
 	return out, nil
 }
+
+func (c *runtimeWorkServiceClient) StreamExecutionArtifact(ctx context.Context, in *StreamExecutionArtifactRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[StreamExecutionArtifactResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &RuntimeWorkService_ServiceDesc.Streams[0], RuntimeWorkService_StreamExecutionArtifact_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[StreamExecutionArtifactRequest, StreamExecutionArtifactResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RuntimeWorkService_StreamExecutionArtifactClient = grpc.ServerStreamingClient[StreamExecutionArtifactResponse]
 
 func (c *runtimeWorkServiceClient) SearchExecutionFiles(ctx context.Context, in *SearchExecutionFilesRequest, opts ...grpc.CallOption) (*SearchExecutionFilesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -11821,6 +11844,9 @@ type RuntimeWorkServiceServer interface {
 	// immutable revision, выбранную binding конкретного RuntimeEnvironment.
 	GetRuntimeEnvironmentRoleImageConfiguration(context.Context, *GetRuntimeEnvironmentRoleImageConfigurationRequest) (*GetRuntimeEnvironmentRoleImageConfigurationResponse, error)
 	ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error)
+	// Единственный initial request связан с canonical Proto digest; body идёт
+	// bounded chunks после owner resolution exact input/Skill/catalog grant.
+	StreamExecutionArtifact(*StreamExecutionArtifactRequest, grpc.ServerStreamingServer[StreamExecutionArtifactResponse]) error
 	SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error)
 	GetExecutionFileMetadata(context.Context, *GetExecutionFileMetadataRequest) (*GetExecutionFileMetadataResponse, error)
 	PreviewExecutionFile(context.Context, *PreviewExecutionFileRequest) (*PreviewExecutionFileResponse, error)
@@ -11879,6 +11905,9 @@ func (UnimplementedRuntimeWorkServiceServer) GetRuntimeEnvironmentRoleImageConfi
 }
 func (UnimplementedRuntimeWorkServiceServer) ReadExecutionArtifact(context.Context, *ReadExecutionArtifactRequest) (*ReadExecutionArtifactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ReadExecutionArtifact not implemented")
+}
+func (UnimplementedRuntimeWorkServiceServer) StreamExecutionArtifact(*StreamExecutionArtifactRequest, grpc.ServerStreamingServer[StreamExecutionArtifactResponse]) error {
+	return status.Error(codes.Unimplemented, "method StreamExecutionArtifact not implemented")
 }
 func (UnimplementedRuntimeWorkServiceServer) SearchExecutionFiles(context.Context, *SearchExecutionFilesRequest) (*SearchExecutionFilesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method SearchExecutionFiles not implemented")
@@ -12104,6 +12133,17 @@ func _RuntimeWorkService_ReadExecutionArtifact_Handler(srv interface{}, ctx cont
 	}
 	return interceptor(ctx, in, info, handler)
 }
+
+func _RuntimeWorkService_StreamExecutionArtifact_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamExecutionArtifactRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(RuntimeWorkServiceServer).StreamExecutionArtifact(m, &grpc.GenericServerStream[StreamExecutionArtifactRequest, StreamExecutionArtifactResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RuntimeWorkService_StreamExecutionArtifactServer = grpc.ServerStreamingServer[StreamExecutionArtifactResponse]
 
 func _RuntimeWorkService_SearchExecutionFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SearchExecutionFilesRequest)
@@ -12713,7 +12753,13 @@ var RuntimeWorkService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _RuntimeWorkService_CompleteIntegrationInvocation_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamExecutionArtifact",
+			Handler:       _RuntimeWorkService_StreamExecutionArtifact_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "controlplane/v1/control_plane.proto",
 }
 

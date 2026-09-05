@@ -859,11 +859,17 @@ func (service *Service) DownloadArtifact(ctx context.Context, p value.Principal,
 	return service.repository.DownloadArtifact(ctx, p, ref, purpose)
 }
 func (service *Service) ReadExecutionArtifact(ctx context.Context, p value.Principal, leaseRef, fence string, generation int64, artifactRef string) (repository.ArtifactDownload, error) {
+	return service.readExecutionArtifact(ctx, p, leaseRef, fence, generation, artifactRef, "platform.runtime.execution.artifact.read")
+}
+func (service *Service) OpenExecutionArtifactTransfer(ctx context.Context, p value.Principal, leaseRef, fence string, generation int64, artifactRef string) (repository.ArtifactDownload, error) {
+	return service.readExecutionArtifact(ctx, p, leaseRef, fence, generation, artifactRef, "platform.runtime.execution.artifact.stream")
+}
+func (service *Service) readExecutionArtifact(ctx context.Context, p value.Principal, leaseRef, fence string, generation int64, artifactRef, permission string) (repository.ArtifactDownload, error) {
 	p, err := service.principal(ctx, p)
 	if err != nil {
 		return repository.ArtifactDownload{}, err
 	}
-	if p.CallerWorkload != "runtime-controller" || p.Permission != "platform.runtime.execution.artifact.read" ||
+	if p.CallerWorkload != "runtime-controller" || p.Permission != permission ||
 		strings.TrimSpace(leaseRef) == "" || strings.TrimSpace(fence) == "" || generation < 1 || strings.TrimSpace(artifactRef) == "" {
 		return repository.ArtifactDownload{}, errs.ErrForbidden
 	}

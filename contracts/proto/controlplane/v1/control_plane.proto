@@ -341,6 +341,9 @@ service RuntimeWorkService {
   // immutable revision, выбранную binding конкретного RuntimeEnvironment.
   rpc GetRuntimeEnvironmentRoleImageConfiguration(GetRuntimeEnvironmentRoleImageConfigurationRequest) returns (GetRuntimeEnvironmentRoleImageConfigurationResponse);
   rpc ReadExecutionArtifact(ReadExecutionArtifactRequest) returns (ReadExecutionArtifactResponse);
+  // Единственный initial request связан с canonical Proto digest; body идёт
+  // bounded chunks после owner resolution exact input/Skill/catalog grant.
+  rpc StreamExecutionArtifact(StreamExecutionArtifactRequest) returns (stream StreamExecutionArtifactResponse);
   rpc SearchExecutionFiles(SearchExecutionFilesRequest) returns (SearchExecutionFilesResponse);
   rpc GetExecutionFileMetadata(GetExecutionFileMetadataRequest) returns (GetExecutionFileMetadataResponse);
   rpc PreviewExecutionFile(PreviewExecutionFileRequest) returns (PreviewExecutionFileResponse);
@@ -3084,6 +3087,23 @@ message ReadExecutionArtifactRequest {
 message ReadExecutionArtifactResponse {
   Artifact artifact = 1;
   bytes content = 2;
+}
+message StreamExecutionArtifactRequest {
+  string lease_ref = 1;
+  string fence = 2;
+  int64 generation = 3;
+  string artifact_ref = 4;
+}
+message StreamExecutionArtifactResponse {
+  oneof part {
+    Artifact metadata = 1;
+    bytes chunk = 2;
+    RuntimeArtifactTransferComplete complete = 3;
+  }
+}
+message RuntimeArtifactTransferComplete {
+  int64 size_bytes = 1;
+  string digest = 2;
 }
 message RenewExecutionRequest {
   string lease_ref = 1;
