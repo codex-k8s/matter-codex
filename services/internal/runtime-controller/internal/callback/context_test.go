@@ -57,7 +57,7 @@ func TestContextArtifactRouteBindsOwnerReadAndDoesNotExposeMismatches(t *testing
 			} else if scenario == "unavailable" {
 				client.err = status.Error(codes.Unavailable, "owner fixture unavailable")
 			}
-			server := &Server{config: Config{RequestTimeout: time.Second}, manager: manager, control: &controlplaneclient.Client{Runtime: client}}
+			server := &Server{config: Config{RequestTimeout: time.Second, FileTransferTimeout: time.Second}, manager: manager, spool: fixtureArtifactSpool(t), control: &controlplaneclient.Client{Runtime: client}}
 			request := httptest.NewRequest(http.MethodGet, "/v1/executions/"+input.LeaseRef+"/artifacts/art_abcdefgh?"+query.Encode(), nil)
 			request.Header.Set("Authorization", "Bearer "+ticket)
 			bindTestExecutionHeaders(request, input, "artifact")

@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -37,6 +38,107 @@ type runtimeFilesOwnerFixture struct {
 	mu            sync.Mutex
 	reads, audits int
 	failAudit     bool
+	failTransfer  bool
+	transfers     int
+}
+
+func (fixture *runtimeFilesOwnerFixture) StreamExecutionArtifact(request *cp.StreamExecutionArtifactRequest, stream cp.RuntimeWorkService_StreamExecutionArtifactServer) error {
+	if request.GetLeaseRef() != fixture.input.LeaseRef || request.GetFence() != fixture.input.LeaseFence || request.GetGeneration() != fixture.input.LeaseGeneration || request.GetArtifactRef() != fixture.file.ArtifactRef {
+		return status.Error(codes.PermissionDenied, "synthetic transfer binding denied")
+	}
+	fixture.mu.Lock()
+	fixture.transfers++
+	fail := fixture.failTransfer
+	fixture.mu.Unlock()
+	metadata := &cp.Artifact{Ref: fixture.file.ArtifactRef, ProjectRef: fixture.file.ProjectRef, Revision: int32(fixture.file.Revision), Version: fixture.file.Version,
+		FileName: fixture.file.Name, MediaType: fixture.file.MediaType, SizeBytes: fixture.file.SizeBytes, Digest: fixture.file.Digest}
+	if err := stream.Send(&cp.StreamExecutionArtifactResponse{Part: &cp.StreamExecutionArtifactResponse_Metadata{Metadata: metadata}}); err != nil {
+		return err
+	}
+	if err := stream.Send(&cp.StreamExecutionArtifactResponse{Part: &cp.StreamExecutionArtifactResponse_Chunk{Chunk: []byte(runtimeFileFixtureText)}}); err != nil {
+		return err
+	}
+	if fail {
+		return status.Error(codes.Unavailable, "synthetic final owner read unavailable")
+	}
+	return stream.Send(&cp.StreamExecutionArtifactResponse{Part: &cp.StreamExecutionArtifactResponse_Complete{Complete: &cp.RuntimeArtifactTransferComplete{SizeBytes: fixture.file.SizeBytes, Digest: fixture.file.Digest}}})
+}
+
+func TestCatalogBodyUsesMetadataPinAndGeneratedStreamBeforeExposingBytes(t *testing.T) {
+	for _, scenario := range []string{"exact", "foreign project query", "duplicate purpose", "wrong purpose", "foreign metadata", "partial stream", "missing ticket"} {
+		t.Run(scenario, func(t *testing.T) {
+			manager, _, input, _, ticket := providerCredentialRefreshRouteFixture(t, func(input *runtimecontract.RunnerInput) {
+				input.Capabilities = append(input.Capabilities, runtimecontract.ArtifactCapability)
+				input.FileCatalog = &runtimecontract.RuntimeFileCatalog{Ref: "vfc_filefixture1", Digest: strings.Repeat("a", 64), Total: 1, Purposes: []string{runtimecontract.FilePurposeProject}}
+			})
+			catalog, file := fileFixture(input)
+			owner := &runtimeFilesOwnerFixture{t: t, input: input, catalog: catalog, file: file, failTransfer: scenario == "partial stream"}
+			listener := bufconn.Listen(1 << 20)
+			upstream := grpc.NewServer()
+			cp.RegisterRuntimeWorkServiceServer(upstream, owner)
+			done := make(chan error, 1)
+			go func() { done <- upstream.Serve(listener) }()
+			t.Cleanup(func() { upstream.Stop(); _ = listener.Close(); <-done })
+			connection, err := grpc.NewClient("passthrough:///catalog-transfer-fixture", grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) { return listener.DialContext(ctx) }), grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = connection.Close() })
+			descriptor, ok := fileDescriptor(input, file.Purpose, file)
+			if !ok {
+				t.Fatal("download descriptor missing")
+			}
+			download := descriptor["download"].(map[string]any)
+			endpoint, err := url.Parse(download["relative_path"].(string))
+			if err != nil || endpoint.IsAbs() || download["method"] != "GET" || download["requires_execution_context"] != true {
+				t.Fatal("unsafe download descriptor")
+			}
+			query := endpoint.Query()
+			switch scenario {
+			case "foreign project query":
+				query.Set("project_ref", "prj_other")
+			case "duplicate purpose":
+				query.Add("purpose", runtimecontract.FilePurposeProject)
+			case "wrong purpose":
+				query.Set("purpose", runtimecontract.FilePurposeRunResult)
+			case "foreign metadata":
+				file.ProjectRef = "prj_other"
+			}
+			endpoint.RawQuery = query.Encode()
+			server := &Server{manager: manager, config: Config{RequestTimeout: time.Second, FileTransferTimeout: time.Second}, spool: fixtureArtifactSpool(t), control: &controlplaneclient.Client{Runtime: cp.NewRuntimeWorkServiceClient(connection)}}
+			request := httptest.NewRequest(http.MethodGet, endpoint.String(), nil)
+			if scenario != "missing ticket" {
+				request.Header.Set("Authorization", "Bearer "+ticket)
+			}
+			bindTestExecutionHeaders(request, input, "artifact")
+			writer := httptest.NewRecorder()
+			server.route(writer, request)
+			if scenario == "exact" {
+				if writer.Code != http.StatusOK || writer.Body.String() != runtimeFileFixtureText || writer.Header().Get("X-Kodex-Artifact-Digest") != file.Digest {
+					t.Fatalf("exact catalog body rejected: %d", writer.Code)
+				}
+			} else if writer.Code < 400 || strings.Contains(writer.Body.String(), runtimeFileFixtureText) {
+				t.Fatalf("invalid catalog transfer exposed bytes: %d", writer.Code)
+			}
+			owner.mu.Lock()
+			reads, transfers := owner.reads, owner.transfers
+			owner.mu.Unlock()
+			if scenario == "exact" || scenario == "partial stream" {
+				if reads != 1 || transfers != 1 {
+					t.Fatal("catalog body did not use both exact owner paths")
+				}
+			} else if scenario == "foreign metadata" {
+				if reads != 1 || transfers != 0 {
+					t.Fatal("foreign metadata opened a body stream")
+				}
+			} else if reads != 0 || transfers != 0 {
+				t.Fatal("invalid selector or authentication reached owner")
+			}
+			if len(server.spool.slots) != 0 {
+				t.Fatal("HTTP response retained a spool slot")
+			}
+		})
+	}
 }
 
 func (fixture *runtimeFilesOwnerFixture) check(ctx context.Context, execution *cp.ExecutionFileContext) {

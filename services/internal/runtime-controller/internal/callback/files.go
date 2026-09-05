@@ -7,8 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"net/url"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -215,8 +217,11 @@ func fileDescriptor(input runtimecontract.RunnerInput, purpose cp.RuntimeFilePur
 		file.GetRunRef() != "" && !validFileRef(file.GetRunRef(), "run_") {
 		return nil, false
 	}
+	download := url.Values{"purpose": {strings.TrimPrefix(purpose.String(), "RUNTIME_FILE_PURPOSE_")}, "entry_ref": {file.GetEntryRef()},
+		"revision": {strconv.FormatInt(file.GetRevision(), 10)}, "digest": {file.GetDigest()}}
 	return map[string]any{"entry_ref": file.GetEntryRef(), "artifact_ref": file.GetArtifactRef(), "revision": file.GetRevision(), "version": file.GetVersion(),
-		"digest": file.GetDigest(), "name": file.GetName(), "media_type": file.GetMediaType(), "size_bytes": file.GetSizeBytes(),
+		"download": map[string]any{"method": "GET", "relative_path": "/v1/executions/" + url.PathEscape(input.LeaseRef) + "/artifacts/" + url.PathEscape(file.GetArtifactRef()) + "?" + download.Encode(), "requires_execution_context": true},
+		"digest":   file.GetDigest(), "name": file.GetName(), "media_type": file.GetMediaType(), "size_bytes": file.GetSizeBytes(),
 		"purpose": strings.TrimPrefix(purpose.String(), "RUNTIME_FILE_PURPOSE_"), "project_ref": file.GetProjectRef(), "run_ref": file.GetRunRef(),
 		"source": file.GetSource(), "source_ref": file.GetSourceRef(), "source_revision_ref": file.GetSourceRevisionRef()}, true
 }
