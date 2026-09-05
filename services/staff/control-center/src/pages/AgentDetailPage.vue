@@ -42,6 +42,25 @@ import AsyncState from "@/shared/ui/AsyncState.vue";
 import PageFrame from "@/shared/ui/PageFrame.vue";
 import ProblemNotice from "@/shared/ui/ProblemNotice.vue";
 import StatusBadge from "@/shared/ui/StatusBadge.vue";
+import ModalDialog from "@/shared/ui/ModalDialog.vue";
+import PublicationImpactSelection from "@/features/runtime/PublicationImpactSelection.vue";
+import {
+  prepareInstructionPublication,
+  publishInstructions,
+  readInstructionPublicationAgent,
+} from "@/features/agents/detail/instruction-publication";
+import {
+  publicationPlanIdentity,
+  publicationSelection,
+  restorePublicationImpact,
+} from "@/features/runtime/publication-impact";
+import type { RevisionImpactPlan } from "@/shared/api/generated/openapi/types.gen";
+import {
+  readPublicationAttempt,
+  rememberPublicationAttempt,
+  forgetPublicationAttempt,
+  type PublicationAttempt,
+} from "@/features/runtime/publication-attempt";
 import { useUnsavedChanges } from "@/shared/ui/unsaved-changes";
 
 const platform = usePlatformStore();
@@ -94,6 +113,19 @@ function captureScope(): () => boolean {
 }
 const capabilityBusy = ref("");
 const problem = ref<AppProblem>();
+const instructionPlan = ref<RevisionImpactPlan>();
+const instructionUnknown = ref(false);
+const instructionAttempt = ref<PublicationAttempt>();
+let instructionKey = "";
+function clearInstructionAttempt(ref: string): void {
+  forgetPublicationAttempt("AGENT_INSTRUCTIONS", ref, window.sessionStorage);
+  instructionAttempt.value = undefined;
+}
+watch(agentRef, () => {
+  instructionPlan.value = undefined;
+  instructionUnknown.value = false;
+  instructionAttempt.value = undefined;
+});
 const applyState = ref<"APPLIED" | "DRAFT" | "RUNNING" | "FAILED">("APPLIED");
 const applyScope = ref(t("agents.profile"));
 const applyBoundary = ref<ApplyBoundary>("next-run");
@@ -434,7 +466,6 @@ async function saveInstructions(): Promise<void> {
   const active = captureScope();
   busy.value = true;
   problem.value = undefined;
-  markApplying(tabScope("instructions"), "published");
   try {
     const updated = await platform.saveInstructions(
       agent.value,
@@ -455,6 +486,151 @@ async function saveInstructions(): Promise<void> {
   }
 }
 
+async function publishInstructionSelection(selected: string[]): Promise<void> {
+  const current = agent.value,
+    plan = instructionPlan.value;
+  if (
+    !current ||
+    !plan ||
+    busy.value ||
+    instructionUnknown.value ||
+    instructionsDirty.value
+  )
+    return;
+  const active = captureScope();
+  busy.value = true;
+  problem.value = undefined;
+  markApplying(tabScope("instructions"), "published");
+  try {
+    publicationSelection(plan, selected);
+    if (
+      current.version !== plan.sourceVersion ||
+      current.draftInstructions?.ref !== plan.draftRef ||
+      current.draftInstructions.version !== plan.draftVersion
+    )
+      throw new Error("Instruction publication intent changed");
+    const attempt: PublicationAttempt = {
+      kind: "AGENT_INSTRUCTIONS",
+      ownerRef: current.ref,
+      planRef: plan.ref,
+      version: current.version,
+      selectedItemRefs: [...selected],
+      key: instructionKey,
+    };
+    rememberPublicationAttempt(attempt, window.sessionStorage);
+    instructionAttempt.value = attempt;
+    instructionUnknown.value = true;
+    const result = await publishInstructions(
+      current,
+      plan,
+      selected,
+      instructionKey,
+    );
+    if (!active()) return;
+    instructionPlan.value = result.plan;
+    instructionUnknown.value = false;
+    clearInstructionAttempt(current.ref);
+    await platform.loadAgent(current.ref);
+    if (platform.problems.agent) throw platform.problems.agent;
+    await platform.loadInstructionVersions(current.ref);
+    if (platform.problems.instructionVersions)
+      throw platform.problems.instructionVersions;
+    if (active()) markApplied();
+  } catch (error) {
+    if (!active()) return;
+    const normalized = asProblem(error);
+    if ([400, 401, 403, 404, 409, 412, 422].includes(normalized.status)) {
+      instructionUnknown.value = false;
+      clearInstructionAttempt(current.ref);
+    }
+    problem.value = normalized;
+    markFailed();
+  } finally {
+    if (active()) busy.value = false;
+  }
+}
+async function retryInstructionPublication(): Promise<void> {
+  const attempt = instructionAttempt.value,
+    plan = instructionPlan.value;
+  if (!attempt || !plan || busy.value || instructionsDirty.value) return;
+  const active = captureScope();
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const report = await restorePublicationImpact(
+      attempt.planRef,
+      requestSignal(),
+    );
+    if (!active()) return;
+    if (publicationPlanIdentity(report.plan) !== publicationPlanIdentity(plan))
+      throw new Error("Instruction recovery plan changed");
+    if (report.plan.state !== "PREPARED") {
+      busy.value = false;
+      await recoverInstructionPublication();
+      return;
+    }
+    const fresh = await readInstructionPublicationAgent(attempt.ownerRef);
+    if (!active()) return;
+    if (
+      fresh.version !== attempt.version ||
+      agent.value?.version !== attempt.version ||
+      report.plan.sourceVersion !== attempt.version ||
+      fresh.draftInstructions?.ref !== plan.draftRef ||
+      fresh.draftInstructions.version !== plan.draftVersion
+    )
+      throw new Error(
+        "Original instruction publication intent is no longer applicable",
+      );
+    instructionPlan.value = report.plan;
+    instructionKey = attempt.key;
+    instructionUnknown.value = false;
+    busy.value = false;
+    await publishInstructionSelection(attempt.selectedItemRefs);
+  } catch (error) {
+    if (active()) problem.value = asProblem(error);
+  } finally {
+    if (active()) busy.value = false;
+  }
+}
+async function recoverInstructionPublication(): Promise<void> {
+  const current = agent.value,
+    plan = instructionPlan.value;
+  if (!current || !plan || busy.value) return;
+  const active = captureScope();
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const report = await restorePublicationImpact(plan.ref, requestSignal());
+    if (!active()) return;
+    if (
+      publicationPlanIdentity(report.plan) === publicationPlanIdentity(plan) &&
+      report.plan.state === "EXPIRED"
+    ) {
+      instructionPlan.value = report.plan;
+      instructionUnknown.value = false;
+      clearInstructionAttempt(current.ref);
+      return;
+    }
+    if (
+      publicationPlanIdentity(report.plan) !== publicationPlanIdentity(plan) ||
+      report.plan.state !== "APPLIED"
+    )
+      throw new Error("Instruction publication outcome is not confirmed");
+    instructionPlan.value = report.plan;
+    instructionUnknown.value = false;
+    clearInstructionAttempt(current.ref);
+    await platform.loadAgent(current.ref);
+    if (platform.problems.agent) throw platform.problems.agent;
+    await platform.loadInstructionVersions(current.ref);
+    if (platform.problems.instructionVersions)
+      throw platform.problems.instructionVersions;
+    if (active()) markApplied();
+  } catch (error) {
+    if (active()) problem.value = asProblem(error);
+  } finally {
+    if (active()) busy.value = false;
+  }
+}
 async function instructionAction(
   action: "VALIDATE" | "PUBLISH",
 ): Promise<void> {
@@ -470,6 +646,30 @@ async function instructionAction(
   problem.value = undefined;
   markApplying(tabScope("instructions"), "published");
   try {
+    if (action === "PUBLISH") {
+      const stored = readPublicationAttempt(
+        "AGENT_INSTRUCTIONS",
+        ref,
+        window.sessionStorage,
+      );
+      const plan = stored
+        ? (await restorePublicationImpact(stored.planRef, requestSignal())).plan
+        : await prepareInstructionPublication(agent.value);
+      if (!active()) return;
+      if (
+        plan.kind !== "AGENT_INSTRUCTIONS" ||
+        plan.sourceRef !== ref ||
+        (stored && plan.sourceVersion !== stored.version)
+      )
+        throw new Error("Instruction publication scope mismatch");
+      instructionPlan.value = plan;
+      instructionAttempt.value = stored;
+      instructionUnknown.value = !!stored && plan.state === "PREPARED";
+      instructionKey = stored?.key ?? crypto.randomUUID();
+      if (stored && plan.state !== "PREPARED") clearInstructionAttempt(ref);
+      return;
+    }
+    markApplying(tabScope("instructions"), "published");
     const updated = await platform.instructionCommand(agent.value, action);
     if (!active()) return;
     instructions.value =
@@ -822,9 +1022,20 @@ onBeforeUnmount(() => {
             @publish="instructionAction('PUBLISH')"
           >
             <template #history>
+              <p v-if="agent.instructionBinding">
+                {{
+                  $t(
+                    agent.instructionBinding.effective
+                      ? "publicationImpact.instructionsEffective"
+                      : "publicationImpact.instructionsInactive",
+                  )
+                }}
+                <code>{{ agent.instructionBinding.revisionRef }}</code>
+              </p>
               <InstructionHistory
                 :versions="instructionHistory"
-                :current-ref="agent.publishedInstructions?.ref"
+                :current-ref="agent.instructionBinding?.revisionRef"
+                :current-effective="agent.instructionBinding?.effective"
                 :can-rollback="agent.nextActions.includes('ROLLBACK')"
                 :busy="busy"
                 @rollback="rollbackInstructions"
@@ -907,6 +1118,38 @@ onBeforeUnmount(() => {
       @close="avatarFile = undefined"
       @confirm="applyAvatar"
     />
+    <ModalDialog
+      v-if="instructionPlan"
+      :title="$t('publicationImpact.title')"
+      size="lg"
+      :busy="busy"
+      @close="instructionPlan = undefined"
+    >
+      <ProblemNotice v-if="problem" :problem="problem" />
+      <button
+        v-if="instructionUnknown"
+        class="button"
+        type="button"
+        :disabled="busy"
+        @click="recoverInstructionPublication"
+      >
+        {{ $t("common.refresh") }}
+      </button>
+      <PublicationImpactSelection
+        :plan="instructionPlan"
+        :busy="busy || instructionUnknown"
+        @publish="publishInstructionSelection"
+      />
+      <button
+        v-if="instructionUnknown && instructionAttempt"
+        type="button"
+        class="button"
+        :disabled="busy"
+        @click="retryInstructionPublication"
+      >
+        {{ $t("publicationImpact.retryOriginal") }}
+      </button>
+    </ModalDialog>
   </PageFrame>
 </template>
 

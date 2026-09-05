@@ -2415,7 +2415,8 @@ onBeforeUnmount(() => {
     max-width: calc(50vw - 20px);
   }
   .files-workspace__count {
-    display: none;
+    flex: 1 1 auto;
+    white-space: normal;
   }
   .files-workspace__toolbar .button {
     min-height: 44px;

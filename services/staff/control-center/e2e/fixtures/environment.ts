@@ -7,6 +7,7 @@ import type {
   RuntimeEnvironmentPolicyInput,
   RuntimeEnvironmentConsumer,
   RuntimeEnvironmentRebindInput,
+  RevisionImpactPlan,
 } from "../../src/shared/api/generated/openapi/types.gen";
 
 export async function installEnvironmentFixture(
@@ -15,6 +16,7 @@ export async function installEnvironmentFixture(
 ) {
   const events: string[] = [];
   const failures: string[] = [];
+  let publicationPlan: RevisionImpactPlan | undefined;
   const now = "2026-09-05T00:00:00Z";
   const digest = "b".repeat(64);
   const policy: RuntimeEnvironmentPolicyInput = {
@@ -138,6 +140,37 @@ export async function installEnvironmentFixture(
   await page.route("**/api/v1/**", async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
+    if (path === "/api/v1/revision-impact-plans/environment_plan_synthetic") {
+      if (!publicationPlan)
+        throw new Error("Environment plan was not prepared");
+      await route.fulfill({
+        json: { plan: publicationPlan, items: [], total: 0 },
+      });
+      return;
+    }
+    if (
+      path === `/api/v1/runtime-environment-drafts/${draft.ref}/impact-plans`
+    ) {
+      expect(draft.state).toBe("VALID");
+      expect(request.headers()["if-match"]).toBe(`"${String(draft.version)}"`);
+      publicationPlan = {
+        ref: "environment_plan_synthetic",
+        version: 1,
+        kind: "RUNTIME_ENVIRONMENT",
+        sourceVersion: 0,
+        draftRef: draft.ref,
+        draftVersion: draft.version,
+        targetDigest: digest,
+        digest: "environment-plan-digest",
+        total: 0,
+        state: "PREPARED",
+        createdAt: now,
+        expiresAt: "2099-09-06T00:00:00Z",
+      };
+      events.push("prepare");
+      await route.fulfill({ status: 201, json: publicationPlan });
+      return;
+    }
     const impactBase = `/api/v1/runtime-environments/${environment.ref}/versions/${environment.currentVersion.ref}`;
     if (path === `${impactBase}/impact`) {
       await route.fulfill({
@@ -208,7 +241,8 @@ export async function installEnvironmentFixture(
     if (path.startsWith("/api/v1/runtime-environment-drafts/")) {
       if (
         path === `/api/v1/runtime-environment-drafts/${prepared.ref}` &&
-        request.method() === "GET"
+        request.method() === "GET" &&
+        draft.ref !== prepared.ref
       )
         draft = structuredClone(prepared);
       const action = path.endsWith("/validation")
@@ -247,11 +281,30 @@ export async function installEnvironmentFixture(
         if (valid) draft.validationDigest = digest;
       }
       if (action === "publish") {
+        if (!publicationPlan)
+          throw new Error("Environment publication requires plan");
+        expect(request.postDataJSON()).toEqual({
+          planRef: publicationPlan.ref,
+          selectedItemRefs: [],
+        });
         if (draft.state !== "VALID") failures.push("Published non-VALID draft");
         draft.state = "PUBLISHED";
         draft.publishedEnvironmentRef = environment.ref;
+        publicationPlan = {
+          ...publicationPlan,
+          state: "APPLIED",
+          version: 2,
+          publishedRevisionRef: environment.currentVersion.ref,
+        };
       }
       if (action === "discard") draft.state = "DISCARDED";
+      if (action === "publish") {
+        await route.fulfill({
+          status: 504,
+          json: { type: "about:blank", title: "Gateway Timeout", status: 504 },
+        });
+        return;
+      }
       await route.fulfill({
         json: draft,
         headers: { ETag: `"${String(draft.version)}"` },

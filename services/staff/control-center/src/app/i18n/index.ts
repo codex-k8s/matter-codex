@@ -336,6 +336,27 @@ const ru = {
     applied: "Перепривязка выполнена",
     rebind: "Перепривязать выбранные: {count}",
   },
+  publicationImpact: {
+    title: "План публикации",
+    retryOriginal: "Повторить исходный запрос",
+    instructionsEffective: "Применяется привязка инструкций:",
+    instructionsInactive:
+      "Используется назначенный шаблон промпта. Сохранённая привязка инструкций:",
+    instructionsSelected: "Выбранная версия инструкций",
+    restore: "Открыть план или восстановить результат",
+    explanation:
+      "Публикация создаст новую ревизию. Отметьте потребителей для обновления; пустой выбор сохранит их прежние привязки.",
+    snapshotTotal: "В исходном плане: {count}",
+    visibleTotal: "Загружено {loaded} из {total} доступных сейчас",
+    expired: "Срок плана истёк. Подготовьте новый план перед публикацией.",
+    publish: "Опубликовать и обновить выбранных: {count}",
+  },
+  roleImageImpact: {
+    explanation:
+      "Выберите окружения и привязки для обновления до допущенного образа. Неотмеченные потребители сохранят текущие версии.",
+    version: "Исходная версия: {version}",
+    apply: "Применить образ к выбранным: {count}",
+  },
   identity: {
     title: "Привязки пользователей Mattermost",
     bind: "Привязать пользователя",
@@ -3385,6 +3406,27 @@ const en = {
     more: "Load more",
     applied: "Rebinding completed",
     rebind: "Rebind selected: {count}",
+  },
+  publicationImpact: {
+    title: "Publication plan",
+    retryOriginal: "Retry original request",
+    instructionsEffective: "Effective instruction binding:",
+    instructionsInactive:
+      "The assigned prompt template is effective. Retained instruction binding:",
+    instructionsSelected: "Selected instruction revision",
+    restore: "Open plan or recover outcome",
+    explanation:
+      "Publication creates a new revision. Select consumers to update; an empty selection preserves their current bindings.",
+    snapshotTotal: "Original plan: {count}",
+    visibleTotal: "Loaded {loaded} of {total} currently available",
+    expired: "The plan has expired. Prepare a new plan before publishing.",
+    publish: "Publish and update selected: {count}",
+  },
+  roleImageImpact: {
+    explanation:
+      "Select environments and bindings to update to the admitted image. Unselected consumers retain their current versions.",
+    version: "Source version: {version}",
+    apply: "Apply image to selected: {count}",
   },
   identity: {
     title: "Mattermost user bindings",

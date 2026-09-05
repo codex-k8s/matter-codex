@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "./fixtures/browser-diagnostics";
 import { installEnvironmentFixture } from "./fixtures/environment";
 import { installProviderFixture } from "./fixtures/providers";
 import { checkSecretEditor } from "./fixtures/secrets";
@@ -29,6 +30,8 @@ import type {
   SystemAssistant,
   IntegrationDefinition,
   RuntimeEnvironmentSet,
+  RevisionImpactPlan,
+  RevisionImpactPage,
 } from "../src/shared/api/generated/openapi/types.gen";
 
 const assistant: SystemAssistant = {
@@ -141,6 +144,7 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
     test.setTimeout(75_000);
     const failures: string[] = [];
     let snapshotConflictDiagnostics = 0;
+    let publicationTimeoutDiagnostics = 0;
     if (width === 1440) await page.clock.install();
     await page.setViewportSize({ width, height: width < 500 ? 844 : 1080 });
     page.on("pageerror", (error) => failures.push(error.message));
@@ -150,7 +154,7 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
         message.text() === "Service Worker registration blocked by Playwright"
       )
         return;
-      // Единственный ожидаемый HTTP отказ проверяет recovery точного synthetic Session cursor.
+      // Ожидаемый HTTP отказ проверяет recovery точного synthetic Session cursor.
       if (
         message.type() === "error" &&
         message.text() ===
@@ -160,6 +164,17 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
         message.location().url.includes("pageToken=session-snapshot")
       ) {
         snapshotConflictDiagnostics++;
+        return;
+      }
+      if (
+        message.type() === "error" &&
+        message.text() ===
+          "Failed to load resource: the server responded with a status of 504 (Gateway Timeout)" &&
+        /^https:\/\/kodex\.test\/api\/v1\/(prompt-template-configurations\/configuration_synthetic\/revisions\/[^/]+|runtime-environment-drafts\/draft_prepared_environment)\/publication$/.test(
+          message.location().url,
+        )
+      ) {
+        publicationTimeoutDiagnostics++;
         return;
       }
       if (message.type() === "error" || message.type() === "warning")
@@ -417,10 +432,62 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
       createdAt: configuration.updatedAt,
     };
     const commands: string[] = [];
+    let promptPlan: RevisionImpactPlan | undefined;
+    let firstPromptPublicationKey: string | undefined;
     const draftHistory: ManagedConfigurationRevision[] = [];
     await page.route("**/api/v1/**", async (route) => {
       const path = new URL(route.request().url()).pathname;
       const method = route.request().method();
+      if (path === "/api/v1/revision-impact-plans/prompt_plan_synthetic") {
+        if (!promptPlan) throw new Error("Prompt plan was not prepared");
+        const report: RevisionImpactPage = {
+          plan: promptPlan,
+          total: 1,
+          items: [
+            {
+              ref: "prompt_item_synthetic",
+              projectRef: projects[0]?.ref ?? "project_synthetic",
+              consumerKind: "AGENT",
+              consumerRef: "agent_prompt_consumer",
+              consumerVersion: 2,
+              bindingRef: "prompt_binding",
+              bindingVersion: 3,
+              sourceRevisionRef: "previous_prompt",
+              outcome: promptPlan.state === "APPLIED" ? "CONFLICT" : "PENDING",
+            },
+          ],
+        };
+        await route.fulfill({ json: report });
+        return;
+      }
+      if (
+        path.endsWith("/impact-plans") &&
+        path.startsWith("/api/v1/prompt-template-configurations/")
+      ) {
+        expect(method).toBe("POST");
+        expect(route.request().headers()["if-match"]).toBe(
+          `"${String(configuration.version)}"`,
+        );
+        expect(revision.state).toBe("VALID");
+        promptPlan = {
+          ref: "prompt_plan_synthetic",
+          version: 1,
+          kind: "PROMPT_TEMPLATE",
+          sourceRef: configuration.ref,
+          sourceVersion: configuration.version,
+          draftRef: revision.ref,
+          draftVersion: revision.revision,
+          targetDigest: revision.digest,
+          digest: "plan-digest",
+          total: 2,
+          state: "PREPARED",
+          createdAt: "2026-09-06T00:00:00Z",
+          expiresAt: "2099-09-06T00:00:00Z",
+        };
+        commands.push("prepare");
+        await route.fulfill({ json: promptPlan });
+        return;
+      }
       if (
         path === "/api/v1/prompt-template-configurations/drafts" &&
         method === "POST"
@@ -488,6 +555,35 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
           /^[0-9a-f-]{36}$/,
         );
         const publishing = path.endsWith("publication");
+        if (publishing) {
+          if (!promptPlan)
+            throw new Error("Prompt publication requires prepared plan");
+          expect(route.request().postDataJSON()).toEqual({
+            planRef: promptPlan.ref,
+            selectedItemRefs: ["prompt_item_synthetic"],
+          });
+          const key = route.request().headers()["idempotency-key"];
+          if (!firstPromptPublicationKey) {
+            firstPromptPublicationKey = key;
+            commands.push("publish-unknown");
+            await route.fulfill({
+              status: 504,
+              json: {
+                type: "about:blank",
+                title: "Gateway Timeout",
+                status: 504,
+              },
+            });
+            return;
+          }
+          expect(key).toBe(firstPromptPublicationKey);
+          promptPlan = {
+            ...promptPlan,
+            state: "APPLIED",
+            version: 2,
+            publishedRevisionRef: revision.ref,
+          };
+        }
         expect(revision.state).toBe(publishing ? "VALID" : "DRAFT");
         revision = { ...revision, state: publishing ? "PUBLISHED" : "VALID" };
         configuration = {
@@ -496,7 +592,13 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
           ...(publishing ? { currentRevision: revision } : {}),
         };
         commands.push(publishing ? "publish" : "validate");
-        await route.fulfill({ json: { configuration, revision } });
+        await route.fulfill({
+          json: {
+            configuration,
+            revision,
+            ...(publishing ? { plan: promptPlan } : {}),
+          },
+        });
         return;
       }
       await route.fallback();
@@ -537,6 +639,31 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
     await page
       .getByRole("button", { name: "Опубликовать", exact: true })
       .click();
+    const promptPlanDialog = page.getByRole("dialog", {
+      name: "План публикации",
+      exact: true,
+    });
+    await expect(
+      promptPlanDialog.getByText("В исходном плане: 2", { exact: true }),
+    ).toBeVisible();
+    await promptPlanDialog
+      .getByRole("checkbox", { name: "agent_prompt_consumer", exact: true })
+      .check();
+    await promptPlanDialog
+      .getByRole("button", {
+        name: "Опубликовать и обновить выбранных: 1",
+        exact: true,
+      })
+      .click();
+    await promptPlanDialog
+      .getByRole("button", { name: "Повторить исходный запрос", exact: true })
+      .click();
+    await expect(
+      promptPlanDialog.locator('[data-state="CONFLICT"]'),
+    ).toBeVisible();
+    await promptPlanDialog
+      .getByRole("button", { name: "Закрыть", exact: true })
+      .click();
     await expect(
       page.locator(".configuration-editor [data-state='PUBLISHED']"),
     ).toBeVisible();
@@ -551,7 +678,15 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
       path: testInfo.outputPath(`configuration-${String(width)}.png`),
       fullPage: true,
     });
-    expect(commands).toEqual(["create", "save", "save", "validate", "publish"]);
+    expect(commands).toEqual([
+      "create",
+      "save",
+      "save",
+      "validate",
+      "prepare",
+      "publish-unknown",
+      "publish",
+    ]);
     const summaries: ManagedConfigurationSummary[] = Array.from(
       { length: 8 },
       (_, index) => ({
@@ -894,6 +1029,26 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
       await page
         .getByRole("button", { name: "Опубликовать", exact: true })
         .click();
+      const environmentPlan = page.getByRole("dialog", {
+        name: "План публикации",
+        exact: true,
+      });
+      await environmentPlan
+        .getByRole("button", {
+          name: "Опубликовать и обновить выбранных: 0",
+          exact: true,
+        })
+        .click();
+      await environmentPlan
+        .getByRole("button", { name: "Обновить", exact: true })
+        .click();
+      await expect(
+        environmentPlan.locator('[data-state="APPLIED"]'),
+      ).toBeVisible();
+      await environmentPlan
+        .getByRole("button", { name: "Закрыть", exact: true })
+        .click();
+      await page.getByRole("link", { name: "Открыть", exact: true }).click();
       await expect(page).toHaveURL(
         new RegExp(
           `/projects/${projectRef}/environments/environment_synthetic$`,
@@ -1295,6 +1450,7 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
     expect(snapshotConflictDiagnostics).toBe(
       width === 390 || width === 2900 ? 1 : 0,
     );
+    expect(publicationTimeoutDiagnostics).toBe(2);
     expect(failures).toEqual([]);
   });
 }
