@@ -1656,6 +1656,17 @@ const ru = {
     previewUnavailable:
       "Для этого формата безопасный встроенный предпросмотр недоступен.",
     binding: "Доступ сотрудников",
+    bindingCount: "Связей: {count}",
+    loadedOfTotal: "Загружено {loaded} из {total}",
+    bindingTargetTotal: "Видимых сотрудников: {count}",
+    bindingReasons: {
+      AVAILABLE: "Действие доступно.",
+      ALREADY_BOUND: "Файл уже подключён.",
+      NOT_BOUND: "Файл не подключён.",
+      AGENT_CAPABILITY_REQUIRED: "Сотруднику не назначена возможность «Файлы».",
+      AGENT_ARCHIVED: "Сотрудник архивирован; новое подключение недоступно.",
+      ARTIFACT_UNAVAILABLE: "Состояние файла не допускает это действие.",
+    },
     bindingHint:
       "Выберите сотрудников, которым этот проверенный файл будет доступен как источник знаний.",
     agentFilesCapabilityRequired:
@@ -4521,6 +4532,17 @@ const en = {
     previewUnavailable:
       "A safe built-in preview is unavailable for this format.",
     binding: "Employee access",
+    bindingCount: "Bindings: {count}",
+    loadedOfTotal: "Loaded {loaded} of {total}",
+    bindingTargetTotal: "Visible employees: {count}",
+    bindingReasons: {
+      AVAILABLE: "This action is available.",
+      ALREADY_BOUND: "The file is already bound.",
+      NOT_BOUND: "The file is not bound.",
+      AGENT_CAPABILITY_REQUIRED: "The employee has no Files capability.",
+      AGENT_ARCHIVED: "The employee is archived; new bindings are unavailable.",
+      ARTIFACT_UNAVAILABLE: "The file state does not allow this action.",
+    },
     bindingHint:
       "Choose the employees who can use this validated file as a knowledge source.",
     agentFilesCapabilityRequired:

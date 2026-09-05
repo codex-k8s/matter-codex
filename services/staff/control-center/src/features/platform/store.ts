@@ -857,7 +857,7 @@ export const usePlatformStore = defineStore("platform", () => {
       artifact.version,
     );
     upsert(artifacts, [result.data]);
-    void loadAgent(agentRef);
+    Reflect.deleteProperty(agents, agentRef);
     return result.data;
   }
 

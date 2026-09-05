@@ -26,6 +26,7 @@ export interface AsyncEntityLoadRequest {
 export interface AsyncEntityPage<T extends AsyncEntityPickerItem> {
   items: readonly T[];
   nextCursor?: string | null;
+  total?: number;
 }
 
 export type AsyncEntityLoader<T extends AsyncEntityPickerItem> = (
@@ -119,6 +120,7 @@ export function useAsyncEntityCollection<T extends AsyncEntityPickerItem>(
 ) {
   const query = ref("");
   const items = shallowRef<T[]>([]);
+  const total = ref<number>();
   const nextCursor = ref<string | null>(null);
   const initialLoading = ref(false);
   const loadingMore = ref(false);
@@ -168,6 +170,13 @@ export function useAsyncEntityCollection<T extends AsyncEntityPickerItem>(
         return;
       if (!isObject(page) || !Array.isArray(page.items))
         throw new Error("Invalid catalog page");
+      if (
+        page.total !== undefined &&
+        (typeof page.total !== "number" ||
+          !Number.isSafeInteger(page.total) ||
+          page.total < page.items.length)
+      )
+        throw new Error("Invalid catalog total");
       const cursor = page.nextCursor === "" ? null : (page.nextCursor ?? null);
       if (
         cursor !== null &&
@@ -178,8 +187,16 @@ export function useAsyncEntityCollection<T extends AsyncEntityPickerItem>(
         append ? items.value : [],
         page.items as readonly T[],
       );
+      if (page.total !== undefined && page.total < merged.length)
+        throw new AppProblem({
+          status: 412,
+          code: "VERSION_MISMATCH",
+          kind: "conflict",
+          retryable: true,
+        });
       if (cursor) cursors.add(cursor);
       items.value = merged;
+      total.value = page.total;
       nextCursor.value = cursor;
       hasLoaded.value = true;
     } catch (loadError) {
@@ -214,6 +231,7 @@ export function useAsyncEntityCollection<T extends AsyncEntityPickerItem>(
     cursors.clear();
     const expectedGeneration = generation;
     items.value = [];
+    total.value = undefined;
     nextCursor.value = null;
     error.value = undefined;
     hasLoaded.value = false;
@@ -265,6 +283,7 @@ export function useAsyncEntityCollection<T extends AsyncEntityPickerItem>(
     hasMore,
     initialLoading,
     items,
+    total,
     loadMore,
     loadMoreError,
     loadingMore,

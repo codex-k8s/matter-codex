@@ -1034,10 +1034,11 @@ Generated SDK потреблён из HTTP `820ad57f1a64700ed27c0f31165d19d3ee57
 VFS search передаёт текущий path серверу вместе с query и поддерживает typed
 lifecycle/kinds filters. Ответ проверяется по закрытым metadata/action enums,
 версиям и scope; каталог с version=0 остаётся допустимым. Эти поля не выводятся
-из browser state. UI массового выбора VFS и `listArtifactBindingTargets` ещё
-требуют подключения, RoleImage643 и Git write-back потребляются следующим пакетом.
+из browser state. UI массового выбора VFS ещё требует подключения; каталог
+`listArtifactBindingTargets` подключён следующим описанным ниже пакетом.
+RoleImage643 и Git write-back потребляются следующим пакетом.
 
-На текущем дереве unit 1016/1016 и targeted synthetic 390/2900 21/21 PASS;
+До пакета Files67 получены unit 1016/1016 и targeted synthetic 390/2900 21/21 PASS;
 browser-сценарий проверяет точный continuation Run и отказ по assigned Files
 capability. Полный baseline фиксируется по SHA в PR. Реальный protected
 browser→HTTP→CP, staging и live-провайдеры — NOT RUN.
@@ -1053,6 +1054,50 @@ Regression fixture удерживает только первый общий з�
 Home и последующий Session recovery. Targeted 390/2900 — 2/2 PASS. Первый полный
 прогон `9bfe88a95` имел 34/35 PASS и FAIL Home390; диагностические ошибки default
 булевого prop и времени жизни fixture исправлены, их история сохранена в PR.
+
+Exact `50d5810a1` прошёл unit 1016/1016, lint/format, production и synthetic
+build/typecheck, E2E TypeScript/discovery. Полный synthetic: **FAIL 34/35 за
+6,1 минуты**, Chromium `Target crashed` в Home2560 после Email OIDC. Исправленный
+Home390 прошёл. Отдельный диагностический Home2560: PASS 42,5 s; последовательность
+Home2900→Home2560 в одном worker/browser: PASS 2/2, 46,8/40,9 s. В stderr verbosity
+нет fatal/OOM. Причина crash не доказана, диагностический PASS не отменяет FAIL.
+Временный диагностический config вне репозитория сохранял исходные проверки и
+ограничивал окружение browser безопасным списком; live credentials не передавались.
+
+Каталог связей Files теперь использует `listArtifactBindingTargets`: серверные
+query/total/cursor/digest, имена и `canBind/canUnbind` с закрытыми причинами. При
+смене файла/версии/поиска прежнее чтение отменяется, snapshot drift на следующей
+странице сбрасывает каталог и допускает только одно новое первое чтение. Панель
+ограничена по высоте, поддерживает прокрутку, загрузку следующих страниц, поиск и
+расширение в modal. Локальный обход Agents и вывод eligibility из их capability
+удалены. Архивная существующая связь снимается по owner projection; configured
+Agent не требует runtimeReady для знания. После mutation применяется точная
+Artifact receipt и инвалидируется Agent cache: eager GET архивного Agent,
+способный дать unhandled 404 после успешного unbind, больше не выполняется.
+Подключён additive OpenAPI checkpoint HTTP `1bd6823f0`: группа `sourceKinds[]`
+передаётся одним `listArtifacts` запросом с прежними query/state/type/scan
+фильтрами. Клиентские per-source cursors, fanout и сортировка объединённых
+страниц удалены. PWA сохраняет серверный порядок, единый cursor и total; общий
+collection primitive переносит optional total вместе с lifetime страницы и
+сбрасывает его при новом поиске. Если total стал меньше уже собранных строк,
+старый snapshot закрыто сбрасывается с единственным чтением первой страницы.
+Toolbar показывает загруженное количество и authoritative total. Generated
+Go/TS получены канонической генерацией из source; для рабочего HTTP пути
+требуется соответствующий checkpoint gateway, его mapper в PWA ветке не копируется.
+
+До group consumer пакет Files67 прошёл полный unit 1031/1031, lint/format,
+production/synthetic build/typecheck и E2E TypeScript/discovery. Scoped browser
+390/2900: PASS 2/2 за 1,7 минуты (50,8/50,6 s). Первый lint обнаружил шесть
+локальных ошибок, следующий typecheck — отсутствие error:undefined в typed mock;
+исправленные проверки прошли. После sourceKinds consumer targeted unit 69/69,
+typecheck и E2E TypeScript PASS. Полный новый functional baseline: unit
+1037/1037, lint/format, production/synthetic build/typecheck, E2E discovery и
+canonical Go/TS byte replay PASS. Scoped 390/2900 после group consumer:
+**FAIL 1/2** — 390 прошёл, 2900 получил прежний Chromium `Target crashed` в
+Email после OIDC ещё до Files. Это показывает, что сбой не ограничен 2560;
+причина пока не доказана. Новый полный synthetic остаётся NOT RUN до следующего
+согласованного пакета SDK; исходный full50d FAIL сохраняется. Отдельная CDP/heap
+диагностика продолжается без изменения timeout, GPU или sandbox.
 
 ## Проверенная документация библиотек
 

@@ -34,6 +34,52 @@ afterEach(() => {
 });
 
 describe("useAsyncEntityCollection", () => {
+  it("сохраняет серверный total и сбрасывает его вместе с query snapshot", async () => {
+    vi.useFakeTimers();
+    const loader = vi
+      .fn()
+      .mockResolvedValueOnce({
+        items: [{ id: "one", label: "Один" }],
+        total: 81,
+        nextCursor: "next",
+      })
+      .mockResolvedValueOnce({ items: [], total: 0 });
+    const scope = effectScope();
+    const collection = scope.run(() => useAsyncEntityCollection(loader));
+    if (!collection) throw new Error("Missing collection");
+    await vi.runAllTimersAsync();
+    expect(collection.total.value).toBe(81);
+    collection.query.value = "новый";
+    expect(collection.total.value).toBeUndefined();
+    await vi.runAllTimersAsync();
+    expect(collection.total.value).toBe(0);
+    scope.stop();
+  });
+  it("отбрасывает собранные страницы при уменьшившемся total и перечитывает первый snapshot", async () => {
+    vi.useFakeTimers();
+    const loader = vi
+      .fn()
+      .mockResolvedValueOnce({
+        items: [{ id: "one", label: "Один" }],
+        total: 2,
+        nextCursor: "next",
+      })
+      .mockResolvedValueOnce({ items: [{ id: "two", label: "Два" }], total: 1 })
+      .mockResolvedValueOnce({
+        items: [{ id: "fresh", label: "Свежий" }],
+        total: 1,
+      });
+    const scope = effectScope();
+    const collection = scope.run(() => useAsyncEntityCollection(loader));
+    if (!collection) throw new Error("Missing collection");
+    await vi.runAllTimersAsync();
+    await collection.loadMore();
+    await vi.runAllTimersAsync();
+    expect(loader).toHaveBeenCalledTimes(3);
+    expect(collection.items.value.map((item) => item.id)).toEqual(["fresh"]);
+    expect(collection.total.value).toBe(1);
+    scope.stop();
+  });
   it("сбрасывает stale snapshot при догрузке и не зацикливает отказ первой страницы", async () => {
     vi.useFakeTimers();
     const conflict = new AppProblem({

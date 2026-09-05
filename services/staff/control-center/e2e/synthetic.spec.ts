@@ -1265,13 +1265,17 @@ for (const width of [2900, 2560, 1920, 1440, 1280, 900, 390]) {
       "data-presentation-state",
       "live",
     );
-    if (width === 1440 || width === 390)
-      await checkFileSelection(page, catalogProject.ref, async () => {
-        await page.screenshot({
-          path: testInfo.outputPath(`file-selection-${String(width)}.png`),
-          fullPage: true,
-        });
-      });
+    if (width === 1440 || width === 390 || width === 2900)
+      await checkFileSelection(
+        page,
+        catalogProject.ref,
+        async (name = "file-selection") => {
+          await page.screenshot({
+            path: testInfo.outputPath(`${name}-${String(width)}.png`),
+            fullPage: name === "file-selection",
+          });
+        },
+      );
     if (width === 1440 || width === 390)
       await checkAssistantHistory(page, catalogProject.ref);
     if (width === 2900 || width === 390)

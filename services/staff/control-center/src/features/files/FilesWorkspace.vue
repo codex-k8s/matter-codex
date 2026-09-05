@@ -26,12 +26,13 @@ import {
 import FileLifecycleDialog from "@/features/files/FileLifecycleDialog.vue";
 import FilePreviewDialog from "@/features/files/FilePreviewDialog.vue";
 import FileTypeIcon from "@/features/files/FileTypeIcon.vue";
+import ArtifactBindingTargets from "@/features/files/ArtifactBindingTargets.vue";
+import { bindingTargetEditable } from "@/features/files/binding-targets";
 import TrashBulkDialog from "@/features/files/TrashBulkDialog.vue";
 import {
   artifactLifecycleState,
   artifactLifecycleAnnounced,
   artifactSourceKinds,
-  artifactBindingControlEnabled,
   artifactSourcesForTab,
   createUploadQueueItems,
   nextUploadQueueItems,
@@ -50,6 +51,7 @@ import {
 import { usePlatformStore } from "@/features/platform/store";
 import type {
   Artifact,
+  ArtifactBindingTarget,
   ArtifactImpact,
 } from "@/shared/api/generated/openapi/types.gen";
 import { asProblem, type AppProblem } from "@/shared/api/problem";
@@ -146,22 +148,13 @@ const {
   loadMore,
   loadingMore,
   query,
+  total,
   refresh,
 } = collection;
 
 const project = computed(() => platform.projects[props.projectRef]);
 const canUpload = computed(() =>
   project.value?.nextActions.includes("UPLOAD_ARTIFACT"),
-);
-const agents = computed(() =>
-  Object.values(platform.agents)
-    .filter(
-      (agent) =>
-        agent.projectRef === props.projectRef &&
-        !agent.system &&
-        agent.state !== "ARCHIVED",
-    )
-    .sort((left, right) => left.name.localeCompare(right.name)),
 );
 const loadedArtifacts = computed(() =>
   items.value.map((item) => item.artifact),
@@ -535,21 +528,6 @@ function uploadPreviewArtifact(item: UploadQueueItem): Artifact {
     createdAt: "1970-01-01T00:00:00.000Z",
     nextActions: [],
   };
-}
-
-function bindingNames(artifact: Artifact): string {
-  return artifact.agentBindings
-    .map((ref) => platform.agents[ref]?.name)
-    .filter((name): name is string => Boolean(name))
-    .join(", ");
-}
-
-function agentSupportsFiles(agentRef: string): boolean {
-  return (
-    platform.agents[agentRef]?.capabilities.some(
-      (capability) => capability.key === "platform.artifact.manage",
-    ) ?? false
-  );
 }
 
 function replaceArtifact(artifact: Artifact): void {
@@ -957,23 +935,24 @@ async function confirmLifecycleOperation(): Promise<void> {
 
 async function changeBinding(
   artifact: Artifact,
-  agentRef: string,
-  enabled: boolean,
+  target: ArtifactBindingTarget,
+  artifactVersion: number,
 ): Promise<void> {
   if (
     bindingBusy.value ||
-    !artifactBindingControlEnabled(
-      artifact,
-      agentRef,
-      agentSupportsFiles(agentRef),
-    )
+    artifact.version !== artifactVersion ||
+    !bindingTargetEditable(target)
   )
     return;
-  bindingBusy.value = `${artifact.ref}:${agentRef}`;
+  bindingBusy.value = `${artifact.ref}:${target.agentRef}`;
   operationProblem.value = undefined;
   try {
     replaceArtifact(
-      await platform.changeArtifactAgentBinding(artifact, agentRef, enabled),
+      await platform.changeArtifactAgentBinding(
+        artifact,
+        target.agentRef,
+        !target.bound,
+      ),
     );
   } catch (error) {
     operationProblem.value = asProblem(error);
@@ -1053,10 +1032,7 @@ function closePreview(): void {
 onMounted(() => {
   const preferred = window.localStorage.getItem(viewPreferenceKey);
   if (preferred === "grid" || preferred === "list") viewMode.value = preferred;
-  void Promise.all([
-    platform.loadProject(props.projectRef),
-    platform.loadAgents(props.projectRef),
-  ]);
+  void platform.loadProject(props.projectRef);
 });
 onBeforeUnmount(() => {
   disposed = true;
@@ -1159,7 +1135,11 @@ onBeforeUnmount(() => {
         </select>
       </label>
       <span class="files-workspace__count mono">
-        {{ custom.loaded }} {{ items.length }}
+        {{
+          total === undefined
+            ? `${custom.loaded} ${String(items.length)}`
+            : $t("files.loadedOfTotal", { loaded: items.length, total })
+        }}
       </span>
       <ViewModeToggle
         v-model="viewMode"
@@ -1604,7 +1584,13 @@ onBeforeUnmount(() => {
                   </span>
                 </span>
                 <span class="file-list-row__binding">
-                  {{ bindingNames(artifact) || $t("files.notBound") }}
+                  {{
+                    artifact.agentBindings.length
+                      ? $t("files.bindingCount", {
+                          count: artifact.agentBindings.length,
+                        })
+                      : $t("files.notBound")
+                  }}
                 </span>
                 <span class="mono">v{{ artifact.revision }}</span>
                 <StatusBadge :state="artifact.scanState" />
@@ -1760,39 +1746,15 @@ onBeforeUnmount(() => {
             </button>
           </section>
           <section class="file-details__bindings">
-            <h3>{{ $t("files.binding") }}</h3>
-            <p>{{ $t("files.bindingHint") }}</p>
-            <p v-if="agents.length === 0" class="muted-text">
-              {{ $t("files.noAgents") }}
-            </p>
-            <label v-for="agent in agents" :key="agent.ref">
-              <input
-                type="checkbox"
-                :checked="selectedArtifact.agentBindings.includes(agent.ref)"
-                :disabled="
-                  !artifactBindingControlEnabled(
-                    selectedArtifact,
-                    agent.ref,
-                    agentSupportsFiles(agent.ref),
-                  ) || !!bindingBusy
-                "
-                @change="
-                  changeBinding(
-                    selectedArtifact,
-                    agent.ref,
-                    ($event.target as HTMLInputElement).checked,
-                  )
-                "
-              />
-              <span
-                ><strong>{{ agent.name }}</strong
-                ><small>{{
-                  agentSupportsFiles(agent.ref)
-                    ? agent.purpose
-                    : $t("files.agentFilesCapabilityRequired")
-                }}</small></span
-              >
-            </label>
+            <ArtifactBindingTargets
+              :artifact="selectedArtifact"
+              :busy="!!bindingBusy"
+              @change="
+                (target, version) =>
+                  changeBinding(selectedArtifact!, target, version)
+              "
+              @refresh="refresh()"
+            />
           </section>
           <section class="file-details__impact">
             <h3>{{ custom.activeRunsTitle }}</h3>
