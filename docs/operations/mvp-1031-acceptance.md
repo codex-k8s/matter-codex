@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.9.0
+version: 1.10.0
 updated: 2026-09-06
 ---
 
@@ -82,27 +82,40 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `adb21e4d3367049853f631673248b7a3e26e0044` включены следующие
+На `aef53fff5b3e8993f437f63eb25d33792ebca907` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
 | Unit | Включённый exact SHA | Граница checkpoint |
 | --- | --- | --- |
-| Control-plane #1046, PR #1071 | `c1a7fb8cdb02214f4b0187bd879a60b91c6a43a7` | D1–D7, SourceWork, account model catalog/TOML, Session affinity v7, Env638, Mattermost637, RoleImage build/lineage и actual selective rebind643, prompt context641, VFS/MCP642, revision impact644, active instruction binding645, policy71 и initial-request-bound artifact stream. Files group sourceKinds использует один owner query/total/cursor. |
+| Control-plane #1046, PR #1071 | `0efbdc6dc04af0320f4959c7fd417728f454cd9b` | D1–D7, SourceWork, account model catalog/TOML, Session affinity v7, Env638, Mattermost637, RoleImage build/lineage и actual selective rebind643, prompt context641, VFS/MCP642, revision impact644, active instruction binding645 и initial-request-bound artifact stream. Policy72/migration646: четыре typed GRANT/USE selector, exact ACL/managed-package predicate для page/count/command/replay и single/list/mutation parity. Files group sourceKinds использует один owner query/total/cursor. |
 | Secret Broker #1068, PR #1069 | `af227acc60d9ca1bd0207429c6d8088fb9496af7` | Encrypted staged lifecycle и protected account model observer, fresh remote provenance, bounded actual Codex process и отказ refresh под read authority. |
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
-| HTTP/SDK #1045, PR #1066 | `4c8dc9184cf358c1abfae057404aed541a149bf9` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Exact integration grant/use candidates72 ещё завершаются. |
+| HTTP/SDK #1045, PR #1066 | `e66ab918d48b37f5354c9d8ebe526a53312e7076` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Четыре typed integration candidates72 endpoint проверяют GRANT/USE, exact prefix/context/pins, reason/boolean/schema и pagination. |
 | PWA #1022, PR #1067 | `29787d8239696095ae596d1e9343878910bed95a` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage. Files67 использует owner binding targets, stale recovery, modal/search/total и единый group sourceKinds cursor. Потребление полного641/643/644/645/70 SDK и нового72 ещё продолжается. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
-| Agent-runner #1026, PR #1058 | `13c092f5131e17b8f1a7be4e1657f77bc1e88cde` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Выполненные native effects фиксируются до post-execution quota check. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
+| Agent-runner #1026, PR #1058 | `5613b045c4d63956de96819d8e42fc7b2c13b8d9` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Native effects и Usage сохраняются при post-execution failure. #1072 согласует canary/publish/reset/prompt межпроцессным bounded lock; #1073 сохраняет расход пяти failure branches и callback retry. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
 | Integration-gateway #1028, PR #1064 | `b889673f04bd431788ac7553e1a80b033852e431` | SourceWork и исполняемый Git write-back: one-parent proposal commit, exact empty lease, separate branch/PR receipts, UNKNOWN read-only recovery, GitHub PR/GitLab MR readback; Git runtime/tmpfs/non-root и оба render. Live provider proof ещё NOT RUN. |
 | Interaction-gateway #1030, PR #1061 | `c7d03d818ac4e6c5a226d49c6d14d7c6dc798b9e` | Actual package системных subscriptions/deliveries; OwnerGate до notification/mirror, exact input и approval claim, fail-closed discovery. |
 
 Сохранены включённые ранее authority `0765f3dad`
 и исправление #1056. Исходные Proto/OpenAPI/policy объединены по семантике,
 generated Go/SDK/PWA validator получены повторной генерацией.
+
+Дополнение72 включено без конфликтов. Source/Proto/operations совпадают
+с проверенным CP0ef, OpenAPI и generated Go/TS — с проверенным HTT Pe66.
+Это сравнение точных файлов не объявляется новым codegen либо полным baseline.
+На CP0ef полный disposable Bootstrap **PASS**30.061s, race/vet/build,
+SQL/Proto/policy72/ABI **PASS**. На HTT Pe66 full race **PASS**6.046s,
+vet/build/OpenAPI/SDK/codegen/Proto/policy72/ABI **PASS**; первый compiler
+запуск **FAIL** из-за пользовательской квоты `/tmp`, тот же код проверен
+повторно с disk TMPDIR. На runner5613 full race/vet/build и public
+`make test-agent-runner` **PASS**; отдельный TLS callback/retry regression
+**PASS**6.696s, app full race15.846s. Длинный TMPDIR первоначально дал
+**FAIL** старого AF_UNIX fixture, короткий private path прошёл.
+Общие baseline/review/live checks нового интеграционного SHA — **NOT RUN**.
 
 На code SHA `2eda37a2ebb07b03ba68a5e7b555b37526e47424` локально **PASS**
 оба `local-role-image-render-contract-test.sh` профиля, включая положительный
