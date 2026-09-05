@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"sort"
 	"strconv"
 	"strings"
@@ -89,6 +90,7 @@ func (repository *Repository) prepareRuntimeContinuationNotice(ctx context.Conte
 	noticeSnapshot.TemplateContent = content
 	noticeSnapshot.ServiceTemplateRevision = promptservice.ServiceTemplateRevision
 	noticeSnapshot.TargetKind, noticeSnapshot.TargetRef = promptservice.TargetSessionContinuation, stringMap(snapshot, "sessionRef")
+	noticeSnapshot.ExtraTemplates = nil
 	noticeSnapshot.StagePurposeTemplate, noticeSnapshot.StageExpectedResultTemplate = "", ""
 	noticeSnapshot.ContextPin.PreviousRuntimeRevisionRef = previousRef
 	noticeSnapshot.SessionContinuation = string(rawDiff)
@@ -150,6 +152,15 @@ func continuationComponents(snapshot map[string]any) (map[string][]promptservice
 	if value("promptServiceTemplateDigest") != "" {
 		result["INSTRUCTIONS"] = append(result["INSTRUCTIONS"], tuple("promptServiceTemplateRevision", "", "promptServiceTemplateDigest"))
 	}
+	promptSnapshot, _ := data["promptSnapshot"].(map[string]any)
+	for _, extra := range continuationObjects(promptSnapshot["extraTemplates"]) {
+		result["INSTRUCTIONS"] = append(result["INSTRUCTIONS"], promptservice.RuntimeDescriptor{Ref: continuationString(extra, "Ref"), Digest: continuationString(extra, "Digest"), Value: continuationString(extra, "Kind")})
+	}
+	for _, field := range []string{"stagePurposeTemplate", "stageExpectedResultTemplate"} {
+		if text := continuationString(promptSnapshot, field); text != "" {
+			result["INSTRUCTIONS"] = append(result["INSTRUCTIONS"], promptservice.RuntimeDescriptor{Ref: field, Digest: continuationDigest(text)})
+		}
+	}
 	result["MODEL"] = []promptservice.RuntimeDescriptor{{Value: value("runtimeProvider")}, {Value: value("runtimeModel")}}
 	result["REASONING"] = []promptservice.RuntimeDescriptor{{Value: value("reasoningMode")}, {Value: value("effectiveReasoningEffort")}}
 	result["IMAGE"] = []promptservice.RuntimeDescriptor{{Digest: strings.TrimPrefix(value("imageManifestDigest"), "sha256:")}}
@@ -209,13 +220,27 @@ func continuationString(value map[string]any, key string) string {
 }
 func continuationNumber(value any) int64 {
 	switch number := value.(type) {
+	case nil:
+		return 0
+	case int:
+		return int64(number)
+	case int32:
+		return int64(number)
+	case int64:
+		return number
 	case float64:
+		if math.IsNaN(number) || math.IsInf(number, 0) || math.Trunc(number) != number || number < 0 || number > 9007199254740991 {
+			return -1
+		}
 		return int64(number)
 	case string:
-		result, _ := strconv.ParseInt(number, 10, 64)
+		result, err := strconv.ParseInt(number, 10, 64)
+		if err != nil || strconv.FormatInt(result, 10) != number {
+			return -1
+		}
 		return result
 	}
-	return 0
+	return -1
 }
 func continuationDigest(value any) string {
 	raw, err := json.Marshal(value)

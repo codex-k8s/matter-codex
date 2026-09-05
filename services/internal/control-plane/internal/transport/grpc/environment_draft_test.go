@@ -37,10 +37,16 @@ func TestPublishedEnvironmentDraftRejectsIncompleteOwnerResult(t *testing.T) {
 			t.Fatalf("incomplete owner result was accepted: %v", err)
 		}
 	}
-	response, err := castPublishedEnvironmentDraft(command.Result{RuntimeEnvironment: &entity.RuntimeEnvironmentSet{Ref: "environment-test", Version: 1},
-		RuntimeEnvironmentDraft: &entity.RuntimeEnvironmentDraft{State: "PUBLISHED", Version: 1, ValidationDigest: "validated", PublishedEnvironmentRef: "environment-test"}})
+	result := command.Result{RuntimeEnvironment: &entity.RuntimeEnvironmentSet{Ref: "environment-test", Version: 1, CurrentVersion: entity.RuntimeEnvironmentVersion{Ref: "revision-test", Digest: "validated"}},
+		RuntimeEnvironmentDraft: &entity.RuntimeEnvironmentDraft{Ref: "draft-test", State: "PUBLISHED", Version: 2, ValidationDigest: "validated", PublishedEnvironmentRef: "environment-test"},
+		RevisionImpactPlan:      &entity.RevisionImpactPlan{Ref: "plan-test", Digest: "plan-digest", Kind: "RUNTIME_ENVIRONMENT", State: "APPLIED", Version: 2, DraftRef: "draft-test", DraftVersion: 1, TargetDigest: "validated", PublishedRevisionRef: "revision-test"}}
+	response, err := castPublishedEnvironmentDraft(result)
 	if err != nil || response.Environment.Ref != "environment-test" {
 		t.Fatalf("complete owner result: %v", err)
+	}
+	result.RevisionImpactPlan.PublishedRevisionRef = "other"
+	if response, err := castPublishedEnvironmentDraft(result); response != nil || status.Code(err) != codes.Internal {
+		t.Fatal("mismatched plan effect accepted")
 	}
 }
 

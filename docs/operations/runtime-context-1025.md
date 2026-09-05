@@ -4,7 +4,7 @@ title: Проекция Skills и памяти runtime-controller
 type: operations
 status: approved
 owner: backend
-version: 1.1.0
+version: 1.3.0
 updated: 2026-09-05
 ---
 
@@ -20,7 +20,8 @@ updated: 2026-09-05
 | Initial | workload mTLS и подписанный exact grant | CP ClaimExecution, immutable RuntimeRevision | Полная проверка digest, typed snapshot, новый Pod и immutable projection |
 | Continuation | Новый server-owned turn/attempt | CP новая revision после закрытия предыдущего графа | Новый Pod; resume только с owner-разрешённым неизменным context digest |
 | Retry | Новый grant/fence, не прежний ticket | CP новая attempt/revision | Новые projections; чужой или прежний callback отклоняется |
-| Skill file | Init mTLS, ticket, execution binding и точный pin | CP ReadExecutionArtifact с lease/fence/generation | Membership в snapshot до RPC, bounded bytes и exact digest после RPC |
+| Skill file | Init mTLS, ticket, execution binding и точный pin | CP StreamExecutionArtifact с lease/fence/generation и initial Proto digest | Membership в snapshot до RPC, private spool, Complete/EOF/size/digest до HTTP response |
+| File catalog | Runner callback mTLS, ticket, execution/MCP binding | CP SearchExecutionFiles/GetExecutionFileMetadata/PreviewExecutionFile/GetExecutionFileManifest, exact catalog и свежая owner eligibility | Только advertised purpose, bounded count/cursor/preview; exact response readback и обязательный RecordRunToolCall без query/content |
 | Memory | Полномочия из owner revision, не filesystem path | CP snapshot с binding/revision/retention | Read-only typed records, без knowledge-artifact fallback |
 | Renew | Та же active lease/attempt/fence | CP RenewExecution | Нельзя менять snapshot продлением lease |
 | Warm reuse | Точная system session и compatibility digest | CP desired revision и claimed turn | Только одинаковые pins; changed context не передаётся старому Pod |
@@ -58,8 +59,59 @@ RuntimeRevision digest пересчитываются до credential materializ
 query fields из OPS-RUNNER-1026. Selector не выдаёт authority: ticket, mTLS,
 execution headers и membership проверяются до owner RPC. После RPC
 сверяются project/ref/revision/size/digest и фактический SHA-256 bytes.
-Receive budget отдельного RPC равен pin size + 64KiB metadata, без изменения
-лимитов остальных методов. Ошибка не возвращает частичный файл или raw body.
+Receive budget отдельного stream frame равен128KiB, body chunks до64KiB;
+лимит полного input остаётся512MiB. Ошибка не возвращает частичный файл или raw
+body. Owner проверяет size/digest источника и повторяет current eligibility
+перед Complete; consumer проверяет terminal frame и EOF, затем выдаёт body.
+
+Catalog body использует ровно purpose/entry_ref/revision/digest в query и
+artifact ref в path. Lease, actor, project и catalog берутся из проверенного
+execution input; отдельный metadata read подтверждает exact entry перед stream.
+Metadata содержит только относительный descriptor, без ticket/token/locator.
+Исходники owner71 приняты из `f9637cb93df84ac66db69005e12011b76cced2b1`;
+prerequisite merge `7165b6711eec2be1089966e4610df7731d31b432` сохраняет CP89
+и canonical regenerated source.
+
+Spool: отдельный том2Gi, два concurrent файла до512MiB, private0700/files0600,
+owner UID10001, fsGroup29000, без mount у sidecars. Файл сразу unlink, его
+дескриптор закрывается при success/error/cancel. Root path и symlink подмена
+проверяются до использования; regular file должен иметь ноль hard links после
+unlink. Приватный canary входит в текущую readiness. Grant/replay state здесь
+не хранится. HTTP shutdown отменяет request contexts и закрывает listener/conns
+при исчерпании graceful budget.
+
+Context7 `/golang/go`: confinement os.Root/OpenRoot/OpenFile, ограничения
+symlink/mount и concurrent methods; `/grpc/grpc-go`: Send/Recv, EOF и
+cancellation. Проверены официальные исходники соответствующих библиотек.
+
+Вклад642 подключён merge `4f97ab180a88edb0da458c4ee0f945ad11f6650f`:
+Proto source объединён семантически, Go regenerated канонически и replay PASS.
+Optional `file_catalog` не меняет старый snapshot без поля; новый descriptor
+входит в digest до materialization. Warm без execution lease не объявляет
+файловые MCP tools. Grants не выводятся из полного списка файлов проекта:
+controller использует только purposes, выданные owner конкретной revision.
+
+Consumer-проверки: authenticated HTTP callback → настоящий generated gRPC
+client через disposable in-memory transport → четыре owner RPC → exact
+metadata/page/preview validation → обязательная activity. Отказ activity не
+отдаёт preview; activity не хранит query и file contents. Подмена catalog,
+revision, purpose, project, entry, digest, count/cursor и unknown input fields
+закрыто отклоняется. Workload test проверяет materialization, v7 JSON schema
+и изменение MCP binding после подмены catalog digest.
+
+Локальные callback/workload race: PASS1.182/1.761s, полный controller race,
+vet и build PASS на consumer source tree до checkpoint. Общий baseline,
+protected deployment и live agent приёмка — NOT RUN. Следующий stream consumer
+проверен targeted race callback/app/workload1.865/1.055/1.768s;
+дополнительный catalog body HTTP→generated stream, partial-body rejection и
+spool cleanup PASS1.832s. Fixture33MiB+7 использует реальный временный файл,
+проверяет финальные bytes и закрытый descriptor. Публичный target
+`make test-runtime-controller-artifact-transfer` PASS1.977s и оба profile
+renders PASS, включая UID/fsGroup, отдельный disk volume и отсутствие mount
+у sidecars. No-EOF/deadline,
+metadata/chunk/size/digest/order/terminal, disk/cancel/capacity/symlink negatives
+проверены. Agent-runner35s client timeout и local MCP download bridge ещё должны
+потребить этот контракт; полный protected/live путь не объявляется завершённым.
 
 ## Интеграционные зависимости
 

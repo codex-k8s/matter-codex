@@ -684,10 +684,12 @@ func (repository *Repository) attachInstructionsFrom(ctx context.Context, runner
 	defer rows.Close()
 	for rows.Next() {
 		var item entity.InstructionVersion
+		var binding entity.AgentInstructionsBinding
 		var problems []byte
-		if err := rows.Scan(&item.Ref, &item.VersionNumber, &item.State, &item.Content, &item.Digest, &item.Core, &item.ParentRef, &problems, &item.CreatedAt, &item.PublishedAt); err != nil {
+		if err := rows.Scan(&item.Ref, &item.VersionNumber, &item.State, &item.Content, &item.Digest, &item.Core, &item.ParentRef, &problems, &item.CreatedAt, &item.PublishedAt, &binding.Ref, &binding.Version, &binding.RevisionRef, &binding.Effective); err != nil {
 			return err
 		}
+		agent.InstructionBinding = &binding
 		_ = json.Unmarshal(problems, &item.ValidationProblems)
 		if item.State == "PUBLISHED" && agent.PublishedInstructions == nil {
 			copy := item
@@ -699,6 +701,9 @@ func (repository *Repository) attachInstructionsFrom(ctx context.Context, runner
 			copy := item
 			agent.DraftInstructions = &copy
 		}
+	}
+	if rows.Err() == nil && agent.InstructionBinding == nil {
+		return errs.ErrUnavailable
 	}
 	return rows.Err()
 }
@@ -1346,6 +1351,17 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 	if sourceKind != "" && !contains([]string{"CONTROL_CENTER", "AGENT_RESULT", "INTEGRATION_RESULT", "KNOWLEDGE_SOURCE", "INTERACTION_ATTACHMENT"}, sourceKind) {
 		return nil, 0, "", errs.ErrInvalid
 	}
+	if len(filter.SourceKinds) > 5 || (sourceKind != "" && len(filter.SourceKinds) > 0) {
+		return nil, 0, "", errs.ErrInvalid
+	}
+	sourceKinds := append([]string{}, filter.SourceKinds...)
+	for i, source := range sourceKinds {
+		if !contains([]string{"CONTROL_CENTER", "AGENT_RESULT", "INTEGRATION_RESULT", "KNOWLEDGE_SOURCE", "INTERACTION_ATTACHMENT"}, source) || contains(sourceKinds[:i], source) {
+			return nil, 0, "", errs.ErrInvalid
+		}
+	}
+	sort.Strings(sourceKinds)
+	filter.SourceKinds = sourceKinds
 	filter.ProjectRef = strings.TrimSpace(filter.ProjectRef)
 	filter.ResourceRef = strings.TrimSpace(filter.ResourceRef)
 	filter.Query = strings.TrimSpace(filter.Query)
@@ -1364,6 +1380,7 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 				"artifact_type":     artifactType,
 				"scan_state":        scanState,
 				"source_kind":       sourceKind,
+				"source_kinds":      sourceKinds,
 				"cursor_ref":        cursorRef,
 				"limit":             limit,
 			})
@@ -1385,16 +1402,16 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 			return result, nil
 		}, func(item entity.Artifact) entity.AccessScope {
 			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "ARTIFACT", ResourceRef: item.Ref, ProjectRef: item.ProjectRef}
-		}, func(_ pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
+		}, func(tx pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
 			item.NextActions = permittedArtifactActions(item.ScanState, item.LifecycleState, allowed)
-			return nil
+			return projectArtifactBindingRefs(ctx, tx, scope, item)
 		}, func(ctx context.Context, tx pgx.Tx) (int64, error) {
 			var total int64
 			err := tx.QueryRow(ctx, queryCatalogArtifactsCount, pgx.StrictNamedArgs{
 				"authority_project": scope.authorityProjectID, "organization_id": scope.organizationID,
 				"project_ref": filter.ProjectRef, "run_ref": filter.ResourceRef, "actor_id": scope.actorID,
 				"query": filter.Query, "lifecycle_state": lifecycleState, "artifact_type": artifactType,
-				"scan_state": scanState, "source_kind": sourceKind,
+				"scan_state": scanState, "source_kind": sourceKind, "source_kinds": sourceKinds,
 			}).Scan(&total)
 			if err != nil {
 				return 0, errs.ErrUnavailable

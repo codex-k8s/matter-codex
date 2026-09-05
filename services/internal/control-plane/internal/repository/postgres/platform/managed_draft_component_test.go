@@ -39,7 +39,7 @@ func testManagedDraftLifecycle(t *testing.T, ctx context.Context, repository *Re
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			invoke := func(kind command.Kind, suffix string, version *int64, payload command.ManagedConfigurationInput) (command.Result, error) {
-				return service.Execute(ctx, command.Command{Kind: kind, Principal: owner,
+				return executePromptPublicationFixture(t, ctx, service, command.Command{Kind: kind, Principal: owner,
 					Mutation: value.Mutation{IdempotencyKey: "managed-edit-" + scenario.name + suffix, ExpectedVersion: version}, Payload: payload})
 			}
 			payload := command.ManagedConfigurationInput{Name: "Editable " + scenario.name, ContentFormat: scenario.format, Content: scenario.content}

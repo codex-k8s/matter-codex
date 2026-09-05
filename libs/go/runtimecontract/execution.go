@@ -176,6 +176,7 @@ type RunnerInput struct {
 	AttachmentSets                    []RunnerAttachmentSet     `json:"attachment_sets,omitempty"`
 	InputArtifacts                    []RunnerInputArtifact     `json:"input_artifacts,omitempty"`
 	ContextSnapshot                   *RuntimeContextSnapshot   `json:"context_snapshot,omitempty"`
+	FileCatalog                       *RuntimeFileCatalog       `json:"file_catalog,omitempty"`
 	Capabilities                      []string                  `json:"capabilities,omitempty"`
 	Provider                          string                    `json:"provider"`
 	Model                             string                    `json:"model"`
@@ -304,13 +305,15 @@ func (input RunnerInput) Validate() error {
 	if input.WorkspacePolicy.Validate() != nil {
 		return errors.New("runner workspace policy binding is invalid")
 	}
+	if input.FileCatalog != nil && (input.FileCatalog.Validate() != nil || input.Mode != RunnerModeTurn || input.ProjectRef == "") {
+		return errors.New("runner file catalog binding is invalid")
+	}
 	environmentDigest, err := RuntimeEnvironmentDigest(input.EnvironmentValues, input.SecretProjections, input.EnvironmentImage, input.EnvironmentTools, normalizedPolicy)
 	if err != nil || environmentDigest != input.RuntimeEnvironmentDigest {
 		return errors.New("runner environment binding is invalid")
 	}
-	if len(input.InputArtifacts) > 0 && !containsString(input.Capabilities, ArtifactCapability) {
-		return errors.New("runner artifact capability is missing")
-	}
+	// Exact owner-selected artifacts и manifest являются отдельным immutable
+	// read context grant; ArtifactCapability разрешает managed write/catalog.
 	for _, grant := range input.IntegrationGrants {
 		if !containsString(input.Capabilities, grant.CapabilityKey) {
 			return errors.New("runner integration grant is outside effective capabilities")

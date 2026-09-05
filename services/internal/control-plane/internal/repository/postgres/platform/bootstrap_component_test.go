@@ -168,6 +168,7 @@ func TestBootstrapComponent(t *testing.T) {
 	t.Run("model catalog is version bound", func(t *testing.T) { testModelCatalogVersion(t, ctx, repository) })
 	t.Run("config overlay published history and rollback", func(t *testing.T) { testConfigOverlayHistory(t, ctx, repository) })
 	t.Run("effective capabilities use current exact authority", func(t *testing.T) { testEffectiveCapabilities(t, ctx, repository) })
+	t.Run("file binding target authority and tombstone cleanup", func(t *testing.T) { testFileBindingTargets(t, ctx, repository) })
 	t.Run("prompt context preview before launch", func(t *testing.T) { testPromptContextPreview(t, ctx, repository) })
 	t.Run("STT catalog requires organization management before configuration", func(t *testing.T) { testSTTCatalogAuthority(t, ctx, repository) })
 	t.Run("authority proof revision keeps platform cursor stable", func(t *testing.T) {
@@ -221,6 +222,7 @@ func TestBootstrapComponent(t *testing.T) {
 	t.Run("instruction draft save replaces the mutable draft", func(t *testing.T) {
 		testInstructionDraftSave(t, ctx, repository)
 	})
+	t.Run("prompt prepublication applies selected exact bindings", func(t *testing.T) { testPromptImpactLifecycle(t, ctx, repository) })
 	t.Run("system assistant proposes and applies typed plan", func(t *testing.T) {
 		prepareObservedWarmFixture(t, ctx, repository)
 		testSystemAssistantTypedPlan(t, ctx, repository)
@@ -372,7 +374,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 		t.Fatalf("validate managed prompt: result=%#v err=%v", validated, err)
 	}
 	version = validated.ManagedConfiguration.Version
-	published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	published, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-prompt-publish", ExpectedVersion: &version},
 		Payload:  command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
@@ -442,7 +444,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 		t.Fatalf("validate corrected managed prompt: result=%#v err=%v", correctedValidated, err)
 	}
 	correctedVersion = correctedValidated.ManagedConfiguration.Version
-	correctedPublished, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	correctedPublished, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-prompt-publish-corrected", ExpectedVersion: &correctedVersion},
 		Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref,
 			RevisionRef: correctedDraft.ManagedRevision.Ref}})
@@ -505,7 +507,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 	}
 	agentNodes, agentTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{
 		ProjectRef:  projectResult.Project.Ref,
-		ResourceRef: "/projects/" + projectResult.Project.Ref + "/entities/agents", Page: query.Page{Size: 20},
+		ResourceRef: "/projects/" + projectResult.Project.Ref + "/agents", Page: query.Page{Size: 20},
 	})
 	if err != nil || agentTotal != 1 || len(agentNodes) != 1 || agentNodes[0].EntityRef != agent.Ref {
 		t.Fatalf("list VFS agents: nodes=%#v total=%d err=%v", agentNodes, agentTotal, err)
@@ -682,9 +684,8 @@ LIMIT 1`, ownerScope.organizationID).Scan(&environmentRef, &environmentProjectRe
 		CallerWorkload: "runtime-controller", Operation: "platform.runtime.role-image-configuration.get",
 	}, "runtime-controller")
 	roleImageBinding, err := service.GetEffectiveManagedConfiguration(ctx, runtimeReader, "ROLE_IMAGE", "RUNTIME_ENVIRONMENT", environmentRef)
-	if err != nil || roleImageBinding.Revision.Ref != roleImage.ManagedRevision.Ref ||
-		roleImageBinding.Configuration.Ref != roleImage.ManagedConfiguration.Ref || roleImageBinding.ConsumerRef != environmentRef {
-		t.Fatalf("read pinned role image configuration: binding=%#v err=%v", roleImageBinding, err)
+	if err == nil || roleImageBinding.Ref != "" || roleImage.ManagedRevision.State != "PUBLISHED" {
+		t.Fatalf("unpromoted recipe became an effective image binding: binding=%#v err=%v", roleImageBinding, err)
 	}
 	foreignRuntimeReader := runtimeReader
 	foreignRuntimeReader.AuthorityTenant = "ffffffff-ffff-4fff-8fff-ffffffffffff"
@@ -767,7 +768,7 @@ LIMIT 1`, ownerScope.organizationID).Scan(&environmentRef, &environmentProjectRe
 		t.Fatalf("validate detached configuration: %v", err)
 	}
 	detachedVersion = detachedValidated.ManagedConfiguration.Version
-	detachedPublished, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
+	detachedPublished, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "managed-detached-publish", ExpectedVersion: &detachedVersion},
 		Payload:  command.ManagedConfigurationInput{ConfigurationRef: "mcfg_gitprompt01", RevisionRef: detached.ManagedRevision.Ref}})
 	if err != nil || detachedPublished.ManagedRevision == nil || detachedPublished.ManagedRevision.State != "PUBLISHED" {
@@ -960,6 +961,16 @@ func publishAndRebindManagedConfiguration(
 			RevisionRef: created.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
 		t.Fatalf("publish %s draft: result=%#v err=%v", key, published, err)
+	}
+	if rebindKind == command.RebindRoleImage {
+		version = published.ManagedConfiguration.Version
+		if _, err = service.Execute(ctx, command.Command{Kind: rebindKind, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-legacy-rebind", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref, Consumers: []entity.ManagedConfigurationConsumer{consumer}}}); err == nil {
+			t.Fatal("metadata-only role image rebind accepted")
+		}
+		if _, err = service.Execute(ctx, command.Command{Kind: command.PrepareRoleImageImpactPlan, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-unpromoted-plan", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}}); !errors.Is(err, domainerrs.ErrConflict) {
+			t.Fatalf("unpromoted role image plan: %v", err)
+		}
+		return published
 	}
 	impact, err := service.GetManagedConfigurationImpact(ctx, principal, created.ManagedConfiguration.Ref, created.ManagedRevision.Ref, query.Filter{})
 	if err != nil || impact.Digest == "" {
@@ -2659,6 +2670,7 @@ func testInstructionDraftSave(t *testing.T, ctx context.Context, repository *Rep
 	if count != 1 || state != "DRAFT" || content != "Second mutable instruction draft replaces the first content." {
 		t.Fatalf("unexpected instruction draft readback: count=%d state=%s content=%q", count, state, content)
 	}
+	testInstructionBindingLifecycle(t, ctx, repository, service, owner, agent.Ref)
 }
 
 func testProviderCredentialLegacyRepair(t *testing.T, ctx context.Context, repository *Repository, pool *pgxpool.Pool) {
@@ -3668,7 +3680,7 @@ func testProjectMembershipCandidate(t *testing.T, ctx context.Context, repositor
 		t.Fatalf("legacy project VIEW leaked resource metadata: results=%#v err=%v", visibleSearch, err)
 	}
 	legacyVFS, legacyVFSTotal, _, err := service.ListVFSNodes(ctx, candidate, query.Filter{
-		ProjectRef: projectRef, ResourceRef: "/projects/" + projectRef + "/entities/agents", Page: query.Page{Size: 20},
+		ProjectRef: projectRef, ResourceRef: "/projects/" + projectRef + "/agents", Page: query.Page{Size: 20},
 	})
 	if err != nil || legacyVFSTotal != 0 || len(legacyVFS) != 0 {
 		t.Fatalf("legacy project VIEW leaked VFS agent metadata: nodes=%#v total=%d err=%v", legacyVFS, legacyVFSTotal, err)
@@ -3852,6 +3864,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || created.Schedule == nil || created.Schedule.CronExpression != "30 9 * * 1-5" || created.Schedule.TimeOfDay != "09:30" || created.Schedule.NextRunAt == nil {
 		t.Fatalf("create normalized schedule: schedule=%#v err=%v", created.Schedule, err)
 	}
+	capturedTemplateRef := bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-captured-template", `Captured {{.task}} / {{.run.ref}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentMakeScheduleDueQuery, created.Schedule.Ref); err != nil {
 		t.Fatalf("make schedule due: %v", err)
 	}
@@ -3867,6 +3880,7 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 		t.Fatalf("claim due schedule: claims=%#v err=%v", claims, err)
 	}
 	staleClaim := claims[0]
+	bindScheduleTemplateFixture(t, ctx, service, owner, project.Project.Ref, created.Schedule.Ref, "schedule-changed-template", `Changed {{.task}}`)
 	if _, err := repository.pool.Exec(ctx, bootstrapComponentExpireScheduleClaimQuery, stringMap(staleClaim, "occurrenceRef")); err != nil {
 		t.Fatalf("expire schedule claim: %v", err)
 	}
@@ -3909,7 +3923,12 @@ func testScheduleLifecycle(t *testing.T, ctx context.Context, repository *Reposi
 	if err != nil || len(duplicateClaims) != 0 {
 		t.Fatalf("active schedule occurrence was claimed twice: claims=%#v err=%v", duplicateClaims, err)
 	}
-	runVersion := materialized.Run.Version
+	checkCapturedScheduleRuntime(t, ctx, repository, service, materialized.Run.Ref, capturedTemplateRef)
+	currentScheduledRun, _, err := service.GetRunGraph(ctx, owner, materialized.Run.Ref)
+	if err != nil {
+		t.Fatal(err)
+	}
+	runVersion := currentScheduledRun.Version
 	cancelled, err := service.Execute(ctx, command.Command{
 		Kind: command.CancelRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "schedule-run-cancel", ExpectedVersion: &runVersion},
@@ -5636,6 +5655,31 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if err != nil || secondTotal != 2 || len(secondPage) != 1 || secondPage[0].Ref != secondRef || finalPageToken != "" {
 		t.Fatalf("second artifact cursor page is unstable: artifacts=%#v next=%q err=%v", secondPage, finalPageToken, err)
 	}
+	group := query.Filter{ProjectRef: project.Project.Ref, SourceKinds: []string{"INTEGRATION_RESULT", "CONTROL_CENTER"}, Page: query.Page{Size: 1}}
+	groupFirst, groupTotal, groupCursor, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupFirst) != 1 || groupCursor == "" {
+		t.Fatalf("artifact source group count/page: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER", "INTEGRATION_RESULT"}
+	group.Page.Token = groupCursor
+	groupSecond, groupTotal, groupEnd, groupErr := service.ListArtifacts(ctx, owner, group)
+	if groupErr != nil || groupTotal != 2 || len(groupSecond) != 1 || groupSecond[0].Ref == groupFirst[0].Ref || groupEnd != "" {
+		t.Fatalf("artifact source group canonical cursor: %v", groupErr)
+	}
+	group.SourceKinds = []string{"CONTROL_CENTER"}
+	if _, _, _, groupErr = service.ListArtifacts(ctx, owner, group); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+		t.Fatalf("artifact source group cursor accepted changed filter: %v", groupErr)
+	}
+	for _, invalid := range []query.Filter{
+		{SourceKind: "CONTROL_CENTER", SourceKinds: []string{"CONTROL_CENTER"}},
+		{SourceKinds: []string{"CONTROL_CENTER", "CONTROL_CENTER"}},
+		{SourceKinds: []string{"UNKNOWN"}},
+		{SourceKinds: []string{""}},
+	} {
+		if _, _, _, groupErr = service.ListArtifacts(ctx, owner, invalid); !errors.Is(groupErr, domainerrs.ErrInvalid) {
+			t.Fatalf("artifact source group invalid filter accepted: %v", groupErr)
+		}
+	}
 	if _, _, _, err := service.ListArtifacts(ctx, owner, query.Filter{
 		ProjectRef: project.Project.Ref, ArtifactType: "EXECUTABLE", Page: query.Page{Size: 1},
 	}); !errors.Is(err, domainerrs.ErrInvalid) {
@@ -5673,6 +5717,11 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if err != nil || len(boundAgent.KnowledgeArtifactRefs) != 1 || boundAgent.KnowledgeArtifactRefs[0] != uploaded.Ref || boundAgent.Version != agent.Agent.Version+1 {
 		t.Fatalf("read normalized knowledge binding: agent=%#v err=%v", boundAgent, err)
 	}
+	workspaceFiles, workspaceTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ProjectRef: project.Project.Ref,
+		ResourceRef: "/projects/" + project.Project.Ref + "/agents/" + agent.Agent.Ref + "/workspace/inputs"})
+	if err != nil || workspaceTotal != 1 || len(workspaceFiles) != 1 || workspaceFiles[0].EntityRef != uploaded.Ref || workspaceFiles[0].Revision != uploaded.Revision || workspaceFiles[0].Selectable || workspaceFiles[0].SelectionReason != "IMMUTABLE_CONTEXT" {
+		t.Fatalf("agent workspace source projection: total=%d err=%v", workspaceTotal, err)
+	}
 	secondRevision, err := service.UploadArtifact(ctx, owner, value.Mutation{IdempotencyKey: "artifact-upload-2"}, platformrepo.ArtifactUpload{
 		ProjectRef: project.Project.Ref, FileName: "support-policy.md", MediaType: "text/markdown",
 		SizeBytes: int64(len("# Updated policy\n")), Reader: strings.NewReader("# Updated policy\n"),
@@ -5692,6 +5741,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	runAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"RUN_INPUT", "lifecycle-run-attachment-set", secondRevision.Ref)
+	testReadonlyArtifactClaim(t, ctx, repository, service, owner, worker, runtimeReader, project.Project.Ref, agent.Agent.Ref, runAttachmentSetRef, secondRevision.Ref)
 	launch, err := service.Execute(ctx, command.Command{Kind: command.LaunchRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-launch-1"}, Payload: command.LaunchRunInput{
 			ProjectRef: project.Project.Ref, Title: "Answer customer", TitleSource: "USER_EDITED", Task: "Prepare an answer about delivery status.",
@@ -5736,6 +5786,7 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	if !ok || len(catalog) != 2 {
 		t.Fatalf("runtime artifact catalog = %#v, want input and knowledge artifacts", lease["artifacts"])
 	}
+	testRuntimeFileQueries(t, ctx, repository, service, owner, lease)
 	runtimeDownload, err := service.ReadExecutionArtifact(ctx, runtimeReader, stringMap(lease, "leaseRef"), stringMap(lease, "fence"), lease["generation"].(int64), secondRevision.Ref)
 	if err != nil {
 		t.Fatalf("read lease-bound runtime artifact: %v", err)
@@ -5769,10 +5820,36 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	}
 	outputAttachmentSetRef := finalizedAttachmentSetRef(t, ctx, service, owner, project.Project.Ref,
 		"SESSION_TURN", "lifecycle-output-reuse-set", completed.CreatedRefs[0])
+	continuationContext := query.PromptPreviewContext{Task: "Add a concise follow-up for the customer.", AttachmentSetRef: outputAttachmentSetRef}
+	prospective, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, "")
+	if err != nil || prospective.RuntimeDiff == nil || prospective.ContextPin.Digest == "" {
+		t.Fatalf("prospective continuation preview missing: %v", err)
+	}
+	if prospective.RuntimeDiff.CurrentRevisionRef != "" || prospective.RuntimeDiff.TurnRef != "" || prospective.RuntimeDiff.Attempt != 0 {
+		t.Fatal("prelaunch continuation fabricated runtime identity")
+	}
+	previewAgain, err := service.PreviewPromptTemplateWithContext(ctx, owner, defaultContinuationTemplate,
+		"SESSION_CONTINUATION", launch.Run.SessionRef, false, continuationContext, prospective.ContextPin.Digest)
+	if err != nil || previewAgain.RuntimeDiff == nil || previewAgain.RuntimeDiff.Digest != prospective.RuntimeDiff.Digest {
+		t.Fatalf("prospective continuation preview changed without mutation: %v", err)
+	}
+	for _, rejected := range []struct {
+		pin      string
+		expected error
+	}{{"malformed", domainerrs.ErrInvalid}, {strings.Repeat("f", 64), domainerrs.ErrVersionMismatch}} {
+		_, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
+			Mutation: value.Mutation{IdempotencyKey: "lifecycle-rejected-preview-" + rejected.pin[:3]}, Payload: command.SessionTurnInput{
+				SessionRef: launch.Run.SessionRef, Task: continuationContext.Task, AttachmentSetRef: outputAttachmentSetRef, ExpectedPromptContextDigest: rejected.pin}})
+		if !errors.Is(err, rejected.expected) {
+			t.Fatalf("invalid continuation preview pin accepted: %v", err)
+		}
+	}
 	continued, err := service.Execute(ctx, command.Command{Kind: command.AddSessionTurn, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "lifecycle-continuation-1"}, Payload: command.SessionTurnInput{
 			SessionRef: launch.Run.SessionRef, RunRef: launch.Run.Ref, Task: "Add a concise follow-up for the customer.",
-			AttachmentSetRef: outputAttachmentSetRef,
+			AttachmentSetRef:            outputAttachmentSetRef,
+			ExpectedPromptContextDigest: prospective.ContextPin.Digest,
 		}})
 	if err != nil || continued.Run == nil || continued.Graph == nil || continued.Run.State != "RUNNING" {
 		t.Fatalf("continue session: run=%#v graph=%#v err=%v", continued.Run, continued.Graph, err)

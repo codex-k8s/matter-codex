@@ -384,9 +384,16 @@ func (server *Server) ListArtifacts(ctx context.Context, request *controlplanev1
 	if request.GetSourceKind() != controlplanev1.ArtifactSource_ARTIFACT_SOURCE_UNSPECIFIED {
 		sourceKind = enumSuffix(request.GetSourceKind(), "ARTIFACT_SOURCE_")
 	}
+	if len(request.GetSourceKinds()) > 5 {
+		return nil, transportError(errs.ErrInvalid)
+	}
+	sourceKinds := make([]string, 0, len(request.GetSourceKinds()))
+	for _, source := range request.GetSourceKinds() {
+		sourceKinds = append(sourceKinds, enumSuffix(source, "ARTIFACT_SOURCE_"))
+	}
 	items, total, next, err := server.service.ListArtifacts(ctx, p, query.Filter{
 		ProjectRef: request.GetProjectRef(), ResourceRef: request.GetRunRef(), Query: request.GetQuery(),
-		State: lifecycleState, ArtifactType: artifactType, ScanState: scanState, SourceKind: sourceKind, Page: page(request.GetPage()),
+		State: lifecycleState, ArtifactType: artifactType, ScanState: scanState, SourceKind: sourceKind, SourceKinds: sourceKinds, Page: page(request.GetPage()),
 	})
 	if err != nil {
 		return nil, transportError(err)

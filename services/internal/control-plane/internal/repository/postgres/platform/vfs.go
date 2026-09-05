@@ -124,7 +124,7 @@ type vfsNodeRow struct {
 }
 
 func (repository *Repository) decorateVFSSelection(ctx context.Context, tx pgx.Tx, current scope, row vfsNodeRow, node *entity.VFSNode) error {
-	if node.Directory {
+	if node.Directory && row.ResourceKind != "SKILL_BUNDLE" {
 		return nil
 	}
 	node.SelectionReason = "PERMISSION_REQUIRED"
@@ -135,7 +135,7 @@ func (repository *Repository) decorateVFSSelection(ctx context.Context, tx pgx.T
 			return err
 		}
 		node.NextActions = artifact.NextActions
-		if node.RunRef != "" && node.Kind == "INPUT" || node.Kind == "AVATAR" {
+		if node.RunRef != "" && node.Kind == "INPUT" || node.Kind == "AVATAR" || strings.HasPrefix(node.Ref, "knowledge-input:") || strings.HasPrefix(node.Ref, "skill-file:") {
 			node.SelectionReason = "IMMUTABLE_CONTEXT"
 			node.NextActions = []string{}
 			if contains(artifact.NextActions, "DOWNLOAD") {

@@ -89,25 +89,38 @@ func (server *Server) ListTemplateVariables(ctx context.Context, request *contro
 		return nil, err
 	}
 	filter := query.Filter{ProjectRef: request.GetProjectRef(), Query: request.GetQuery(), Page: page(request.GetPage())}
-	if request.GetAgentRef() != "" || request.GetRuntimeRevisionRef() != "" {
-		filter.TemplateContext = &query.TemplateVariableContext{AgentRef: request.GetAgentRef(), RuntimeRevisionRef: request.GetRuntimeRevisionRef()}
+	if request.GetAgentRef() != "" || request.GetRuntimeRevisionRef() != "" || request.GetTargetKind() != "" || request.GetTargetRef() != "" || request.GetContext() != nil || request.GetExpectedContextDigest() != "" {
+		filter.TemplateContext = &query.TemplateVariableContext{AgentRef: request.GetAgentRef(), RuntimeRevisionRef: request.GetRuntimeRevisionRef(),
+			TargetKind: request.GetTargetKind(), TargetRef: request.GetTargetRef(), ExpectedContextDigest: request.GetExpectedContextDigest(), Preview: castPromptPreviewContext(request.GetContext())}
 	}
-	items, total, next, err := server.service.ListTemplateVariables(ctx, p, filter)
+	result, err := server.service.ListPromptContextVariables(ctx, p, filter)
 	if err != nil {
 		return nil, transportError(err)
 	}
-	response := &controlplanev1.ListTemplateVariablesResponse{Total: total, Page: &controlplanev1.PageInfo{NextPageToken: next}}
-	for _, item := range items {
+	response := &controlplanev1.ListTemplateVariablesResponse{Total: result.Total, Page: &controlplanev1.PageInfo{NextPageToken: result.NextPageToken}, ContextPin: castPromptContextPin(result.ContextPin)}
+	for _, item := range result.Variables {
+		reason, reasonErr := castTemplateAvailabilityReason(item.Reason, item.Available)
+		if reasonErr != nil {
+			return nil, transportError(reasonErr)
+		}
 		variable := &controlplanev1.TemplateVariable{Name: item.Name, ValueType: item.Type,
 			Description: item.Description, Example: item.Example, Source: item.Source, Collection: item.Collection,
 			ItemValueType: item.ItemType, RangeExample: item.RangeExample, Available: item.Available,
-			Reason: controlplanev1.TemplateVariableAvailabilityReason(controlplanev1.TemplateVariableAvailabilityReason_value["TEMPLATE_VARIABLE_AVAILABILITY_REASON_"+item.Reason])}
+			Reason: reason}
 		for _, field := range item.ItemFields {
 			variable.ItemFields = append(variable.ItemFields, &controlplanev1.TemplateVariableField{Name: field.Name, ValueType: field.Type, Description: field.Description})
 		}
 		response.Variables = append(response.Variables, variable)
 	}
 	return response, nil
+}
+
+func castTemplateAvailabilityReason(value string, available bool) (controlplanev1.TemplateVariableAvailabilityReason, error) {
+	reason, ok := controlplanev1.TemplateVariableAvailabilityReason_value["TEMPLATE_VARIABLE_AVAILABILITY_REASON_"+value]
+	if !ok || reason == 0 || available != (value == "AVAILABLE") {
+		return 0, errs.ErrUnavailable
+	}
+	return controlplanev1.TemplateVariableAvailabilityReason(reason), nil
 }
 
 func (server *Server) PublishAgentRuntimeConfiguration(ctx context.Context, request *controlplanev1.PublishAgentRuntimeConfigurationRequest) (*controlplanev1.PublishAgentRuntimeConfigurationResponse, error) {

@@ -125,6 +125,9 @@ func projectArtifactResults(ctx context.Context, runner queryRunner, current sco
 		if (*artifact).Version == item.version {
 			(*artifact).NextActions = slices.Clone(item.actions)
 		}
+		if err := projectArtifactBindingRefs(ctx, runner, current, *artifact); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -170,5 +173,5 @@ func projectArtifactEligibility(ctx context.Context, runner queryRunner, current
 	if artifact.Version == version {
 		artifact.NextActions = permittedArtifactActions(scan, lifecycle, func(permission string) bool { return contains(permissions, permission) })
 	}
-	return nil
+	return projectArtifactBindingRefs(ctx, runner, current, artifact)
 }

@@ -40,6 +40,10 @@ func testResumableTargetChange(t *testing.T, ctx context.Context, repository *Re
 
 func testResumableSessionPagination(t *testing.T, ctx context.Context, repository *Repository, service *platformservice.Service, owner, worker, reader value.Principal, original entity.Run) {
 	t.Helper()
+	other := createLifecycleAgent(t, ctx, service, owner, original.ProjectRef, "file-target-other-continuation-agent", "Other continuation target")
+	if _, err := service.GetRunAttachmentEligibility(ctx, owner, original.ProjectRef, entity.RunTarget{Type: "AGENT", Ref: other.Ref}, original.Ref); !errors.Is(err, domainerrs.ErrInvalid) {
+		t.Fatalf("continuation accepted substituted target: %v", err)
+	}
 	created, err := service.Execute(ctx, command.Command{Kind: command.LaunchRun, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "resumable-pagination-launch"}, Payload: command.LaunchRunInput{
 			ProjectRef: original.ProjectRef, Task: "Verify immutable provider account affinity.", Target: original.Target}})
@@ -168,6 +172,19 @@ func testResumableSessionCatalog(t *testing.T, ctx context.Context, service *pla
 		}
 	} else if total != 0 || len(items) != 0 || next != "" {
 		t.Fatalf("ineligible Session leaked: total=%d items=%#v", total, items)
+	}
+	attachment, err := service.GetRunAttachmentEligibility(ctx, owner, run.ProjectRef, run.Target, run.Ref)
+	if err != nil {
+		t.Fatalf("continuation attachment projection: %v", err)
+	}
+	if attachment.RunRef != run.Ref || attachment.RunVersion == 0 || attachment.Digest == "" {
+		t.Fatalf("continuation lost exact Run metadata: %+v", attachment)
+	}
+	if available && attachment.Reason != fileTargetAvailable && attachment.Reason != fileTargetCapabilityRequired {
+		t.Fatalf("eligible Session was replaced with current catalog: %+v", attachment)
+	}
+	if !available && (attachment.Eligible || attachment.Reason != runAttachmentSessionUnavailable) {
+		t.Fatalf("ineligible Session allowed attachments: %+v", attachment)
 	}
 	events, _, _, err := service.ListRunEvents(ctx, owner, query.Filter{ResourceRef: run.Ref, Limit: 500})
 	if err != nil || len(events) == 0 {

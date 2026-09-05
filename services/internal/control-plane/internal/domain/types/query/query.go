@@ -14,6 +14,7 @@ type Filter struct {
 	TemplateContext                                                                 *TemplateVariableContext `json:",omitempty"`
 	ProjectRef, ResourceRef, Query, State, Category, DefinitionKey, Action, Outcome string
 	ArtifactType, ScanState, SourceKind                                             string
+	SourceKinds                                                                     []string `json:",omitempty"`
 	States                                                                          []string
 	AfterSequence                                                                   int64
 	Limit                                                                           int32
@@ -21,5 +22,7 @@ type Filter struct {
 }
 
 type TemplateVariableContext struct {
-	AgentRef, RuntimeRevisionRef string
+	AgentRef, RuntimeRevisionRef                 string
+	TargetKind, TargetRef, ExpectedContextDigest string
+	Preview                                      PromptPreviewContext
 }

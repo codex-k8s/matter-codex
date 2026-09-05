@@ -32,7 +32,17 @@ jq -e '
     "platform.provider-credentials.readiness.check"
   ];
   .v == 1 and .policy.default_decision == "DENY" and
-	.policy_revision == 65 and .policy.authority_abi_version == 2 and
+	.policy_revision == 71 and .policy.authority_abi_version == 2 and
+  ([.policy.operation_bindings[] | select(.operation_id == "platform.runtime.execution.artifact.stream") |
+    select(.caller_workload_id == "runtime-controller" and .target_workload_id == "control-plane" and .project_required == false and
+      .request_profile == {"mode":"UNARY_PROTO_SHA256","resource":"FORBIDDEN","version":"FORBIDDEN","attempt":"FORBIDDEN","idempotency":"FORBIDDEN"})] | length) == 1 and
+  ([.policy.operation_bindings[] | select(.operation_id | startswith("platform.runtime.files.")) |
+    select(.caller_workload_id == "runtime-controller" and .target_workload_id == "control-plane" and .project_required == false and
+      .request_profile == {"mode":"UNARY_PROTO_SHA256","resource":"FORBIDDEN","version":"FORBIDDEN","attempt":"FORBIDDEN","idempotency":"FORBIDDEN"})] | length) == 4 and
+  ([.policy.operation_bindings[] | select(.operation_id == "platform.query.artifact-binding-targets.list" or .operation_id == "platform.query.run-attachment-eligibility.get") |
+    select(.caller_workload_id == "control-api-gateway" and .target_workload_id == "control-plane" and
+      .authority_proof_producer_id == "control-plane.oidc" and .project_required == false and
+      .request_profile == {"mode":"UNARY_PROTO_SHA256","resource":"REQUIRED","version":"FORBIDDEN","attempt":"FORBIDDEN","idempotency":"FORBIDDEN"})] | length) == 2 and
   ([.policy.operation_bindings[] | select(.operation_id | startswith("platform.configuration-writebacks.work.")) |
     select(.caller_workload_id == "integration-gateway" and .target_workload_id == "control-plane" and .project_required == false and
       .request_profile == {"mode":"UNARY_PROTO_SHA256","resource":"FORBIDDEN","version":"FORBIDDEN","attempt":"FORBIDDEN","idempotency":"FORBIDDEN"})] | length) == 5 and

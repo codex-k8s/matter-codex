@@ -67,6 +67,8 @@ const (
 	SetAgentAvatar                     Kind = "SET_AGENT_AVATAR"
 	RemoveAgentAvatar                  Kind = "REMOVE_AGENT_AVATAR"
 	CreateInstructions                 Kind = "CREATE_INSTRUCTION_DRAFT"
+	PrepareInstructionsImpact          Kind = "PREPARE_INSTRUCTIONS_IMPACT"
+	PreparePromptTemplateImpact        Kind = "PREPARE_PROMPT_TEMPLATE_IMPACT"
 	ValidateInstructions               Kind = "VALIDATE_INSTRUCTION_DRAFT"
 	PublishInstructions                Kind = "PUBLISH_INSTRUCTION_DRAFT"
 	RollbackInstructions               Kind = "ROLLBACK_INSTRUCTIONS"
@@ -183,6 +185,8 @@ const (
 	ValidateRoleImageRevision          Kind = "VALIDATE_ROLE_IMAGE_REVISION_DRAFT"
 	PublishRoleImageRevision           Kind = "PUBLISH_ROLE_IMAGE_REVISION_DRAFT"
 	RebindRoleImage                    Kind = "REBIND_ROLE_IMAGE_CONSUMERS"
+	PrepareRoleImageImpactPlan         Kind = "PREPARE_ROLE_IMAGE_IMPACT_PLAN"
+	PrepareEnvironmentDraftImpact      Kind = "PREPARE_ENVIRONMENT_DRAFT_IMPACT"
 	CreateIntegrationDefinition        Kind = "CREATE_INTEGRATION_DEFINITION_DRAFT"
 	ValidateIntegrationDefinition      Kind = "VALIDATE_INTEGRATION_DEFINITION_DRAFT"
 	PublishIntegrationDefinition       Kind = "PUBLISH_INTEGRATION_DEFINITION_DRAFT"
@@ -215,6 +219,8 @@ type MembershipInput struct {
 	Active                             bool
 }
 type AgentInput struct {
+	PlanRef                                                                                                 string
+	SelectedItemRefs                                                                                        []string
 	Ref, ProjectRef, RoleDefinitionRef, Name, Purpose, RoleDescription, AvatarURL, RuntimeRef, Instructions string
 	Enabled                                                                                                 bool
 }
@@ -241,6 +247,8 @@ type RuntimeEnvironmentDraftInput struct {
 	DraftRef, ProjectRef, EnvironmentRef string
 	ExpectedEnvironmentVersion           int64
 	Specification                        entity.RuntimeEnvironmentDraftSpecification
+	PlanRef                              string
+	SelectedItemRefs                     []string
 }
 type RuntimeSecretRebindInput struct {
 	SecretRef  string
@@ -289,6 +297,7 @@ type LaunchRunInput struct {
 }
 type SessionTurnInput struct {
 	SessionRef, RunRef, NodeRef, Task, AttachmentSetRef string
+	ExpectedPromptContextDigest                         string
 }
 type RunCommandInput struct{ RunRef, Reason string }
 type GateResolutionInput struct {
@@ -453,8 +462,15 @@ type InteractionIdentityInput struct {
 }
 
 type ManagedConfigurationInput struct {
+	PromptScope                                                                                 *PromptTemplateScopeInput
+	PlanRef                                                                                     string
+	SelectedItemRefs                                                                            []string
 	ConfigurationRef, ProjectRef, Name, Kind, ContentFormat, Content, RevisionRef, ImpactDigest string
 	Consumers                                                                                   []entity.ManagedConfigurationConsumer
+}
+
+type PromptTemplateScopeInput struct {
+	TargetKind, TargetRef, AgentRef, WorkflowRevisionRef, WorkflowStageKey, ExpectedContextDigest, TemplateKind string
 }
 
 type EmailMailboxInput struct {
@@ -506,6 +522,8 @@ type Result struct {
 	ManagedConfiguration    *entity.ManagedConfigurationSet
 	ConfigurationWriteBack  *entity.ConfigurationWriteBack
 	ManagedRevision         *entity.ManagedConfigurationRevision
+	RoleImageImpactPlan     *entity.RoleImageImpactPlan
+	RevisionImpactPlan      *entity.RevisionImpactPlan
 }
 
 type EmailReconciliationInput struct {
