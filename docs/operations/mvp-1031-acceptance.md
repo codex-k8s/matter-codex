@@ -4,8 +4,8 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.6.0
-updated: 2026-09-05
+version: 1.7.0
+updated: 2026-09-06
 ---
 
 # Приёмка #1031
@@ -82,27 +82,49 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `17c120887754cee3813a6974ce36d59b7476f2a8` включены следующие
+На `e271f2c4034355bd9766c443d72ebc940ffa4f5a` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
 | Unit | Включённый exact SHA | Граница checkpoint |
 | --- | --- | --- |
-| Control-plane #1046 | `b0bea6f45e2c5ed3692922177ec9f3b54d81b4ff` | Сохранены D1–D7, SourceWork, catalog/Session affinity v7, Home totals, Env638, Mattermost637; RoleImage UI→build/lineage, resumable Session, prompt639, Git proposal owner640, policy65 и VFS exact source/selection/Artifact eligibility. Prompt641, RoleImage actual selective rebind и полный VFS/MCP ещё завершаются. |
+| Control-plane #1046, PR #1071 | `c1a7fb8cdb02214f4b0187bd879a60b91c6a43a7` | D1–D7, SourceWork, account model catalog/TOML, Session affinity v7, Env638, Mattermost637, RoleImage build/lineage и actual selective rebind643, prompt context641, VFS/MCP642, revision impact644, active instruction binding645, policy71 и initial-request-bound artifact stream. Files group sourceKinds использует один owner query/total/cursor. |
 | Secret Broker #1068, PR #1069 | `af227acc60d9ca1bd0207429c6d8088fb9496af7` | Encrypted staged lifecycle и protected account model observer, fresh remote provenance, bounded actual Codex process и отказ refresh под read authority. |
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
-| HTTP/SDK #1045, PR #1066 | `b0939429d4cd216ea34ae79e43ec78c8abbbbde3` | D2 pins/status/TOML, totals, Env/overlay history, typed effective capabilities, RoleImage query/state/lineage и resumable Session query/paired target/total. Новые prompt/writeback/VFS consumers ещё завершаются. |
+| HTTP/SDK #1045, PR #1066 | `e9d8c550dcaa57120d67ec69f7c9b28f334a210f` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK. |
 | PWA #1022, PR #1067 | `76cf061130cb66e28dc20c42ecfd9fb718cbf195` | D2/TOML, Git source/overlay lifecycle, effective capability projection, Home/NewRun server Session catalog, RoleImage lineage/filters и unbind после отзыва capability. Aggregate attachment/binding eligibility и новые VFS/prompt/writeback consumers ещё завершаются. |
 | STT #1020, PR #1070 | `6c23e653263643912e3e984802448b561a652615` | Administrative adapter catalog до configuration/credentials, policy 60, согласованные limits и актуальная STT model profile revision. |
-| Runtime-controller #1025, PR #1063 | `21425ddbbc2196849c5378f8227bd18e13f2f8fb` | Exact v7 mode/effort/context, Pod/callback, schema/admission/render contract revision 2. |
-| Agent-runner #1026, PR #1058 | `257c2f2c98e001d2422a3c8df20a95389a9b3850` | Server reasoning mode/effort во всех turns, UNSUPPORTED без параметра, сохранён bounded workspace/context lifecycle. |
+| Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
+| Agent-runner #1026, PR #1058 | `e204788846450901f14742dd85d3c5f4101c9b9c` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
 | Integration-gateway #1028, PR #1064 | `b889673f04bd431788ac7553e1a80b033852e431` | SourceWork и исполняемый Git write-back: one-parent proposal commit, exact empty lease, separate branch/PR receipts, UNKNOWN read-only recovery, GitHub PR/GitLab MR readback; Git runtime/tmpfs/non-root и оба render. Live provider proof ещё NOT RUN. |
 | Interaction-gateway #1030, PR #1061 | `c7d03d818ac4e6c5a226d49c6d14d7c6dc798b9e` | Actual package системных subscriptions/deliveries; OwnerGate до notification/mirror, exact input и approval claim, fail-closed discovery. |
 
 Сохранены включённые ранее authority `0765f3dad`
 и исправление #1056. Исходные Proto/OpenAPI/policy объединены по семантике,
 generated Go/SDK/PWA validator получены повторной генерацией.
+
+На code SHA `2eda37a2ebb07b03ba68a5e7b555b37526e47424` локально **PASS**
+оба `local-role-image-render-contract-test.sh` профиля, включая положительный
+EMAIL render и39 отрицательных проверок каждого профиля. Hot reload сохраняет
+объявленные `ephemeral-storage` requests/limits controller, его disk spool2Gi
+и единственный mount. EMAIL verifier проверяет точные Secret/Deployment/
+NetworkPolicy/ConfigMap права publisher, отдельную readback роль и неизменённые
+admission policy/binding с закрытым отказом. Предыдущий запуск на дереве9907801
+был **FAIL**: verifier ожидал прежний Secret-only RBAC; ошибка исправлена без
+изменения полномочий runtime. Логи `integration990-spool-*-fixed.log` и первый
+`integration990-spool-web-only.log` сохранены в приватном evidence-каталоге.
+
+На `e271f2c4034355bd9766c443d72ebc940ffa4f5a` canonical Go/TS OpenAPI replay
+локально **PASS**; regenerated файлы совпадают. Это не полный baseline.
+PWA пока на прежнем включённом SHA и ещё потребляет consolidated SDK в #1067.
+Полный новый PWA build, общий baseline и вся сквозная приёмка — **NOT RUN**.
+
+Spool ограничивается самим controller двумя файлами по512MiB и deadline.
+Kubelet periodic scan не учитывает открытые unlink-файлы; `emptyDir.sizeLimit`
+и `ephemeral-storage` не заменяют внутренний лимит. Правило проверено через
+Context7 по официальной документации
+[Kubernetes ephemeral storage](https://kubernetes.io/docs/concepts/storage/ephemeral-storage/).
 
 На code SHA `17c120887754cee3813a6974ce36d59b7476f2a8` локально **PASS**:
 Go/TS SDK и Proto source generation/clean replay, policy65 codegen,
