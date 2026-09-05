@@ -30,7 +30,16 @@ for mutation in \
   '(select(.kind == "Deployment" and .metadata.name == "email-bridge") | .spec.template.spec.containers[] | select(.name == "email-bridge") | .volumeMounts[] | select(.name == "mail") | .subPath) = "mailboxes.json"' \
   'select(.kind != "Secret" or .metadata.name != "email-bridge-mailbox-projection")' \
   '(select(.kind == "Role" and .metadata.name == "control-plane-email-projection-writer") | .rules[0].resourceNames) = ["foreign-projection"]' \
+  '(select(.kind == "Role" and .metadata.name == "control-plane-email-projection-writer") | .rules[1].resourceNames) = ["foreign-deployment"]' \
+  '(select(.kind == "Role" and .metadata.name == "control-plane-email-projection-writer") | .rules[2].resourceNames) = ["foreign-network-policy"]' \
+  '(select(.kind == "Role" and .metadata.name == "control-plane-email-projection-writer") | .rules[3].verbs) += ["update"]' \
+  '(select(.kind == "Role" and .metadata.name == "control-plane-email-projection-writer") | .rules) += [{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]' \
   '(select(.kind == "RoleBinding" and .metadata.name == "control-plane-email-projection-writer") | .subjects[0].name) = "email-bridge"' \
+  '(select(.kind == "ClusterRole" and .metadata.name == "control-plane-mail-publication-admission-reader") | .rules[0].verbs) += ["update"]' \
+  '(select(.kind == "ClusterRoleBinding" and .metadata.name == "control-plane-mail-publication-admission-reader") | .subjects[0].name) = "email-bridge"' \
+  'select(.kind != "ValidatingAdmissionPolicy" or .metadata.name != "egress-mail-configmap-publication")' \
+  '(select(.kind == "ValidatingAdmissionPolicy" and .metadata.name == "egress-mail-configmap-publication") | .spec.failurePolicy) = "Ignore"' \
+  '(select(.kind == "ValidatingAdmissionPolicyBinding" and .metadata.name == "egress-mail-configmap-publication") | .spec.validationActions) = ["Audit"]' \
   '(select(.kind == "ConfigMap" and .metadata.name == "email-bridge-runtime") | .data.EMAIL_BRIDGE_EGRESS_POLICY_DIGEST) = "stale"' \
   '(select(.kind == "Deployment" and .metadata.name == "email-bridge") | .spec.template.metadata.annotations."kodex.dev/mail-policy-digest") = "stale"' \
   '(select(.kind == "NetworkPolicy" and .metadata.name == "egress-gateway-mail-destinations") | .spec.egress) = [{}]' \

@@ -704,13 +704,16 @@ patch_go_container() {
         }]) |
       .spec.replicas = 1 |
       (.spec.template.spec.containers[] | select(.name == strenv(CONTAINER))) |= (
+        (.resources // {} | with_entries(
+          .value |= with_entries(select(.key == "ephemeral-storage"))
+        ) | with_entries(select(.value != {}))) as $storage_resources |
         .image = strenv(GO_IMAGE) |
         .imagePullPolicy = "IfNotPresent" |
         .command = ["/workspace/tools/dev/run-go-hot-reload.sh"] |
         .args = ([strenv(MODULE),strenv(PACKAGE),strenv(CONTAINER)] +
           (strenv(COMMAND_ARGS) | from_json)) |
         .workingDir = ("/workspace/" + strenv(MODULE)) |
-        .resources = {"requests":{"cpu":"50m","memory":"128Mi"}} |
+        .resources = ({"requests":{"cpu":"50m","memory":"128Mi"}} * $storage_resources) |
         .securityContext.readOnlyRootFilesystem = false |
         .volumeMounts = (((.volumeMounts // []) |
           map(select(.name != "dev-source" and .name != "dev-go-mod" and .name != "dev-go-sumdb" and

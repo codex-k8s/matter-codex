@@ -428,6 +428,24 @@ yq -o=json -I=0 '.' "$render" | jq -s -e '
       .value] | first) == $policy.roleRuntimeContractSHA256)
 ' >/dev/null || fail 'runtime-controller annotations do not match effective hot-reload images'
 yq -o=json -I=0 '.' "$render" | jq -s -e '
+  first(.[] | select(.kind == "Deployment" and .metadata.name == "runtime-controller")) |
+  .spec.template.spec as $pod |
+  any($pod.volumes[];
+    .name == "artifact-spool" and .emptyDir.sizeLimit == "2Gi" and
+    (.emptyDir.medium // "") == "") and
+  any($pod.containers[];
+    .name == "runtime-controller" and
+    .resources.requests["ephemeral-storage"] == "128Mi" and
+    .resources.limits["ephemeral-storage"] == "2Gi" and
+    any(.volumeMounts[];
+      .name == "artifact-spool" and
+      .mountPath == "/var/run/kodex/runtime-controller/artifact-spool" and
+      (.readOnly // false) == false and has("subPath") == false)) and
+  all(($pod.containers + ($pod.initContainers // []))[];
+    .name == "runtime-controller" or
+    all(.volumeMounts[]?; .name != "artifact-spool"))
+' >/dev/null || fail 'runtime-controller artifact spool storage boundary is invalid'
+yq -o=json -I=0 '.' "$render" | jq -s -e '
   any(.[];
     .kind == "Deployment" and .metadata.name == "internal-rpc-authority-publisher" and
     any(.spec.template.spec.volumes[];
