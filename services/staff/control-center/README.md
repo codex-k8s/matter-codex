@@ -1168,6 +1168,41 @@ format/lint ошибки диагностического helper и избыто
 полный прогон следует после оставшихся typed consumers 641/72/writeback и
 общих E2E исправлений. Прежний full50d 34/35 FAIL остаётся в истории.
 
+## Промежуточное подключение 641/72 и Git write-back
+
+Потреблён coherent OpenAPI источник HTTP `65b38abf4e5aa619ea17c2eb1f493ce74e32123c`
+с canonical Go/TS generation. Четыре server-owned каталога интеграционных
+грантов сохраняют query/cursor/total, disabled reasons и точные версии выбранного
+connection/project/recipient/capability. Изменение connection version сбрасывает
+зависимые страницы. Existing grant command использует исходный connection OCC;
+новые mutation pins не придуманы. Отдельного экрана ради USE query нет: текущие
+формы выдают GRANT, а Git source не имеет Agent/capability context.
+
+Просмотр инструкций и сохранённых этапов использует typed context catalog,
+exact context digest и owner materialization. Для продолжения выбранная Session,
+задача и finalized AttachmentSet поступают серверу до preview; изменение формы
+сбрасывает результат. Пустой template у Workflow/continuation означает действующий
+owner snapshot, а полный текст требует явного запроса `prompt.full.view`.
+Declared promptScope передаётся create/save шаблона и сохраняет immutable refs.
+Редактор Workflow использует typed `draft` при наличии; после save выполняется
+защищённый refetch. Published-first карточки не подменяются Draft; preview этапа
+связан с тем же body/ref, ordinal revision не преобразуется в opaque ref.
+
+В ConfigurationEditor подключён GitWriteBackPanel: prepare, exact history/view,
+явные approve/reject/cancel и recovery неизвестного исхода. Общий i18n registry
+содержит локальные ru/en сообщения панели. При выходе очищаются recovery всех
+закрытых writeback и publication форм. Повтор прежней UNKNOWN публикации не
+очищает исходный intent при новом authority/OCC отказе; terminal outcome читается
+через защищённый план. Raw live E2E helpers обновлены под catalog pins, разрешённый
+моделью effort и обязательные планы Instructions.
+
+На промежуточном дереве unit 1107/1107 PASS. Initial i18n registry FAIL исправлен
+подключением сообщений без изменения проверки; initial lint FAIL исправлен.
+Новые browser-сценарии 641/72/writeback, общий полный synthetic и live runtime
+пока NOT RUN. Исторические browser FAIL и установленная причина EDQUOT остаются
+выше; итоговый browser baseline использует disk TMPDIR и прежние flags/timeouts.
+Продолжается полный scope #1022, checkpoint не означает окончание приёмки.
+
 ## Проверенная документация библиотек
 
 Для Playwright проверены Context7 `/microsoft/playwright/v1.61.0` и актуальный

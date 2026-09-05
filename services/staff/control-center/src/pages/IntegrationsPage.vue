@@ -21,6 +21,7 @@ import IntegrationApprovalPanel from "@/features/integrations/ui/IntegrationAppr
 import IntegrationCatalogPanel from "@/features/integrations/ui/IntegrationCatalogPanel.vue";
 import IntegrationConnectionsPanel from "@/features/integrations/ui/IntegrationConnectionsPanel.vue";
 import IntegrationGrantsPanel from "@/features/integrations/ui/IntegrationGrantsPanel.vue";
+import type { IntegrationGrantSelection } from "@/features/integrations/grant-candidates";
 import IntegrationSectionTabs from "@/features/integrations/ui/IntegrationSectionTabs.vue";
 import {
   buildIntegrationPackages,
@@ -326,7 +327,6 @@ const commandRef = ref("");
 const commandAction = ref<"TEST" | "ENABLE" | "DISABLE">();
 const operationSuccess = ref("");
 const grantConnectionRef = ref("");
-const targetsLoading = ref(false);
 const formSubmitted = ref(false);
 const configurationMode = ref<"FORM" | "YAML">("FORM");
 const yamlContent = ref("");
@@ -471,16 +471,6 @@ const grantConnection = computed(() =>
   grantConnectionRef.value
     ? platform.connections[grantConnectionRef.value]
     : undefined,
-);
-const projectAgents = computed(() =>
-  Object.values(platform.agents).filter(
-    (item) => item.projectRef === grant.projectRef && !item.system,
-  ),
-);
-const projectWorkflows = computed(() =>
-  Object.values(platform.workflows).filter(
-    (item) => item.projectRef === grant.projectRef,
-  ),
 );
 
 function selectSection(section: IntegrationsSection): void {
@@ -808,29 +798,18 @@ function openGrants(connection: IntegrationConnection): void {
   void selectGrantConnection(connection.ref);
 }
 
-async function loadGrantTargets(): Promise<void> {
-  grant.targetRef = "";
-  if (!grant.projectRef) return;
-  targetsLoading.value = true;
-  problem.value = undefined;
-  try {
-    await Promise.all([
-      platform.loadAgents(grant.projectRef),
-      platform.loadWorkflows(grant.projectRef),
-    ]);
-  } catch (error) {
-    problem.value = asProblem(error);
-  } finally {
-    targetsLoading.value = false;
-  }
-}
-
-async function saveGrant(): Promise<void> {
+async function saveGrant(selection: IntegrationGrantSelection): Promise<void> {
   const connection = grantConnection.value;
   if (
     !connection?.nextActions.includes("MANAGE_GRANTS") ||
     !grant.targetRef ||
-    !grant.capabilityKey
+    !grant.capabilityKey ||
+    selection.connectionRef !== connection.ref ||
+    selection.connectionVersion !== connection.version ||
+    selection.projectRef !== grant.projectRef ||
+    selection.recipientKind !== grant.targetKind ||
+    selection.recipientRef !== grant.targetRef ||
+    selection.capabilityKey !== grant.capabilityKey
   )
     return;
   busy.value = true;
@@ -986,24 +965,18 @@ onBeforeUnmount(() => {
 
         <IntegrationGrantsPanel
           v-else
-          :connections="connections"
           :grants="visibleGrants"
           :selected-connection="grantConnection"
-          :projects="platform.projectList"
-          :agents="projectAgents"
-          :workflows="projectWorkflows"
           :project-ref="grant.projectRef"
           :target-kind="grant.targetKind"
           :target-ref="grant.targetRef"
           :capability-key="grant.capabilityKey"
-          :targets-loading="targetsLoading"
           :busy="busy"
           @select-connection="selectGrantConnection"
           @update:project-ref="grant.projectRef = $event"
           @update:target-kind="grant.targetKind = $event"
           @update:target-ref="grant.targetRef = $event"
           @update:capability-key="grant.capabilityKey = $event"
-          @load-targets="loadGrantTargets"
           @save="saveGrant"
           @revoke="revokeGrant"
         />

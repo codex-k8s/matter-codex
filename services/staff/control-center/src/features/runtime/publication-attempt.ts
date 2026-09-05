@@ -11,8 +11,23 @@ export interface PublicationAttempt {
   selectedItemRefs: string[];
   key: string;
 }
+export function publicationRefusalClearsIntent(
+  hadUnknownAttempt: boolean,
+  status: number,
+): boolean {
+  // Ответ на повтор не доказывает исход предшествующей попытки.
+  return !hadUnknownAttempt && (status === 400 || status === 422);
+}
 function storageKey(kind: PublicationAttemptKind, ownerRef: string): string {
   return `kodex.publication-attempt:${kind}:${ownerRef}`;
+}
+export function clearPublicationAttempts(storage: Storage): void {
+  const keys = Array.from({ length: storage.length }, (_, index) =>
+    storage.key(index),
+  );
+  for (const key of keys) {
+    if (key?.startsWith("kodex.publication-attempt:")) storage.removeItem(key);
+  }
 }
 function validRef(value: unknown): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= 256;

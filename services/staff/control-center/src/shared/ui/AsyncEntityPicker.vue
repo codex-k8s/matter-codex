@@ -101,6 +101,7 @@ const loader: AsyncEntityLoader<PickerEntry> = async (request) => {
         source: item,
       })),
       nextCursor: page.nextCursor,
+      total: page.total,
     };
   }
   if (!props.loadPage) throw new Error("Async entity loader is required");
@@ -120,6 +121,7 @@ const loader: AsyncEntityLoader<PickerEntry> = async (request) => {
       source: item,
     })),
     nextCursor: page.nextPageToken,
+    total: page.total,
   };
 };
 
@@ -127,6 +129,7 @@ const {
   hasMore,
   initialLoading,
   items,
+  total,
   loadMore,
   loadMoreError,
   loadingMore,
@@ -746,7 +749,11 @@ watch(
           </template>
         </div>
         <footer class="async-picker__footer">
-          {{ $t("runtime.pickerShown", { count: items.length }) }}
+          {{
+            total === undefined
+              ? $t("runtime.pickerShown", { count: items.length })
+              : $t("runtime.pickerTotal", { count: items.length, total })
+          }}
         </footer>
       </section>
     </DismissiblePopover>

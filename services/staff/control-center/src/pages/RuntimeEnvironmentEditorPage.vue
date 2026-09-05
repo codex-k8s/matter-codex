@@ -5,6 +5,7 @@ import PublicationImpactSelection from "@/features/runtime/PublicationImpactSele
 import {
   readPublicationAttempt,
   rememberPublicationAttempt,
+  publicationRefusalClearsIntent,
   forgetPublicationAttempt,
   type PublicationAttempt,
 } from "@/features/runtime/publication-attempt";
@@ -849,6 +850,7 @@ async function retryPublication(): Promise<void> {
   }
 }
 async function publish(selected: string[]): Promise<void> {
+  const hadUnknownAttempt = publicationAttempt.value !== undefined;
   if (
     busy.value ||
     !serverDraft.value ||
@@ -906,7 +908,7 @@ async function publish(selected: string[]): Promise<void> {
   } catch (error) {
     if (disposed) return;
     const normalized = asProblem(error);
-    if ([400, 401, 403, 404, 409, 412, 422].includes(normalized.status)) {
+    if (publicationRefusalClearsIntent(hadUnknownAttempt, normalized.status)) {
       forgetPublicationAttempt(
         "RUNTIME_ENVIRONMENT",
         serverDraft.value.ref,

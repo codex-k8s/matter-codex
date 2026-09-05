@@ -58,6 +58,7 @@ import type { RevisionImpactPlan } from "@/shared/api/generated/openapi/types.ge
 import {
   readPublicationAttempt,
   rememberPublicationAttempt,
+  publicationRefusalClearsIntent,
   forgetPublicationAttempt,
   type PublicationAttempt,
 } from "@/features/runtime/publication-attempt";
@@ -487,6 +488,7 @@ async function saveInstructions(): Promise<void> {
 }
 
 async function publishInstructionSelection(selected: string[]): Promise<void> {
+  const hadUnknownAttempt = instructionAttempt.value !== undefined;
   const current = agent.value,
     plan = instructionPlan.value;
   if (
@@ -539,7 +541,7 @@ async function publishInstructionSelection(selected: string[]): Promise<void> {
   } catch (error) {
     if (!active()) return;
     const normalized = asProblem(error);
-    if ([400, 401, 403, 404, 409, 412, 422].includes(normalized.status)) {
+    if (publicationRefusalClearsIntent(hadUnknownAttempt, normalized.status)) {
       instructionUnknown.value = false;
       clearInstructionAttempt(current.ref);
     }
@@ -1007,6 +1009,7 @@ onBeforeUnmount(() => {
         >
           <AgentInstructionsPanel
             :agent-ref="agent.ref"
+            :agent-version="agent.version"
             :model-value="instructions"
             :project-ref="projectRef"
             :state="instructionState"

@@ -381,4 +381,5 @@ export interface AsyncEntityOption {
 export interface AsyncEntityOptionPage {
   items: AsyncEntityOption[];
   nextPageToken?: string;
+  total?: number;
 }

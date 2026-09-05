@@ -11,10 +11,13 @@ import {
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
+import { createTemplateVariableLoader } from "@/features/agents/detail/api";
 import {
-  createTemplateVariableLoader,
-  loadMaterializedTemplatePreview,
-} from "@/features/agents/detail/api";
+  createPromptVariableLoader,
+  previewContextPrompt,
+  type PromptTarget,
+} from "./prompt-context";
+import PromptContextDetails from "./PromptContextDetails.vue";
 import CodeEditorSurface from "@/features/agents/detail/CodeEditorSurface.vue";
 import { agentDetailCopy } from "@/features/agents/detail/copy";
 import type {
@@ -44,6 +47,7 @@ const props = defineProps<{
   dirty: boolean;
   projectRef: string;
   agentRef?: string;
+  agentVersion?: number;
   runtimeRevisionRef?: string;
 }>();
 const emit = defineEmits<{
@@ -52,7 +56,7 @@ const emit = defineEmits<{
   validate: [];
   publish: [];
 }>();
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const copy = computed(() => agentDetailCopy(locale.value));
 const mode = ref<"edit" | "preview" | "materialized">("edit");
 const editor = shallowRef<{
@@ -62,15 +66,29 @@ const materializedPreview = ref<PromptTemplatePreview>();
 const materializedTemplate = ref("");
 const materializedBusy = ref(false);
 const materializedProblem = ref<AppProblem>();
+const fullPreview = ref(false);
+const target = computed<PromptTarget | undefined>(() =>
+  props.agentRef && props.agentVersion
+    ? {
+        projectRef: props.projectRef,
+        targetKind: "AGENT",
+        targetRef: props.agentRef,
+        context: { expectedAgentVersion: props.agentVersion },
+      }
+    : undefined,
+);
+const contextKey = computed(() => JSON.stringify(target.value ?? {}));
 let materializedController: AbortController | undefined;
 const usedVariables = computed(() =>
   extractTemplateVariables(props.modelValue),
 );
 const loadVariables = computed(() =>
-  createTemplateVariableLoader(props.projectRef, {
-    agentRef: props.agentRef,
-    runtimeRevisionRef: props.runtimeRevisionRef,
-  }),
+  target.value
+    ? createPromptVariableLoader(target.value)
+    : createTemplateVariableLoader(props.projectRef, {
+        agentRef: props.agentRef,
+        runtimeRevisionRef: props.runtimeRevisionRef,
+      }),
 );
 const materializedContent = computed(
   () =>
@@ -104,9 +122,12 @@ async function refreshMaterializedPreview(): Promise<void> {
   materializedBusy.value = true;
   materializedProblem.value = undefined;
   try {
-    const preview = await loadMaterializedTemplatePreview(
+    if (!target.value) throw new Error("Prompt target context is unavailable");
+    const preview = await previewContextPrompt(
+      target.value,
       template,
       controller.signal,
+      fullPreview.value,
     );
     if (controller.signal.aborted || materializedController !== controller)
       return;
@@ -160,6 +181,8 @@ watch(
     props.projectRef,
     props.agentRef,
     props.runtimeRevisionRef,
+    props.agentVersion,
+    fullPreview.value,
   ],
   invalidatePreview,
   {
@@ -246,7 +269,13 @@ onBeforeUnmount(invalidatePreview);
           <div class="instructions-panel__preview-bar">
             <Sparkles :size="15" aria-hidden="true" />
             <span>{{ copy.instructions.materializedPreview }}</span>
-            <StatusBadge :state="materializedStale ? 'DRAFT' : 'AVAILABLE'" />
+            <StatusBadge
+              :state="
+                materializedStale || !materializedPreview?.complete
+                  ? 'DRAFT'
+                  : 'AVAILABLE'
+              "
+            />
             <button
               class="button"
               type="button"
@@ -260,6 +289,13 @@ onBeforeUnmount(invalidatePreview);
           <p class="instructions-panel__materialized-help">
             {{ copy.instructions.materializedHelp }}
           </p>
+          <label
+            ><input
+              v-model="fullPreview"
+              type="checkbox"
+              :disabled="materializedBusy"
+            />{{ t("promptContext.full") }}</label
+          >
           <div
             v-if="materializedBusy"
             class="instructions-panel__materialized-state"
@@ -280,6 +316,10 @@ onBeforeUnmount(invalidatePreview);
           <p v-else class="instructions-panel__materialized-state">
             {{ copy.instructions.materializedUnavailable }}
           </p>
+          <PromptContextDetails
+            v-if="materializedPreview && !materializedStale"
+            :preview="materializedPreview"
+          />
           <ul
             v-if="materializedPreview?.diagnostics.length"
             class="instructions-panel__materialized-diagnostics"
@@ -343,6 +383,8 @@ onBeforeUnmount(invalidatePreview);
         </div>
         <p>{{ copy.instructions.variablesHelp }}</p>
         <TemplateVariableCatalog
+          :load-items="loadVariables"
+          :context-key="contextKey"
           :agent-ref="agentRef"
           :runtime-revision-ref="runtimeRevisionRef"
           :project-ref="projectRef"
