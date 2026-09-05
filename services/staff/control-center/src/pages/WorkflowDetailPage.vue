@@ -2,6 +2,11 @@
 import { Check, Play, Plus, Save, Trash2, Upload } from "@lucide/vue";
 import VoiceTextarea from "@/shared/ui/VoiceTextarea.vue";
 import CodeEditor from "@/shared/ui/CodeEditor.vue";
+import PromptTargetPreview from "@/features/agents/detail/PromptTargetPreview.vue";
+import {
+  workflowEditorInput,
+  workflowStagePromptTarget,
+} from "@/features/platform/workflow-editor";
 import { computed, onBeforeUnmount, reactive, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
@@ -76,6 +81,11 @@ const publishedCapabilitiesStep = ref("");
 function publishedStep(position: number) {
   return workflow.value?.state === "PUBLISHED"
     ? workflow.value.steps.find((step) => step.position === position)
+    : undefined;
+}
+function promptTarget(position: number) {
+  return workflow.value && !dirty.value
+    ? workflowStagePromptTarget(workflow.value, position)
     : undefined;
 }
 const problem = ref<AppProblem>();
@@ -186,35 +196,7 @@ async function load() {
     if (workflow.value && workflow.value.projectRef !== project)
       throw new Error("Workflow project scope mismatch");
     if (workflow.value) {
-      Object.assign(form, {
-        name: workflow.value.name,
-        purpose: workflow.value.purpose,
-        coordinatorAgentRef: workflow.value.coordinatorAgentRef ?? "",
-        maxConcurrency: workflow.value.maxConcurrency ?? 1,
-        timeoutSeconds: workflow.value.timeoutSeconds ?? 7200,
-        completionCriteria: workflow.value.completionCriteria ?? "",
-        inputFields: workflow.value.inputFields.map((field) => ({
-          key: field.key,
-          label: field.label,
-          description: field.description,
-          valueType: field.valueType,
-          required: field.required,
-          options: [...field.options],
-        })),
-        steps: workflow.value.steps.map((step) => ({
-          position: step.position,
-          name: step.name,
-          purpose: step.purpose,
-          agentRef: step.agentRef ?? "",
-          parallel: step.parallel,
-          parallelGroup: step.parallelGroup,
-          humanGate: step.humanGate,
-          timeoutSeconds: step.timeoutSeconds,
-          expectedResult: step.expectedResult,
-          gateDecisions: [...step.gateDecisions],
-          requiredCapabilityKeys: [...step.requiredCapabilityKeys],
-        })),
-      });
+      Object.assign(form, workflowEditorInput(workflow.value));
       savedForm.value = JSON.stringify(form);
     }
   } catch (error) {
@@ -229,7 +211,7 @@ async function save() {
   problem.value = undefined;
   try {
     await platform.saveWorkflow(projectRef.value, form, workflow.value);
-    if (current === loadGeneration) savedForm.value = JSON.stringify(form);
+    if (current === loadGeneration) await load();
   } catch (error) {
     problem.value = asProblem(error);
   } finally {
@@ -474,6 +456,12 @@ onBeforeUnmount(() => {
                   :disabled="!canEdit || busy"
                 />
               </div>
+              <PromptTargetPreview
+                class="field--wide"
+                :target="promptTarget(step.position)"
+                :disabled="busy || dirty"
+                :disabled-reason="$t('promptContext.saveStage')"
+              />
               <label class="check-field"
                 ><input v-model="step.parallel" type="checkbox" />{{
                   $t("workflows.parallel")

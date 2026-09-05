@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import VoiceTextarea from "@/shared/ui/VoiceTextarea.vue";
+import PromptTargetPreview from "@/features/agents/detail/PromptTargetPreview.vue";
+import type { PromptTarget } from "@/features/agents/detail/prompt-context";
 import {
   Bot,
   Check,
@@ -99,6 +101,70 @@ const form = reactive({
   task: "",
   sessionRef: "",
 });
+const continuationPreviewTarget = ref<PromptTarget>();
+const continuationPreview = ref<{ refresh: () => Promise<void> }>();
+const continuationPreviewBusy = ref(false);
+function isContinuationMode(): boolean {
+  return sessionMode.value === "CONTINUE";
+}
+const continuationPreviewIdentity = computed(() =>
+  JSON.stringify({
+    project: projectRef.value,
+    mode: sessionMode.value,
+    run: selectedSession.value?.ref,
+    session: selectedSession.value?.sessionRef,
+    task: form.task,
+    target: [
+      form.targetType,
+      form.targetRef,
+      selectedTargetValue.value?.version,
+    ],
+    attachments: attachmentState.value,
+    selected: selectedArtifactItems.value.map((item) => item.ref),
+  }),
+);
+watch(
+  continuationPreviewIdentity,
+  () => {
+    continuationPreviewTarget.value = undefined;
+  },
+  { flush: "sync" },
+);
+async function previewContinuation(): Promise<void> {
+  const selected = selectedSession.value;
+  if (
+    !selected ||
+    sessionMode.value !== "CONTINUE" ||
+    !canSubmit.value ||
+    busy.value ||
+    continuationPreviewBusy.value
+  )
+    return;
+  continuationPreviewBusy.value = true;
+  problem.value = undefined;
+  try {
+    const task = form.task.trim();
+    const attachmentSetRef = await attachmentComposer.value?.finalize();
+    if (
+      selectedSession.value !== selected ||
+      !isContinuationMode() ||
+      form.task.trim() !== task
+    )
+      return;
+    continuationPreviewTarget.value = {
+      projectRef: projectRef.value,
+      targetKind: "SESSION_CONTINUATION",
+      targetRef: selected.sessionRef,
+      context: { task, ...(attachmentSetRef ? { attachmentSetRef } : {}) },
+    };
+    await nextTick();
+    await continuationPreview.value?.refresh();
+  } catch (error) {
+    problem.value = asProblem(error);
+  } finally {
+    continuationPreviewBusy.value = false;
+  }
+}
 
 const targetLoader = computed(() =>
   createExecutionTargetPickerLoader(projectRef.value, form.targetType),
@@ -791,6 +857,23 @@ watch(
             </RouterLink>
           </section>
 
+          <section v-if="sessionMode === 'CONTINUE'" class="panel stack">
+            <button
+              v-if="!continuationPreviewTarget"
+              type="button"
+              class="button"
+              :disabled="!canSubmit || busy || continuationPreviewBusy"
+              @click="previewContinuation"
+            >
+              {{ $t("promptContext.continuation") }}
+            </button>
+            <PromptTargetPreview
+              v-if="continuationPreviewTarget"
+              ref="continuationPreview"
+              :target="continuationPreviewTarget"
+              :disabled="busy"
+            />
+          </section>
           <ProblemNotice v-if="problem" :problem="problem" compact />
         </div>
 

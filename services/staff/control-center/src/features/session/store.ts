@@ -9,6 +9,8 @@ import { environmentDraftReauthKey } from "@/features/runtime/environment-draft-
 import { emailAttemptStorageKey } from "@/features/integrations/email-attempt";
 import { mailboxCredentialRecoveryKey } from "@/features/integrations/email-credential-recovery";
 import { gitSourceRecoveryKey } from "@/features/managed-configurations/git-source";
+import { clearWriteBackRecovery } from "@/features/managed-configurations/writeback/model";
+import { clearPublicationAttempts } from "@/features/runtime/publication-attempt";
 
 import {
   consumeOidcIntent,
@@ -176,6 +178,8 @@ export const useSessionStore = defineStore("session", () => {
     window.sessionStorage.removeItem(emailAttemptStorageKey);
     window.sessionStorage.removeItem(mailboxCredentialRecoveryKey);
     window.sessionStorage.removeItem(gitSourceRecoveryKey);
+    clearWriteBackRecovery(window.sessionStorage);
+    clearPublicationAttempts(window.sessionStorage);
     window.sessionStorage.removeItem(oidcReauthIntentStorageKey);
     window.sessionStorage.removeItem(
       runtimeEnvironmentPolicyReauthCompletionStorageKey,

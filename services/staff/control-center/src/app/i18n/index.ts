@@ -1,10 +1,14 @@
 import { createI18n } from "vue-i18n";
+import { promptContextMessages } from "@/features/agents/detail/prompt-context-messages";
+import { writeBackMessages } from "@/features/managed-configurations/writeback/messages";
 
 import { currentLocale } from "@/shared/locale";
 import { serverMessagesFor } from "@/shared/ui/server-message-catalog";
 import { additionalPermissionMessages } from "@/shared/ui/permission-message-catalog";
 
 const ru = {
+  ...writeBackMessages.ru,
+  promptDetails: promptContextMessages.ru,
   capabilityAuthority: {
     publishedStep: "Возможности опубликованного этапа",
     total: "Всего возможностей",
@@ -189,6 +193,9 @@ const ru = {
     AGENT_CONTEXT_REQUIRED: "Требуется контекст агента",
     RUNTIME_CONTEXT_REQUIRED: "Требуется ревизия выполнения",
     NOT_MATERIALIZED: "Не материализована",
+    PERMISSION_REQUIRED: "Запросите у владельца право чтения этих данных",
+    CAPABILITY_REQUIRED:
+      "Разрешите нужную возможность сотруднику; для файлов — чтение файлов",
   },
   mailbox: {
     leave:
@@ -952,6 +959,7 @@ const ru = {
       "Конфигурация была изменена параллельно. Перезагрузите авторитетное состояние и повторите правку.",
     reload: "Перезагрузить состояние",
     pickerShown: "Показано: {count}",
+    pickerTotal: "Показано: {count} из {total}",
     pickerScroll: "Прокрутите для продолжения",
     environmentsTitle: "Рабочие окружения",
     environmentsSubtitle:
@@ -1834,6 +1842,33 @@ const ru = {
       SENSITIVE: "чувствительные данные",
       DESTRUCTIVE: "необратимое действие",
     },
+  },
+  integrationCandidates: {
+    READY: "Доступно",
+    CONNECTION_UNAVAILABLE: "Подключение недоступно",
+    RECIPIENT_UNAVAILABLE: "Получатель недоступен",
+    PACKAGE_UNAVAILABLE: "Пакет недоступен",
+    GRANT_UNAVAILABLE: "Разрешение недоступно",
+    WORKFLOW_EXCLUDED: "Исключено настройками процесса",
+  },
+  promptContext: {
+    full: "Запросить полный текст с отдельной проверкой доступа",
+    saveStage: "Сохраните черновик этапа, чтобы проверить его точный контекст.",
+    preview: "Просмотреть контекст исполнения",
+    scope: "Контекст применения шаблона",
+    scopeHelp:
+      "Сервер проверяет переменные и зависимости для выбранного сотрудника или сохранённого этапа.",
+    unscoped: "Общий шаблон без выбранного контекста",
+    AGENT: "Сотрудник",
+    WORKFLOW_STAGE: "Этап процесса",
+    INSTRUCTIONS: "Инструкции",
+    CONTINUATION: "Сообщение продолжения Session",
+    kind: "Назначение шаблона",
+    stage: "Сохранённый этап",
+    continuation: "Просмотреть сообщение продолжения",
+    continuationHint:
+      "Просмотр действующего сообщения доступен при продолжении выбранной Session. Сохранённый шаблон проверяется сервером в объявленном контексте.",
+    refreshRequired: "Контекст изменился. Обновите просмотр перед отправкой.",
   },
   integrationsRedesign: {
     tabsLabel: "Разделы интеграций",
@@ -2892,6 +2927,8 @@ const ru = {
 
 const en = {
   ...ru,
+  ...writeBackMessages.en,
+  promptDetails: promptContextMessages.en,
   capabilityAuthority: {
     publishedStep: "Published step capabilities",
     total: "Total capabilities",
@@ -3260,6 +3297,9 @@ const en = {
     AGENT_CONTEXT_REQUIRED: "Agent context required",
     RUNTIME_CONTEXT_REQUIRED: "Runtime revision required",
     NOT_MATERIALIZED: "Not materialized",
+    PERMISSION_REQUIRED: "Ask the owner for permission to read this data",
+    CAPABILITY_REQUIRED:
+      "Enable the required agent capability; file context requires file read access",
   },
   mailbox: {
     leave:
@@ -3915,6 +3955,7 @@ const en = {
       "The configuration changed concurrently. Reload authoritative state and repeat the edit.",
     reload: "Reload state",
     pickerShown: "Shown: {count}",
+    pickerTotal: "Shown: {count} of {total}",
     pickerScroll: "Scroll to load more",
     environmentsTitle: "Work environments",
     environmentsSubtitle:
@@ -4732,6 +4773,34 @@ const en = {
       SENSITIVE: "sensitive data",
       DESTRUCTIVE: "destructive action",
     },
+  },
+  integrationCandidates: {
+    READY: "Available",
+    CONNECTION_UNAVAILABLE: "Connection unavailable",
+    RECIPIENT_UNAVAILABLE: "Recipient unavailable",
+    PACKAGE_UNAVAILABLE: "Package unavailable",
+    GRANT_UNAVAILABLE: "Grant unavailable",
+    WORKFLOW_EXCLUDED: "Excluded by workflow configuration",
+  },
+  promptContext: {
+    full: "Request full content with a separate access check",
+    saveStage: "Save the stage draft to inspect its exact context.",
+    preview: "Preview execution context",
+    scope: "Template context",
+    scopeHelp:
+      "The server validates variables and dependencies for the selected agent or saved stage.",
+    unscoped: "Shared template without a selected context",
+    AGENT: "Agent",
+    WORKFLOW_STAGE: "Workflow stage",
+    INSTRUCTIONS: "Instructions",
+    CONTINUATION: "Session continuation message",
+    kind: "Template purpose",
+    stage: "Saved stage",
+    continuation: "Preview continuation message",
+    continuationHint:
+      "Preview the active message when continuing a selected Session. The server validates the saved template in its declared context.",
+    refreshRequired:
+      "The context changed. Refresh the preview before submitting.",
   },
   integrationsRedesign: {
     tabsLabel: "Integration sections",

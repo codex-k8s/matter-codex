@@ -3833,9 +3833,9 @@ async function pinAgentProviderAccount(
     readback.configuration.providerPolicy.mode === "FIXED" &&
     current.length === 1 &&
     current[0]?.accountRef === candidate.accountRef &&
-    current[0]?.catalogRevision === candidate.catalogRevision &&
-    current[0]?.catalogDigest === candidate.catalogDigest &&
-    current[0]?.providerDefinitionKey === candidate.providerDefinitionKey
+    current[0].catalogRevision === candidate.catalogRevision &&
+    current[0].catalogDigest === candidate.catalogDigest &&
+    current[0].providerDefinitionKey === candidate.providerDefinitionKey
   )
     return;
   const input: AgentRuntimeConfigurationInput = {
@@ -3861,7 +3861,7 @@ async function pinAgentProviderAccount(
           headers: {
             "Content-Type": "application/json",
             "Idempotency-Key": key,
-            "If-Match": `"${version}"`,
+            "If-Match": `"${String(version)}"`,
             "X-CSRF-Token": decodeURIComponent(csrf),
           },
           body: JSON.stringify(input),

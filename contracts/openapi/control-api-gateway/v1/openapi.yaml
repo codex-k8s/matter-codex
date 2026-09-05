@@ -2831,6 +2831,122 @@ paths:
                   nextActions: { type: array, items: { $ref: '#/components/schemas/NextAction' } }
                   nextPageToken: { type: string, maxLength: 512 }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/integration-grant-candidates/connections:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrationGrantConnectionCandidates
+      description: Авторитетный каталог выбранного шага; результат не выдаёт разрешение на изменение или исполнение.
+      parameters:
+        - name: purpose
+          in: query
+          required: true
+          schema: { type: string, enum: [GRANT, USE] }
+        - name: projectRef
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: recipientKind
+          in: query
+          required: false
+          schema: { type: string, enum: [AGENT, WORKFLOW] }
+        - name: recipientRef
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: capabilityKey
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 120 }
+        - name: workflowRef
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: stepKey
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 120 }
+        - { $ref: '#/components/parameters/Query' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: Точный контекст, pins, отфильтрованный total и страница кандидатов
+          content: { application/json: { schema: { $ref: '#/components/schemas/IntegrationGrantConnectionCandidatePage' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/integration-grant-candidates/projects:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrationGrantProjectCandidates
+      description: Авторитетный каталог выбранного шага; результат не выдаёт разрешение на изменение или исполнение.
+      parameters:
+        - name: connectionRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - { $ref: '#/components/parameters/Query' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: Точный контекст, pins, отфильтрованный total и страница кандидатов
+          content: { application/json: { schema: { $ref: '#/components/schemas/IntegrationGrantProjectCandidatePage' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/integration-grant-candidates/recipients:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrationGrantRecipientCandidates
+      description: Авторитетный каталог выбранного шага; результат не выдаёт разрешение на изменение или исполнение.
+      parameters:
+        - name: recipientKind
+          in: query
+          required: true
+          schema: { type: string, enum: [AGENT, WORKFLOW] }
+        - name: connectionRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: projectRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - { $ref: '#/components/parameters/Query' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: Точный контекст, pins, отфильтрованный total и страница кандидатов
+          content: { application/json: { schema: { $ref: '#/components/schemas/IntegrationGrantRecipientCandidatePage' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/integration-grant-candidates/capabilities:
+    get:
+      tags: [Integrations]
+      operationId: listIntegrationGrantCapabilityCandidates
+      description: Авторитетный каталог выбранного шага; результат не выдаёт разрешение на изменение или исполнение.
+      parameters:
+        - name: connectionRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: projectRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - name: recipientKind
+          in: query
+          required: true
+          schema: { type: string, enum: [AGENT, WORKFLOW] }
+        - name: recipientRef
+          in: query
+          required: true
+          schema: { $ref: '#/components/schemas/OpaqueRef' }
+        - { $ref: '#/components/parameters/Query' }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: Точный контекст, pins, отфильтрованный total и страница кандидатов
+          content: { application/json: { schema: { $ref: '#/components/schemas/IntegrationGrantCapabilityCandidatePage' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/integration-connections:
     get:
       tags: [Integrations]
@@ -7505,6 +7621,16 @@ components:
         purpose: { type: string, maxLength: 1000 }
         state: { type: string, enum: [DRAFT, VALID, PUBLISHED, ARCHIVED] }
         revision: { type: integer, minimum: 1 }
+        revisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная owner revision отображаемых steps/inputFields; опубликованная, иначе сохранённый draft. Отсутствует без обеих revisions.
+        draftRevisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная сохранённая draft revision владельца; отсутствует без draft.
+        publishedRevisionRef:
+          allOf: [{ $ref: '#/components/schemas/OpaqueRef' }]
+          description: Точная опубликованная revision владельца; отсутствует до публикации.
+        draft: { $ref: '#/components/schemas/WorkflowDraftSnapshot' }
         coordinatorAgentRef: { $ref: '#/components/schemas/OpaqueRef' }
         inputFields: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/WorkflowInputField' } }
         steps: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/WorkflowStep' } }
@@ -7514,6 +7640,23 @@ components:
         validationMessages: { type: array, maxItems: 100, items: { type: string, maxLength: 300 } }
         updatedAt: { $ref: '#/components/schemas/Timestamp' }
         nextActions: { type: array, items: { $ref: '#/components/schemas/NextAction' } }
+    WorkflowDraftSnapshot:
+      type: object
+      additionalProperties: false
+      description: Сохранённый draft для редактора; все поля и ref происходят из одной owner revision. Не подменяет опубликованный основной вид Workflow.
+      required: [ref, version, revision, state, inputFields, steps, validationMessages]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        revision: { type: integer, minimum: 1 }
+        state: { type: string, enum: [DRAFT, VALID, PUBLISHED, ARCHIVED] }
+        coordinatorAgentRef: { $ref: '#/components/schemas/OpaqueRef' }
+        inputFields: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/WorkflowInputField' } }
+        steps: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/WorkflowStep' } }
+        maxConcurrency: { type: integer, minimum: 1, maximum: 100 }
+        timeoutSeconds: { type: integer, minimum: 1, maximum: 604800 }
+        completionCriteria: { type: string, maxLength: 2000 }
+        validationMessages: { type: array, maxItems: 100, items: { type: string, maxLength: 300 } }
     WorkflowInput:
       type: object
       additionalProperties: false
@@ -8210,6 +8353,125 @@ components:
       required: [apiKey]
       properties:
         apiKey: { type: string, minLength: 8, maxLength: 16384, writeOnly: true }
+    IntegrationCandidateReason:
+      type: string
+      enum: [READY, CONNECTION_UNAVAILABLE, RECIPIENT_UNAVAILABLE, PACKAGE_UNAVAILABLE, GRANT_UNAVAILABLE, WORKFLOW_EXCLUDED]
+    IntegrationGrantCandidateContext:
+      type: object
+      additionalProperties: false
+      properties:
+        connectionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        recipientKind: { type: string, enum: [AGENT, WORKFLOW] }
+        recipientRef: { $ref: '#/components/schemas/OpaqueRef' }
+        capabilityKey: { type: string, minLength: 1, maxLength: 120 }
+        workflowRef: { $ref: '#/components/schemas/OpaqueRef' }
+        stepKey: { type: string, minLength: 1, maxLength: 120 }
+    IntegrationGrantCandidatePins:
+      type: object
+      additionalProperties: false
+      required: [contextDigest]
+      properties:
+        contextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        connectionVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        definitionVersion: { type: string, minLength: 1, maxLength: 128 }
+        definitionDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        projectVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        recipientVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        workflowRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+    IntegrationGrantConnectionCandidate:
+      type: object
+      additionalProperties: false
+      required: [connectionRef, name, definitionKey, providerName, resourceScope, grantable, usable, reason, pins]
+      properties:
+        connectionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        name: { type: string, maxLength: 500 }
+        definitionKey: { type: string, maxLength: 500 }
+        providerName: { type: string, maxLength: 500 }
+        credentialKind: { type: string, enum: [TOKEN, PASSWORD] }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        resourceScope: { type: object, additionalProperties: { type: string, maxLength: 349528 }, maxProperties: 8 }
+        grantable: { type: boolean }
+        usable: { type: boolean }
+        reason: { $ref: '#/components/schemas/IntegrationCandidateReason' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantConnectionCandidatePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, contextDigest, context, pins]
+      properties:
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/IntegrationGrantConnectionCandidate' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 2048 }
+        contextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        context: { $ref: '#/components/schemas/IntegrationGrantCandidateContext' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantProjectCandidate:
+      type: object
+      additionalProperties: false
+      required: [projectRef, name, grantable, reason, pins]
+      properties:
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        name: { type: string, maxLength: 500 }
+        grantable: { type: boolean }
+        reason: { $ref: '#/components/schemas/IntegrationCandidateReason' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantProjectCandidatePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, contextDigest, context, pins]
+      properties:
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/IntegrationGrantProjectCandidate' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 2048 }
+        contextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        context: { $ref: '#/components/schemas/IntegrationGrantCandidateContext' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantRecipientCandidate:
+      type: object
+      additionalProperties: false
+      required: [recipientRef, name, recipientKind, projectRef, grantable, reason, pins]
+      properties:
+        recipientRef: { $ref: '#/components/schemas/OpaqueRef' }
+        name: { type: string, maxLength: 500 }
+        recipientKind: { type: string, enum: [AGENT, WORKFLOW] }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        grantable: { type: boolean }
+        reason: { $ref: '#/components/schemas/IntegrationCandidateReason' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantRecipientCandidatePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, contextDigest, context, pins]
+      properties:
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/IntegrationGrantRecipientCandidate' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 2048 }
+        contextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        context: { $ref: '#/components/schemas/IntegrationGrantCandidateContext' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantCapabilityCandidate:
+      type: object
+      additionalProperties: false
+      required: [capability, grantable, reason, pins]
+      properties:
+        capability: { $ref: '#/components/schemas/IntegrationCapability' }
+        grantable: { type: boolean }
+        reason: { $ref: '#/components/schemas/IntegrationCandidateReason' }
+        currentGrantRef: { $ref: '#/components/schemas/OpaqueRef' }
+        currentGrantVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
+    IntegrationGrantCapabilityCandidatePage:
+      type: object
+      additionalProperties: false
+      required: [items, total, contextDigest, context, pins]
+      properties:
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/IntegrationGrantCapabilityCandidate' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 2048 }
+        contextDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        context: { $ref: '#/components/schemas/IntegrationGrantCandidateContext' }
+        pins: { $ref: '#/components/schemas/IntegrationGrantCandidatePins' }
     IntegrationCapability:
       type: object
       additionalProperties: false

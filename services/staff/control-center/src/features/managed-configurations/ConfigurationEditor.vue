@@ -19,6 +19,7 @@ import type {
   ManagedConfigurationRevision,
   RevisionImpactPlan,
   RoleImageImpactPlan,
+  PromptTemplateScopeInput,
 } from "@/shared/api/generated/openapi/types.gen";
 import { asProblem, type AppProblem } from "@/shared/api/problem";
 import CodeEditor from "@/shared/ui/CodeEditor.vue";
@@ -30,10 +31,14 @@ import { useUnsavedChanges } from "@/shared/ui/unsaved-changes";
 import * as api from "./api";
 import ConfigurationFields from "./ConfigurationFields.vue";
 import GitSourcePanel from "./GitSourcePanel.vue";
+import GitWriteBackPanel from "./writeback/GitWriteBackPanel.vue";
+import PromptScopeFields from "./PromptScopeFields.vue";
+import { promptScopeInput } from "./prompt-scope";
 import PublicationImpactSelection from "@/features/runtime/PublicationImpactSelection.vue";
 import {
   readPublicationAttempt,
   rememberPublicationAttempt,
+  publicationRefusalClearsIntent,
   forgetPublicationAttempt,
   type PublicationAttempt,
 } from "@/features/runtime/publication-attempt";
@@ -79,6 +84,8 @@ const pageToken = ref<string>();
 const historyCursors = new Set<string>();
 const name = ref("");
 const content = ref("");
+const promptScope = ref<PromptTemplateScopeInput>();
+const promptScopeValid = ref(true);
 const format = ref<ManagedConfigurationRevision["contentFormat"]>(
   props.kind === "PROMPT_TEMPLATE" ? "TEXT" : "JSON",
 );
@@ -163,6 +170,8 @@ const gitOwned = computed(() => configuration.value?.managedBy === "GIT");
 const dirty = computed(
   () =>
     content.value !== (revision.value?.content ?? "") ||
+    JSON.stringify(promptScope.value) !==
+      JSON.stringify(promptScopeInput(revision.value?.promptScope)) ||
     format.value !==
       (revision.value?.contentFormat ??
         (props.kind === "PROMPT_TEMPLATE" ? "TEXT" : "JSON")) ||
@@ -191,6 +200,7 @@ const canSave = computed(
   () =>
     !busy.value &&
     !sourceBusy.value &&
+    promptScopeValid.value &&
     dirty.value &&
     !gitOwned.value &&
     name.value.trim() &&
@@ -235,6 +245,7 @@ function choose(item: ManagedConfigurationRevision): void {
     return;
   revision.value = item;
   content.value = item.content;
+  promptScope.value = promptScopeInput(item.promptScope);
   format.value = item.contentFormat;
   closeImpact();
   selected.value = [];
@@ -246,6 +257,7 @@ function accept(result: ManagedConfigurationResult): void {
   revision.value = result.revision;
   name.value = result.configuration.name;
   content.value = result.revision.content;
+  promptScope.value = promptScopeInput(result.revision.promptScope);
   format.value = result.revision.contentFormat;
   revisions.value = [
     result.revision,
@@ -307,6 +319,7 @@ async function load(more = false): Promise<void> {
     if (!more) {
       revision.value = result.items[0] ?? result.configuration.currentRevision;
       content.value = revision.value?.content ?? "";
+      promptScope.value = promptScopeInput(revision.value?.promptScope);
       format.value = revision.value?.contentFormat ?? format.value;
       closeImpact();
     }
@@ -323,6 +336,9 @@ async function save(): Promise<void> {
       ? await api.changeDraft(current, target, {
           contentFormat: format.value,
           content: content.value,
+          ...(props.kind === "PROMPT_TEMPLATE"
+            ? { promptScope: promptScope.value }
+            : {}),
         })
       : await api.createDraft(
           props.kind,
@@ -332,6 +348,9 @@ async function save(): Promise<void> {
             name: name.value.trim(),
             contentFormat: format.value,
             content: content.value,
+            ...(props.kind === "PROMPT_TEMPLATE"
+              ? { promptScope: promptScope.value }
+              : {}),
           },
           configuration.value?.version,
         );
@@ -433,6 +452,7 @@ async function transition(action: "validate" | "publish"): Promise<void> {
   );
 }
 async function publishPrompt(selected: string[]): Promise<void> {
+  const hadUnknownAttempt = promptAttempt.value !== undefined;
   const current = configuration.value,
     target = revision.value,
     plan = publicationPlan.value;
@@ -490,7 +510,10 @@ async function publishPrompt(selected: string[]): Promise<void> {
       accept(result);
     } catch (error) {
       if (
-        [400, 401, 403, 404, 409, 412, 422].includes(asProblem(error).status)
+        publicationRefusalClearsIntent(
+          hadUnknownAttempt,
+          asProblem(error).status,
+        )
       ) {
         publicationUnknown.value = false;
         clearPromptAttempt(current.ref);
@@ -701,6 +724,7 @@ async function rebind(): Promise<void> {
   );
 }
 async function applyRoleImage(selected: string[]): Promise<void> {
+  const hadUnknownAttempt = imageAttempt.value !== undefined;
   const plan = imagePlan.value;
   if (!plan || busy.value || imageUnknown.value || dirty.value) return;
   await perform(async () => {
@@ -724,7 +748,10 @@ async function applyRoleImage(selected: string[]): Promise<void> {
       accept(result);
     } catch (error) {
       if (
-        [400, 401, 403, 404, 409, 412, 422].includes(asProblem(error).status)
+        publicationRefusalClearsIntent(
+          hadUnknownAttempt,
+          asProblem(error).status,
+        )
       ) {
         imageUnknown.value = false;
         clearImageAttempt(plan.configurationRef);
@@ -879,6 +906,22 @@ watch(
       :disabled="busy || dirty"
       @busy="sourceBusy = $event"
       @changed="load()"
+    />
+    <GitWriteBackPanel
+      v-if="configuration?.managedBy === 'GIT'"
+      :key="configuration.ref"
+      :configuration="configuration"
+      :disabled="busy || dirty"
+      @busy="sourceBusy = $event"
+      @changed="load()"
+    />
+    <PromptScopeFields
+      v-if="kind === 'PROMPT_TEMPLATE'"
+      v-model="promptScope"
+      :project-ref="configuration?.projectRef ?? projectRef"
+      :template="content"
+      :disabled="busy || sourceBusy || gitOwned"
+      @valid="promptScopeValid = $event"
     />
     <div class="configuration-editor__fields">
       <label

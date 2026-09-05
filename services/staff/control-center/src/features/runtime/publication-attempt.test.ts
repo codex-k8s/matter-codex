@@ -1,10 +1,21 @@
 import { expect, it } from "vitest";
 import {
+  publicationRefusalClearsIntent,
+  clearPublicationAttempts,
   readPublicationAttempt,
   rememberPublicationAttempt,
   forgetPublicationAttempt,
   type PublicationAttempt,
 } from "./publication-attempt";
+it.each([400, 401, 403, 404, 409, 412, 422, 500, 503, 504])(
+  "сохраняет прежний неизвестный исход при отказе повторного запроса %i",
+  (status) => {
+    expect(publicationRefusalClearsIntent(true, status)).toBe(false);
+    expect(publicationRefusalClearsIntent(false, status)).toBe(
+      status === 400 || status === 422,
+    );
+  },
+);
 function memoryStorage(): Storage {
   const values = new Map<string, string>();
   return {
@@ -30,6 +41,18 @@ const attempt: PublicationAttempt = {
   selectedItemRefs: ["item-two", "item-one"],
   key: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
 };
+it("при смене владельца очищает intent всех закрытых форм, сохраняя остальные настройки", () => {
+  const storage = memoryStorage();
+  rememberPublicationAttempt(attempt, storage);
+  rememberPublicationAttempt(
+    { ...attempt, kind: "ROLE_IMAGE", ownerRef: "image" },
+    storage,
+  );
+  storage.setItem("locale", "ru");
+  clearPublicationAttempts(storage);
+  expect(storage.length).toBe(1);
+  expect(storage.getItem("locale")).toBe("ru");
+});
 it("сохраняет original If-Match/key/selection после закрытия формы без content", () => {
   const storage = memoryStorage();
   rememberPublicationAttempt(attempt, storage);

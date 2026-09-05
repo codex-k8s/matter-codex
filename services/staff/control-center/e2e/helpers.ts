@@ -304,7 +304,7 @@ export async function publishAgent(page: Page): Promise<void> {
     const preparation = await prepared;
     expect(preparation.status()).toBe(200);
     expect(preparation.request().headers()["if-match"]).toBe(
-      `"${agent.version}"`,
+      `"${String(agent.version)}"`,
     );
     const plan = (await preparation.json()) as RevisionImpactPlan;
     expect(plan.kind).toBe("AGENT_INSTRUCTIONS");
@@ -342,7 +342,7 @@ export async function publishAgent(page: Page): Promise<void> {
     expect(command.planRef).toBe(plan.ref);
     expect(command.selectedItemRefs).toHaveLength(1);
     expect(response.request().headers()["if-match"]).toBe(
-      `"${plan.sourceVersion}"`,
+      `"${String(plan.sourceVersion)}"`,
     );
     expect(response.request().headers()["idempotency-key"]).toBeTruthy();
     const receipt = (await response.json()) as InstructionPublicationResult;

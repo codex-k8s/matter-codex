@@ -93,6 +93,8 @@ export function normalizeTemplateVariable(
       "AGENT_CONTEXT_REQUIRED",
       "RUNTIME_CONTEXT_REQUIRED",
       "NOT_MATERIALIZED",
+      "PERMISSION_REQUIRED",
+      "CAPABILITY_REQUIRED",
     ].includes(variable.reason) ||
     variable.available !== (variable.reason === "AVAILABLE")
   )

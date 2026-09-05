@@ -9,6 +9,7 @@ import type { TemplateVariablePickerItem } from "@/features/agents/detail/model"
 import {
   nearScrollEnd,
   useAsyncEntityCollection,
+  type AsyncEntityLoader,
 } from "@/shared/ui/async-entity-picker";
 
 const props = defineProps<{
@@ -16,6 +17,8 @@ const props = defineProps<{
   agentRef?: string;
   runtimeRevisionRef?: string;
   disabled: boolean;
+  loadItems?: AsyncEntityLoader<TemplateVariablePickerItem>;
+  contextKey?: string;
 }>();
 const emit = defineEmits<{ select: [item: TemplateVariablePickerItem] }>();
 const { locale, t } = useI18n();
@@ -23,10 +26,12 @@ const copy = computed(() => agentDetailCopy(locale.value).instructions);
 const listboxId = `template-variable-catalog-${useId()}`;
 const activeScope = ref("ALL");
 const loader: ReturnType<typeof createTemplateVariableLoader> = (request) =>
-  createTemplateVariableLoader(props.projectRef, {
-    agentRef: props.agentRef,
-    runtimeRevisionRef: props.runtimeRevisionRef,
-  })(request);
+  props.loadItems
+    ? props.loadItems(request)
+    : createTemplateVariableLoader(props.projectRef, {
+        agentRef: props.agentRef,
+        runtimeRevisionRef: props.runtimeRevisionRef,
+      })(request);
 const {
   hasMore,
   items,
@@ -38,7 +43,12 @@ const {
   refresh,
 } = useAsyncEntityCollection(loader, { debounceMs: 500 });
 watch(
-  () => [props.projectRef, props.agentRef, props.runtimeRevisionRef],
+  () => [
+    props.projectRef,
+    props.agentRef,
+    props.runtimeRevisionRef,
+    props.contextKey,
+  ],
   () => refresh(),
   { flush: "sync" },
 );

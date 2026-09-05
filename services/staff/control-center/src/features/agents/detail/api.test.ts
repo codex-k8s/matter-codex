@@ -1,13 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listTemplateVariables, previewPromptTemplate } = vi.hoisted(() => ({
+const { listTemplateVariables } = vi.hoisted(() => ({
   listTemplateVariables: vi.fn(),
-  previewPromptTemplate: vi.fn(),
 }));
 
 vi.mock("@/shared/api/generated/openapi/sdk.gen", () => ({
   listTemplateVariables,
-  previewPromptTemplate,
 }));
 vi.mock("@/shared/api/mutation", () => ({
   csrfToken: () => "c".repeat(43),
@@ -16,15 +14,11 @@ vi.mock("@/shared/api/problem", () => ({
   unwrap: (value: unknown) => Promise.resolve(value),
 }));
 
-import {
-  createTemplateVariableLoader,
-  loadMaterializedTemplatePreview,
-} from "@/features/agents/detail/api";
+import { createTemplateVariableLoader } from "@/features/agents/detail/api";
 
 describe("agent detail api", () => {
   beforeEach(() => {
     listTemplateVariables.mockReset();
-    previewPromptTemplate.mockReset();
   });
 
   it("передаёт серверу поиск и cursor, сохраняя scope переменной", async () => {
@@ -106,30 +100,4 @@ describe("agent detail api", () => {
       ).rejects.toThrow();
     },
   );
-
-  it("получает synthetic materialized preview без локальной подстановки", async () => {
-    previewPromptTemplate.mockResolvedValue({
-      data: {
-        safePreview: "Проект: demo",
-        fullMaterializedPrompt: "Проект: demo\nИнструменты: gh",
-        diagnostics: [],
-      },
-    });
-    const signal = new AbortController().signal;
-    const preview = await loadMaterializedTemplatePreview(
-      "Проект: {{ .project.name }}",
-      signal,
-    );
-
-    expect(previewPromptTemplate).toHaveBeenCalledWith({
-      body: {
-        template: "Проект: {{ .project.name }}",
-        targetKind: "SYNTHETIC",
-        includeFullMaterialization: true,
-      },
-      headers: { "X-CSRF-Token": "c".repeat(43) },
-      signal,
-    });
-    expect(preview.fullMaterializedPrompt).toContain("Инструменты: gh");
-  });
 });
