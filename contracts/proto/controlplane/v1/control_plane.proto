@@ -94,6 +94,7 @@ service PlatformQueryService {
   rpc ListManagedConfigurations(ListManagedConfigurationsRequest) returns (ListManagedConfigurationsResponse);
   rpc GetManagedConfigurationImpact(GetManagedConfigurationImpactRequest) returns (GetManagedConfigurationImpactResponse);
   rpc GetRoleImageImpactPlan(GetRoleImageImpactPlanRequest) returns (GetRoleImageImpactPlanResponse);
+  rpc GetRevisionImpactPlan(GetRevisionImpactPlanRequest) returns (GetRevisionImpactPlanResponse);
   rpc GetManagedConfigurationGitWriteBack(GetManagedConfigurationGitWriteBackRequest) returns (GetManagedConfigurationGitWriteBackResponse);
   rpc ListManagedConfigurationGitWriteBacks(ListManagedConfigurationGitWriteBacksRequest) returns (ListManagedConfigurationGitWriteBacksResponse);
   rpc GetSystemSTTConfiguration(GetSystemSTTConfigurationRequest) returns (GetSystemSTTConfigurationResponse);
@@ -248,6 +249,7 @@ service PlatformCommandService {
   rpc PublishRoleImageRevisionDraft(PublishRoleImageRevisionDraftRequest) returns (PublishRoleImageRevisionDraftResponse);
   rpc RebindRoleImageConsumers(RebindRoleImageConsumersRequest) returns (RebindRoleImageConsumersResponse);
   rpc PrepareRoleImageImpactPlan(PrepareRoleImageImpactPlanRequest) returns (PrepareRoleImageImpactPlanResponse);
+  rpc PrepareEnvironmentDraftImpact(PrepareEnvironmentDraftImpactRequest) returns (PrepareEnvironmentDraftImpactResponse);
   rpc CreateIntegrationDefinitionDraft(CreateIntegrationDefinitionDraftRequest) returns (CreateIntegrationDefinitionDraftResponse);
   rpc ValidateIntegrationDefinitionDraft(ValidateIntegrationDefinitionDraftRequest) returns (ValidateIntegrationDefinitionDraftResponse);
   rpc PublishIntegrationDefinitionDraft(PublishIntegrationDefinitionDraftRequest) returns (PublishIntegrationDefinitionDraftResponse);
@@ -4284,10 +4286,13 @@ message ValidateRuntimeEnvironmentDraftResponse { RuntimeEnvironmentDraft draft 
 message PublishRuntimeEnvironmentDraftRequest {
   MutationContext mutation = 1;
   string draft_ref = 2;
+  string plan_ref = 3;
+  repeated string selected_item_refs = 4;
 }
 message PublishRuntimeEnvironmentDraftResponse {
   RuntimeEnvironmentDraft draft = 1;
   RuntimeEnvironmentSet environment = 2;
+  RevisionImpactPlan plan = 3;
 }
 message DiscardRuntimeEnvironmentDraftRequest {
   MutationContext mutation = 1;
@@ -5411,6 +5416,82 @@ message RoleImageImpactItem {
   string result_binding_ref = 9;
   int64 result_binding_version = 10;
 }
+enum RevisionImpactKind {
+  REVISION_IMPACT_KIND_UNSPECIFIED = 0;
+  REVISION_IMPACT_KIND_RUNTIME_ENVIRONMENT = 1;
+  REVISION_IMPACT_KIND_PROMPT_TEMPLATE = 2;
+  REVISION_IMPACT_KIND_AGENT_INSTRUCTIONS = 3;
+}
+enum RevisionImpactState {
+  REVISION_IMPACT_STATE_UNSPECIFIED = 0;
+  REVISION_IMPACT_STATE_PREPARED = 1;
+  REVISION_IMPACT_STATE_APPLIED = 2;
+  REVISION_IMPACT_STATE_EXPIRED = 3;
+}
+enum RevisionImpactOutcome {
+  REVISION_IMPACT_OUTCOME_UNSPECIFIED = 0;
+  REVISION_IMPACT_OUTCOME_PENDING = 1;
+  REVISION_IMPACT_OUTCOME_APPLIED = 2;
+  REVISION_IMPACT_OUTCOME_CONFLICT = 3;
+  REVISION_IMPACT_OUTCOME_FORBIDDEN = 4;
+  REVISION_IMPACT_OUTCOME_NOT_SELECTED = 5;
+}
+enum RevisionImpactConsumerKind {
+  REVISION_IMPACT_CONSUMER_KIND_UNSPECIFIED = 0;
+  REVISION_IMPACT_CONSUMER_KIND_AGENT = 1;
+  REVISION_IMPACT_CONSUMER_KIND_AGENT_CONTINUATION = 2;
+  REVISION_IMPACT_CONSUMER_KIND_WORKFLOW = 3;
+  REVISION_IMPACT_CONSUMER_KIND_SCHEDULE = 4;
+}
+message RevisionImpactPlan {
+  string ref = 1;
+  int64 version = 2;
+  RevisionImpactKind kind = 3;
+  string source_ref = 4;
+  int64 source_version = 5;
+  string source_revision_ref = 6;
+  string draft_ref = 7;
+  int64 draft_version = 8;
+  string target_digest = 9;
+  string digest = 10;
+  int64 total = 11;
+  RevisionImpactState state = 12;
+  google.protobuf.Timestamp created_at = 13;
+  google.protobuf.Timestamp expires_at = 14;
+  string published_revision_ref = 15;
+}
+message RevisionImpactItem {
+  string ref = 1;
+  string project_ref = 2;
+  RevisionImpactConsumerKind consumer_kind = 3;
+  string consumer_ref = 4;
+  int64 consumer_version = 5;
+  string binding_ref = 6;
+  int64 binding_version = 7;
+  string source_revision_ref = 8;
+  RevisionImpactOutcome outcome = 9;
+  string result_revision_ref = 10;
+  string result_binding_ref = 11;
+  int64 result_binding_version = 12;
+  int64 result_consumer_version = 13;
+}
+message PrepareEnvironmentDraftImpactRequest {
+  MutationContext mutation = 1;
+  string draft_ref = 2;
+}
+message PrepareEnvironmentDraftImpactResponse { RevisionImpactPlan plan = 1; }
+message GetRevisionImpactPlanRequest {
+  string plan_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message GetRevisionImpactPlanResponse {
+  RevisionImpactPlan plan = 1;
+  repeated RevisionImpactItem items = 2;
+  int64 total = 3;
+  PageInfo page = 4;
+}
+
 message PrepareRoleImageImpactPlanRequest {
   MutationContext mutation = 1;
   string configuration_ref = 2;
