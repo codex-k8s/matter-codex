@@ -58,6 +58,7 @@ const ru = {
     },
   },
   serverMessages: {
+    unsupported: "Сообщение сервера недоступно в этой версии приложения.",
     INTERACTION_AUTHORITY_CHANGED:
       "Подключение или разрешения изменены. Отправка отменена.",
     INTERACTION_DELIVERY_GATE_TITLE: "Подтверждение доставки во внешний канал",
@@ -2709,6 +2710,8 @@ const ru = {
     renameConversation: "Переименовать диалог",
     archiveConversation: "Архивировать диалог",
     archiveConfirm: "Архивировать этот диалог?",
+    closeWithDraftConfirm:
+      "Закрыть чат с неотправленным сообщением или вложениями? Выбранные вложения потребуется добавить заново.",
     searchHistory: "Поиск диалогов",
     historyState: "Состояние диалогов",
     receipt: "Квитанция",
@@ -2911,6 +2914,7 @@ const en = {
     },
   },
   serverMessages: {
+    unsupported: "This server message is unavailable in this app version.",
     INTERACTION_AUTHORITY_CHANGED:
       "The connection or permissions changed. Delivery was cancelled.",
     INTERACTION_DELIVERY_GATE_TITLE: "External channel delivery approval",
@@ -5554,6 +5558,8 @@ const en = {
     renameConversation: "Rename conversation",
     archiveConversation: "Archive conversation",
     archiveConfirm: "Archive this conversation?",
+    closeWithDraftConfirm:
+      "Close the chat with an unsent message or attachments? Selected attachments will need to be added again.",
     searchHistory: "Search conversations",
     historyState: "Conversation state",
     receipt: "Receipt",

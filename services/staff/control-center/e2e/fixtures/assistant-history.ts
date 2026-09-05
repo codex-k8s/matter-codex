@@ -91,6 +91,18 @@ export async function checkAssistantHistory(
   expect(cursors).toEqual([null, "history_next"]);
   await history.getByRole("button", { name: /Предыдущий диалог/ }).click();
   await expect(dialog).toHaveAttribute("data-conversation-ref", "cnv_older");
+  const composer = dialog.locator(".assistant-composer textarea");
+  await composer.fill("Несохранённый текст");
+  let closeWarning = "";
+  page.once("dialog", async (prompt) => {
+    closeWarning = prompt.message();
+    await prompt.dismiss();
+  });
+  await composer.press("Escape");
+  await expect(dialog).toBeVisible();
+  await expect(composer).toHaveValue("Несохранённый текст");
+  expect(closeWarning).toContain("неотправленным сообщением");
+  await composer.fill("");
   if (mobile)
     await dialog
       .getByRole("button", { name: "История диалогов", exact: true })

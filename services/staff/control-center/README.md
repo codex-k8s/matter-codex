@@ -1004,6 +1004,17 @@ runtime ConfigMap, PDB, ServiceAccount и default-deny NetworkPolicy. Nginx
 `control-api-gateway`. Image reference закрепляется digest. Pod не получает
 service-account token или server credentials.
 
+## Дополнительный аудит MVP-UI-01/09
+
+Дополнительный аудит MVP-UI-01/09: неизвестный exact server token `i18n:KEY`
+в generic результатах заменяется локализованным сообщением несовместимости.
+Произвольный пользовательский текст с упоминанием префикса сохраняется.
+Закрытие чата через Escape, фон или кнопку предупреждает о неотправленном
+тексте/вложениях; отказ сохраняет открытый чат и ввод. SSR-проверки ru/en и
+browser-сценарии на 390/1440 PASS. Новые query Files/Run, VFS hierarchy,
+RoleImage impact и Git write-back ожидают соответствующий generated SDK;
+этот аудит не завершает их приёмку.
+
 ## Проверенная документация библиотек
 
 Для Playwright проверены Context7 `/microsoft/playwright/v1.61.0` и актуальный

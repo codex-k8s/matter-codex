@@ -15,6 +15,7 @@ export function useServerMessage(): (value: string) => string {
   const { t } = useI18n();
   return (value) => {
     const key = serverMessageKey(value);
-    return key ? t(key) : value;
+    if (key) return t(key);
+    return value.startsWith("i18n:") ? t("serverMessages.unsupported") : value;
   };
 }
