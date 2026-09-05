@@ -300,7 +300,9 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 	case command.CreateConnection, command.UpdateConnection, command.DeleteConnection, command.ConfigureConnectionCredential,
 		command.TestConnection, command.SetConnectionEnabled, command.ChangeIntegrationGrant:
 		return repository.changeConnection(ctx, tx, scope, input)
-	case command.CreateAssistantConversation, command.UpdateAssistantConversation, command.AddAssistantTurn,
+	case command.ConfigureEmailCredential:
+		return repository.configureEmailCredential(ctx, tx, scope, input)
+	case command.CreateAssistantConversation, command.UpdateAssistantConversation, command.ArchiveAssistantConversation, command.AddAssistantTurn,
 		command.UpdateAssistantPlan, command.ValidateAssistantPlan, command.ApplyAssistantPlan, command.RejectAssistantPlan,
 		command.UpdateAssistantInstructions, command.RecoverAssistant:
 		return repository.changeAssistant(ctx, tx, scope, input)
@@ -326,6 +328,15 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 	case command.CreateAccessRole, command.CreateAccessRoleVersion, command.ArchiveAccessRole,
 		command.CreateAccessBinding, command.ChangeAccessBinding, command.RevokeAccessBinding:
 		return repository.applyAccessCommand(ctx, tx, scope, input)
+	case command.ConfigureRoleImageGitSource, command.ConfigureIntegrationDefinitionGitSource, command.RefreshRoleImageGitSource, command.RefreshIntegrationDefinitionGitSource:
+		return repository.changeConfigurationSource(ctx, tx, scope, input)
+	case command.PrepareRoleImageGitWriteBack, command.PrepareIntegrationDefinitionGitWriteBack, command.ApproveManagedConfigurationGitWriteBack, command.RejectManagedConfigurationGitWriteBack, command.CancelManagedConfigurationGitWriteBack:
+		return repository.changeConfigurationWriteBack(ctx, tx, scope, input)
+	case command.CreateEmailMailboxDraft, command.SaveEmailMailboxDraft, command.ValidateEmailMailboxDraft,
+		command.PublishEmailMailboxDraft, command.DiscardEmailMailboxDraft:
+		return repository.changeEmailMailbox(ctx, tx, scope, input)
+	case command.BindEmailMailboxConfiguration, command.UnbindEmailMailboxConfiguration:
+		return repository.bindEmailMailbox(ctx, tx, scope, input)
 	case command.CreatePromptTemplateDraft, command.ValidatePromptTemplateDraft,
 		command.PublishPromptTemplateDraft, command.RebindPromptTemplate,
 		command.SavePromptTemplateDraft,
@@ -1012,24 +1023,28 @@ func (repository *Repository) changeAgentBinding(ctx context.Context, tx pgx.Tx,
 	if err := tx.QueryRow(ctx, queryCommandsChangeagentbindingSelectAgentsOrganizationIdRef, scope.organizationID, payload.AgentRef).Scan(&projectID, &projectRef, &current); err != nil {
 		return commandOutcome{}, errs.ErrNotFound
 	}
-	if current != *input.Mutation.ExpectedVersion {
-		return commandOutcome{}, errs.ErrVersionMismatch
-	}
-	grantCapability := payload.BindingRef
-	if input.Kind == command.ChangeAgentGrant {
-		grantCapability = "platform.integration.grant"
-	}
-	if payload.Enabled {
-		var allowed bool
-		if err := tx.QueryRow(ctx, queryCommandsChangeagentbindingActorCanGrant, pgx.StrictNamedArgs{
-			"actor_platform_role": scope.role, "organization_id": scope.organizationID,
-			"project_id": projectID, "actor_id": scope.actorID, "capability_key": grantCapability,
-		}).Scan(&allowed); err != nil {
+	var capabilityKey string
+	if input.Kind == command.ChangeAgentCapability {
+		if !validCapabilityKey(payload.BindingRef) {
+			return commandOutcome{}, errs.ErrInvalid
+		}
+		if err := tx.QueryRow(ctx, queryCommandsChangeagentbindingSelectEnabledCapability, payload.BindingRef).Scan(&capabilityKey); errors.Is(err, pgx.ErrNoRows) {
+			return commandOutcome{}, errs.ErrNotFound
+		} else if err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
 		}
-		if !allowed {
-			return commandOutcome{}, errs.ErrForbidden
+	}
+	if input.Kind == command.ChangeAgentGrant {
+		if err := repository.requireAgentIntegrationGrantAuthority(ctx, tx, scope, payload.AgentRef, payload.BindingRef); err != nil {
+			return commandOutcome{}, err
 		}
+	} else if payload.Enabled {
+		if err := repository.requireCapabilityGrantAuthority(ctx, tx, scope, projectRef, payload.AgentRef, payload.BindingRef); err != nil {
+			return commandOutcome{}, err
+		}
+	}
+	if current != *input.Mutation.ExpectedVersion {
+		return commandOutcome{}, errs.ErrVersionMismatch
 	}
 	if input.Kind == command.ChangeAgentGrant {
 		if payload.Enabled {
@@ -1043,15 +1058,6 @@ func (repository *Repository) changeAgentBinding(ctx context.Context, tx pgx.Tx,
 			}
 		}
 	} else if input.Kind == command.ChangeAgentCapability {
-		if !validCapabilityKey(payload.BindingRef) {
-			return commandOutcome{}, errs.ErrInvalid
-		}
-		var capabilityKey string
-		if err := tx.QueryRow(ctx, queryCommandsChangeagentbindingSelectEnabledCapability, payload.BindingRef).Scan(&capabilityKey); errors.Is(err, pgx.ErrNoRows) {
-			return commandOutcome{}, errs.ErrNotFound
-		} else if err != nil {
-			return commandOutcome{}, errs.ErrUnavailable
-		}
 		query := queryCommandsChangeagentbindingRemoveCapability
 		if payload.Enabled {
 			query = queryCommandsChangeagentbindingAppendCapability
@@ -1494,8 +1500,14 @@ func (repository *Repository) launchRunWithAttachmentPolicy(ctx context.Context,
 		if err := tx.QueryRow(ctx, queryCommandsLaunchrunInsertSessionsRefProjectIdTargetRef, sessionRef, scope.organizationID, projectID, payload.Target.Type, payload.Target.Ref, providerAccountID, scope.actorID).Scan(&sessionID); err != nil {
 			return commandOutcome{}, fmt.Errorf("insert run session: %w", errs.ErrUnavailable)
 		}
+		if err := bindSessionModelCatalog(ctx, tx, scope.organizationID, sessionID, targetAgentRefs[0]); err != nil {
+			return commandOutcome{}, err
+		}
 	} else if err := tx.QueryRow(ctx, queryCommandsLaunchrunSelectSessionsOrganizationIdProjectIdRef, scope.organizationID, projectID, sessionRef, payload.Target.Type, payload.Target.Ref).Scan(&sessionID); err != nil {
 		return commandOutcome{}, fmt.Errorf("resolve continuation session: %w", errs.ErrConflict)
+	}
+	if err := validateSessionRuntimeCatalog(ctx, tx, scope.organizationID, sessionID, targetAgentRefs[0]); err != nil {
+		return commandOutcome{}, err
 	}
 	runRef, _ := newRef("run")
 	title := strings.TrimSpace(payload.Title)
@@ -2228,6 +2240,9 @@ func (repository *Repository) resolveGate(ctx context.Context, tx pgx.Tx, scope 
 	nextState := stateMap[payload.Decision]
 	if nextState == "" {
 		return commandOutcome{}, errs.ErrInvalid
+	}
+	if outcome, handled, err := repository.resolveInteractionDeliveryGate(ctx, tx, scope, input); handled {
+		return outcome, err
 	}
 	var gateID, nodeID, rootRunID, projectID, projectRef, gateNodeRef string
 	var predecessorNodeID, predecessorNodeRef, predecessorRunID, sessionID, integrationInvocationID string

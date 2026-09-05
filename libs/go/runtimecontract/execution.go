@@ -176,6 +176,7 @@ type RunnerInput struct {
 	AttachmentSets                    []RunnerAttachmentSet     `json:"attachment_sets,omitempty"`
 	InputArtifacts                    []RunnerInputArtifact     `json:"input_artifacts,omitempty"`
 	ContextSnapshot                   *RuntimeContextSnapshot   `json:"context_snapshot,omitempty"`
+	FileCatalog                       *RuntimeFileCatalog       `json:"file_catalog,omitempty"`
 	Capabilities                      []string                  `json:"capabilities,omitempty"`
 	Provider                          string                    `json:"provider"`
 	Model                             string                    `json:"model"`
@@ -303,6 +304,9 @@ func (input RunnerInput) Validate() error {
 	}
 	if input.WorkspacePolicy.Validate() != nil {
 		return errors.New("runner workspace policy binding is invalid")
+	}
+	if input.FileCatalog != nil && (input.FileCatalog.Validate() != nil || input.Mode != RunnerModeTurn || input.ProjectRef == "") {
+		return errors.New("runner file catalog binding is invalid")
 	}
 	environmentDigest, err := RuntimeEnvironmentDigest(input.EnvironmentValues, input.SecretProjections, input.EnvironmentImage, input.EnvironmentTools, normalizedPolicy)
 	if err != nil || environmentDigest != input.RuntimeEnvironmentDigest {

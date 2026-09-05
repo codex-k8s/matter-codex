@@ -17,6 +17,26 @@ import (
 
 func testEmailConfiguration(t *testing.T, ctx context.Context, repository *Repository) {
 	t.Helper()
+	// Старый watermark/protocol fixture использует descriptor из примера без
+	// owner credential rows. После проверки закрываем его forward-only, чтобы
+	// следующий полноценный mailbox lifecycle не наследовал чужую fixture.
+	t.Cleanup(func() {
+		current, err := repository.EmailConfiguration(ctx)
+		if err != nil {
+			t.Errorf("read email fixture cleanup: %v", err)
+			return
+		}
+		current.Revision++
+		current.Mailboxes = []api.Mailbox{}
+		raw, err := json.Marshal(current)
+		if err != nil {
+			t.Errorf("encode email fixture cleanup: %v", err)
+			return
+		}
+		if err := repository.ConfigureEmail(ctx, raw); err != nil {
+			t.Errorf("retire email fixture forward-only: %v", err)
+		}
+	})
 	raw, err := os.ReadFile("../../../../../../../contracts/email-bridge/v1/examples/mailboxes.yaml")
 	if err != nil {
 		t.Fatal(err)
@@ -118,6 +138,20 @@ func testEmailConfiguration(t *testing.T, ctx context.Context, repository *Repos
 	config.Revision = 5
 	config.Mailboxes[0].Revision = 4
 	config.Mailboxes[0].ConnectionId = connection.Connection.Ref
+	stored, err := repository.EmailConfiguration(ctx)
+	if err != nil || api.Digest(stored) != api.Digest(config) {
+		t.Fatalf("immutable runtime document readback: %v", err)
+	}
+	seed, err := json.Marshal(api.Configuration{Version: "email-bridge/v1", Revision: 1, ManagedBy: "git", Source: "release-bootstrap", Mailboxes: []api.Mailbox{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	restoredReader := *repository
+	restored, err := restoredReader.InitializeEmailConfiguration(ctx, seed)
+	if err != nil || restored.Revision != config.Revision || api.Digest(restored) != api.Digest(config) {
+		t.Fatalf("release seed replaced immutable owner document: %v", err)
+	}
+	read(&restoredReader, 4, false)
 	t.Run("authorization and report owner lifecycle", func(t *testing.T) {
 		testEmailProducer(t, ctx, repository, service, owner, *connection.Connection, config)
 	})

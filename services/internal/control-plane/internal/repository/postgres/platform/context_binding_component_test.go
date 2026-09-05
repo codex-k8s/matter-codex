@@ -62,7 +62,7 @@ func testContextBinding(t *testing.T, ctx context.Context, repository *Repositor
 		if memory {
 			folder = "memories"
 		}
-		parent := "/projects/" + projectRef + "/entities/agents/" + agent.Ref
+		parent := "/projects/" + projectRef + "/agents/" + agent.Ref
 		directories, total, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ResourceRef: parent, Page: query.Page{Size: 1}})
 		if err != nil || total != int64(want) || len(directories) != want {
 			t.Fatalf("context VFS applicable directories: count=%d total=%d err=%v", len(directories), total, err)
@@ -136,6 +136,7 @@ func testContextBinding(t *testing.T, ctx context.Context, repository *Repositor
 		if memory {
 			return
 		}
+		testRuntimeSkillFileManifest(t, ctx, repository, service, claim, want)
 		file := snapshot.Skills[0].Files[0]
 		download, err := service.ReadExecutionArtifact(ctx, reader, stringMap(claim, "leaseRef"), stringMap(claim, "fence"), runtimeRevisionMapInt64(claim, "generation"), file.ArtifactRef)
 		if !want {

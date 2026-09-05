@@ -12,8 +12,17 @@ import (
 
 func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, current scope, input command.Command) error {
 	switch input.Kind {
+	case command.PrepareRoleImageGitWriteBack, command.PrepareIntegrationDefinitionGitWriteBack, command.ApproveManagedConfigurationGitWriteBack, command.RejectManagedConfigurationGitWriteBack, command.CancelManagedConfigurationGitWriteBack:
+		_, err := repository.writeBackCommandAuthority(ctx, tx, current, input)
+		return err
+	case command.ConfigureRoleImageGitSource, command.ConfigureIntegrationDefinitionGitSource, command.RefreshRoleImageGitSource, command.RefreshIntegrationDefinitionGitSource:
+		_, err := repository.configurationSourceAuthority(ctx, tx, current, input)
+		return err
 	case command.ReportEmailEffect:
 		_, _, _, err := repository.authorizeEmailReport(ctx, tx, current, input)
+		return err
+	case command.ArchiveAssistantConversation:
+		_, err := repository.authorizeAssistantArchive(ctx, tx, current, input)
 		return err
 	case command.ReconcileEmailEffect:
 		_, err := repository.authorizeEmailReconciliation(ctx, tx, current, input)
@@ -58,6 +67,28 @@ func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, c
 	if err := repository.requireAccess(ctx, tx, current, permission, target); err != nil {
 		return errs.ErrNotFound
 	}
+	// Receipt не сохраняет отозванное право выдавать capability.
+	if input.Kind == command.ChangeAgentCapability || input.Kind == command.ChangeAgentGrant {
+		payload, ok := input.Payload.(command.AgentBindingInput)
+		if !ok {
+			return errs.ErrInvalid
+		}
+		if input.Kind == command.ChangeAgentGrant {
+			return repository.requireAgentIntegrationGrantAuthority(ctx, tx, current, payload.AgentRef, payload.BindingRef)
+		}
+		if payload.Enabled {
+			if !validCapabilityKey(payload.BindingRef) {
+				return errs.ErrInvalid
+			}
+			var key string
+			if err := tx.QueryRow(ctx, queryCommandsChangeagentbindingSelectEnabledCapability, payload.BindingRef).Scan(&key); errors.Is(err, pgx.ErrNoRows) {
+				return errs.ErrNotFound
+			} else if err != nil {
+				return errs.ErrUnavailable
+			}
+			return repository.requireCapabilityGrantAuthority(ctx, tx, current, target.scope.ProjectRef, payload.AgentRef, key)
+		}
+	}
 	return nil
 }
 
@@ -99,9 +130,9 @@ func (repository *Repository) commandAccessTarget(ctx context.Context, tx pgx.Tx
 	case command.AgentBindingInput:
 		return repository.resolveCommandTarget(ctx, tx, current, "agent.manage", "AGENT", payload.AgentRef, "")
 	case command.AgentRuntimeConfigurationInput:
-		return repository.resolveCommandTarget(ctx, tx, current, "agent.manage", "AGENT", payload.AgentRef, "")
+		return repository.resolveRuntimeConfigurationTarget(ctx, tx, current, "agent.manage", payload.AgentRef)
 	case command.ConfigOverlayInput:
-		return repository.resolveCommandTarget(ctx, tx, current, "agent.manage", "AGENT", payload.AgentRef, "")
+		return repository.resolveRuntimeConfigurationTarget(ctx, tx, current, "agent.manage", payload.AgentRef)
 	case command.RuntimeEnvironmentBindingInput:
 		return repository.resolveCommandTarget(ctx, tx, current, "agent.manage", "AGENT", payload.AgentRef, "")
 	case command.RuntimeEnvironmentRebindInput:
@@ -269,6 +300,20 @@ func (repository *Repository) commandAccessTarget(ctx context.Context, tx pgx.Tx
 			return "organization.manage", organization, nil
 		}
 		return repository.resolveCommandTarget(ctx, tx, current, "integration.manage", "INTEGRATION", payload.Ref, "")
+	case command.EmailCredentialInput:
+		return repository.resolveCommandTarget(ctx, tx, current, "integration.manage", "INTEGRATION", payload.ConnectionRef, "")
+	case command.EmailMailboxInput:
+		connectionRef := payload.ConnectionRef
+		if payload.Managed.ConfigurationRef != "" {
+			var mailboxRef string
+			if err := tx.QueryRow(ctx, queryEmailMailboxConfigurationOwner, current.organizationID, payload.Managed.ConfigurationRef).Scan(&connectionRef, &mailboxRef); err != nil {
+				return "", resolvedAccessTarget{}, errs.ErrNotFound
+			}
+			if payload.ConnectionRef != "" && payload.ConnectionRef != connectionRef {
+				return "", resolvedAccessTarget{}, errs.ErrNotFound
+			}
+		}
+		return repository.resolveCommandTarget(ctx, tx, current, "integration.manage", "INTEGRATION", connectionRef, "")
 	case command.IntegrationGrantInput:
 		if payload.AgentRef != "" {
 			return repository.resolveCommandTarget(ctx, tx, current, "agent.manage", "AGENT", payload.AgentRef, "")
@@ -293,13 +338,20 @@ func (repository *Repository) commandAccessTarget(ctx context.Context, tx pgx.Tx
 			return repository.resolveCommandTarget(ctx, tx, current, "project.manage", "PROJECT", payload.ProjectRef, payload.ProjectRef)
 		}
 		if payload.ConfigurationRef != "" {
-			var projectRef string
+			var projectRef, configurationKind string
 			if err := tx.QueryRow(ctx, queryManagedConfigurationAccessTarget, pgx.StrictNamedArgs{
 				"organization_id": current.organizationID, "configuration_ref": payload.ConfigurationRef,
-			}).Scan(&projectRef); errors.Is(err, pgx.ErrNoRows) {
+			}).Scan(&projectRef, &configurationKind); errors.Is(err, pgx.ErrNoRows) {
 				return "", resolvedAccessTarget{}, errs.ErrNotFound
 			} else if err != nil {
 				return "", resolvedAccessTarget{}, errs.ErrUnavailable
+			}
+			if configurationKind == "EMAIL_MAILBOX" {
+				var connectionRef, mailboxRef string
+				if err := tx.QueryRow(ctx, queryEmailMailboxConfigurationOwner, current.organizationID, payload.ConfigurationRef).Scan(&connectionRef, &mailboxRef); err != nil {
+					return "", resolvedAccessTarget{}, errs.ErrNotFound
+				}
+				return repository.resolveCommandTarget(ctx, tx, current, "integration.manage", "INTEGRATION", connectionRef, "")
 			}
 			if projectRef != "" {
 				return repository.resolveCommandTarget(ctx, tx, current, "project.manage", "PROJECT", projectRef, projectRef)

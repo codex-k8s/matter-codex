@@ -30,11 +30,22 @@ func (repository *Repository) ReadExecutionArtifact(ctx context.Context, princip
 	if err != nil {
 		return platformrepo.ArtifactDownload{}, err
 	}
+	dbctx, stop := context.WithTimeout(ctx, 5*time.Second)
+	defer stop()
+	tx, err := repository.pool.BeginTx(dbctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead})
+	if err != nil {
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
+	}
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+		defer cancel()
+		_ = tx.Rollback(cleanup)
+	}()
 	fenceDigest := sha256.Sum256([]byte(fence))
 	item := entity.Artifact{}
 	var objectKey, objectVersion, objectETag, objectDigest string
 	var objectSize int64
-	err = repository.pool.QueryRow(ctx, queryRuntimeReadexecutionartifactSelectArtifactContent, pgx.StrictNamedArgs{
+	err = tx.QueryRow(dbctx, queryRuntimeReadexecutionartifactSelectArtifactContent, pgx.StrictNamedArgs{
 		"organization_id": scope.organizationID,
 		"lease_ref":       leaseRef,
 		"fence_digest":    hex.EncodeToString(fenceDigest[:]),
@@ -65,6 +76,24 @@ func (repository *Repository) ReadExecutionArtifact(ctx context.Context, princip
 		(objectETag != "" && object.ETag != objectETag) {
 		_ = object.Body.Close()
 		return platformrepo.ArtifactDownload{}, errs.ErrConflict
+	}
+	auditRef, err := newRef("aud")
+	if err != nil {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, err
+	}
+	tag, err := tx.Exec(dbctx, queryRuntimeFilesBodyAudit, pgx.StrictNamedArgs{
+		"audit_ref": auditRef, "organization_id": scope.organizationID, "artifact_ref": artifactRef,
+		"lease_ref": leaseRef, "fence_digest": hex.EncodeToString(fenceDigest[:]), "generation": generation,
+		"correlation": scope.correlationRef,
+	})
+	if err != nil || tag.RowsAffected() != 1 {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
+	}
+	if tx.Commit(dbctx) != nil {
+		_ = object.Body.Close()
+		return platformrepo.ArtifactDownload{}, errs.ErrUnavailable
 	}
 	return platformrepo.ArtifactDownload{Artifact: item, Reader: object.Body}, nil
 }
@@ -166,6 +195,14 @@ func (repository *Repository) recordRunToolCall(ctx context.Context, tx pgx.Tx, 
 	if !ok || !validToolCallProjection(payload) {
 		return commandOutcome{}, errs.ErrInvalid
 	}
+	filePurpose := ""
+	if runtimecontract.IsRuntimeFileTool(payload.Tool) {
+		filePurpose, _ = payload.SafeParameters["purpose"].(string)
+		if len(payload.SafeParameters) != 1 || !contains([]string{runtimecontract.FilePurposeProject, runtimecontract.FilePurposeRunResult, runtimecontract.FilePurposeSkill, runtimecontract.FilePurposeWorkspaceInput}, filePurpose) ||
+			!strings.HasPrefix(payload.GrantRef, "vfc_") || payload.CapabilityRef != "" {
+			return commandOutcome{}, errs.ErrInvalid
+		}
+	}
 	lease, err := repository.lease(ctx, tx, scope, command.LeaseInput{LeaseRef: payload.LeaseRef, Fence: payload.Fence, Generation: payload.Generation}, true)
 	if err != nil {
 		return commandOutcome{}, err
@@ -175,6 +212,7 @@ func (repository *Repository) recordRunToolCall(ctx context.Context, tx pgx.Tx, 
 	if err := tx.QueryRow(ctx, queryRuntimeRecordtoolcallSelectActorAndGrant, pgx.StrictNamedArgs{
 		"organization_id": scope.organizationID, "node_id": lease["nodeID"], "generation": payload.Generation,
 		"grant_ref": payload.GrantRef, "capability_ref": payload.CapabilityRef,
+		"tool": payload.Tool, "purpose": filePurpose,
 	}).Scan(&actorRef, &actorName, &systemAssistant, &grantAllowed); errors.Is(err, pgx.ErrNoRows) {
 		return commandOutcome{}, errs.ErrNotFound
 	} else if err != nil {
@@ -254,6 +292,9 @@ func containsSensitiveToolKey(value any) bool {
 }
 
 func toolCapabilityMatches(tool, capability string, integration, systemAssistant bool) bool {
+	if runtimecontract.IsRuntimeFileTool(tool) {
+		return integration && capability == ""
+	}
 	if integration {
 		return tool == "invoke_integration" && capability != ""
 	}
@@ -402,6 +443,32 @@ func (repository *Repository) claimExecution(ctx context.Context, tx pgx.Tx, sco
 		if activeExecutions >= providerAccountCapacity[candidate.providerAccountID] {
 			continue
 		}
+		configuration, _, err := readRuntimeCatalogConfiguration(ctx, tx, scope.organizationID, candidate.agentRef, candidate.runtimeConfigID)
+		if err != nil {
+			return commandOutcome{}, err
+		}
+		if configuration.Model != candidate.model {
+			return commandOutcome{}, errs.ErrConflict
+		}
+		verifiedCandidate, retainedPolicy, err := checkedSessionModelCatalog(ctx, tx, scope.organizationID, candidate.sessionID, candidate.providerAccountRef, configuration, candidate.configOverlay)
+		if err != nil {
+			return commandOutcome{}, err
+		}
+		if retainedPolicy != nil {
+			candidate.providerPolicyID, candidate.providerPolicyRef, candidate.providerPolicyVersion, candidate.providerPolicyDigest = retainedPolicy.PolicyID, retainedPolicy.PolicyRef, retainedPolicy.PolicyVersion, retainedPolicy.PolicyDigest
+		}
+		overlayConfiguration, err := runtimecontract.ParseConfigOverlay(candidate.configOverlay)
+		if err != nil {
+			return commandOutcome{}, errs.ErrConflict
+		}
+		effectiveEffort := overlayConfiguration.ModelReasoningEffort
+		if effectiveEffort == "" {
+			effectiveEffort = verifiedCandidate.DefaultReasoningEffort
+		}
+		reasoningMode := runtimecontract.ReasoningSupported
+		if effectiveEffort == "" {
+			reasoningMode = runtimecontract.ReasoningUnsupported
+		}
 		nodeID, nodeRef, runID, runRef := candidate.nodeID, candidate.nodeRef, candidate.runID, candidate.runRef
 		rootRunID, projectID, projectRef := candidate.rootRunID, candidate.projectID, candidate.projectRef
 		sessionID, sessionRef, task, agentRef := candidate.sessionID, candidate.sessionRef, candidate.task, candidate.agentRef
@@ -527,14 +594,19 @@ func (repository *Repository) claimExecution(ctx context.Context, tx pgx.Tx, sco
 			targetKind = promptservice.TargetSessionContinuation
 			continuation = string(rawSessionContext)
 		}
+		initiatorCapabilityScope := scope
+		initiatorCapabilityScope.actorRef = candidate.initiatorRef
+		userCapabilities, permittedIntegrationGrants, err := repository.agentCapabilityAuthority(ctx, tx, initiatorCapabilityScope, projectRef, agentRef, capabilities)
+		if err != nil {
+			return commandOutcome{}, err
+		}
+		integrationGrants = permittedIntegrationGrants
 		connectionCapabilities := make([]string, 0, len(integrationGrants))
 		for _, grant := range integrationGrants {
 			if capability := grant["capabilityKey"]; capability != "" {
 				connectionCapabilities = append(connectionCapabilities, capability)
 			}
 		}
-		userCapabilities := promptUserCapabilities(candidate.userPlatformRole, candidate.userProjectPermissions,
-			capabilities, connectionCapabilities)
 		var workflowCapabilities []string
 		if candidate.workflowRef != "" {
 			workflowCapabilities = append([]string{}, candidate.workflowCapabilities...)
@@ -630,7 +702,7 @@ func (repository *Repository) claimExecution(ctx context.Context, tx pgx.Tx, sco
 			"turnRef": turnRef, "attempt": attempt, "task": task,
 			"agentRef": agentRef, "stableKey": stableKey, "runtimeKey": runtimeKey,
 			"runtimeRevision": runtimeRevision, "runtimeProvider": provider,
-			"runtimeModel": model, "instructionRef": instructionRef,
+			"runtimeModel": model, "effectiveReasoningEffort": effectiveEffort, "reasoningMode": reasoningMode, "instructionRef": instructionRef,
 			"providerAccountRef":               providerAccountRef,
 			"providerCredentialRevisionRef":    providerCredentialRef,
 			"providerCredentialRevisionNumber": providerCredentialRevisionNumber,
@@ -690,6 +762,9 @@ func (repository *Repository) claimExecution(ctx context.Context, tx pgx.Tx, sco
 		}
 		snapshot["contextSnapshot"] = contextSnapshot
 		snapshot["codexSessionID"] = runtimeContextSessionID(codexSessionID, candidate.previousContextDigest, contextSnapshot.Digest)
+		if err := captureRuntimeFileCatalog(ctx, tx, scope, snapshot, contextSnapshot); err != nil {
+			return commandOutcome{}, err
+		}
 		revisionDigestHex, err := runtimeRevisionDigestFromSnapshot(snapshot)
 		if err != nil {
 			return commandOutcome{}, errs.ErrConflict
@@ -875,43 +950,6 @@ func providerCredentialRefreshOutcome(lease map[string]any, accountRef, credenti
 
 func jsonUnmarshal(raw []byte, target any) error { return json.Unmarshal(raw, target) }
 
-func promptUserCapabilities(platformRole string, projectPermissions, agentCapabilities, connectionCapabilities []string) []string {
-	eligible := promptservice.Union(agentCapabilities, connectionCapabilities)
-	if platformRole == "OWNER" || platformRole == "ADMINISTRATOR" {
-		return eligible
-	}
-	permissions := make(map[string]struct{}, len(projectPermissions))
-	for _, permission := range projectPermissions {
-		permissions[permission] = struct{}{}
-	}
-	connection := make(map[string]struct{}, len(connectionCapabilities))
-	for _, capability := range connectionCapabilities {
-		connection[capability] = struct{}{}
-	}
-	required := map[string]string{
-		"platform.project.manage":    "MANAGE",
-		"platform.agent.manage":      "MANAGE_AGENTS",
-		"platform.run.launch":        "LAUNCH_RUNS",
-		"platform.run.delegate":      "MANAGE_AGENTS",
-		"platform.gate.resolve":      "RESOLVE_GATES",
-		"platform.artifact.manage":   "MANAGE_ARTIFACTS",
-		"platform.schedule.manage":   "MANAGE_SCHEDULES",
-		"platform.integration.grant": "MANAGE_INTEGRATIONS",
-		"platform.stt.use":           "VIEW",
-	}
-	result := make([]string, 0, len(eligible))
-	for _, capability := range eligible {
-		permission := required[capability]
-		if _, ok := connection[capability]; ok {
-			permission = "MANAGE_INTEGRATIONS"
-		}
-		if _, ok := permissions[permission]; permission != "" && ok {
-			result = append(result, capability)
-		}
-	}
-	return result
-}
-
 func callableIntegrationGrants(grants []map[string]string) []map[string]string {
 	result := make([]map[string]string, 0, len(grants))
 	for _, grant := range grants {
@@ -988,7 +1026,9 @@ func runtimeRevisionDigestFromSnapshot(values map[string]any) (string, error) {
 		AttachmentSetRef: stringMap(values, "attachmentSetRef"), AttachmentSetManifestDigest: stringMap(values, "attachmentSetManifestDigest"),
 		AttachmentContext: stringMap(values, "attachmentContext"), Capabilities: runtimeRevisionStringSlice(values["capabilities"]),
 		Provider: stringMap(values, "runtimeProvider"), Model: stringMap(values, "runtimeModel"),
-		ProviderAccountRef: stringMap(values, "providerAccountRef"), ProviderCredentialRef: stringMap(values, "providerCredentialRevisionRef"),
+		EffectiveReasoningEffort: stringMap(values, "effectiveReasoningEffort"),
+		ReasoningMode:            stringMap(values, "reasoningMode"),
+		ProviderAccountRef:       stringMap(values, "providerAccountRef"), ProviderCredentialRef: stringMap(values, "providerCredentialRevisionRef"),
 		ProviderCredentialRevision: runtimeRevisionMapInt64(values, "providerCredentialRevisionNumber"),
 		ProviderCredentialSHA256:   stringMap(values, "providerCredentialSHA256"),
 		RuntimeConfigRef:           stringMap(values, "runtimeConfigRef"), RuntimeConfigVersion: runtimeRevisionMapInt64(values, "runtimeConfigVersion"), RuntimeConfigDigest: stringMap(values, "runtimeConfigDigest"),
@@ -1033,6 +1073,17 @@ func runtimeRevisionDigestFromSnapshot(values map[string]any) (string, error) {
 	input.InputArtifacts = runtimeRevisionArtifacts(values["artifacts"])
 	input.DelegationTargets = runtimeRevisionDelegationTargets(values["delegationTargets"])
 	input.SessionContext = runtimeRevisionSessionContext(values["sessionContext"])
+	if raw, ok := values["fileCatalog"]; ok {
+		encoded, err := json.Marshal(raw)
+		if err != nil {
+			return "", errs.ErrConflict
+		}
+		var catalog runtimecontract.RuntimeFileCatalog
+		if json.Unmarshal(encoded, &catalog) != nil || catalog.Validate() != nil {
+			return "", errs.ErrConflict
+		}
+		input.FileCatalog = &catalog
+	}
 	if raw, ok := values["contextSnapshot"]; ok {
 		encoded, err := json.Marshal(raw)
 		if err != nil {
@@ -1566,6 +1617,9 @@ func (repository *Repository) delegateExecution(ctx context.Context, tx pgx.Tx, 
 		"created_by":          initiatorID,
 	}).Scan(&childSessionID); err != nil {
 		return commandOutcome{}, errs.ErrUnavailable
+	}
+	if err := bindSessionModelCatalog(ctx, tx, scope.organizationID, childSessionID, payload.TargetAgentRef); err != nil {
+		return commandOutcome{}, err
 	}
 	childTask := strings.TrimSpace(payload.Task)
 	if workflowInstructions != "" {
