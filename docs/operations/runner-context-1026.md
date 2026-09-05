@@ -4,8 +4,8 @@ title: Материализация Skills и памяти в agent-runner
 type: operations
 status: approved
 owner: backend
-version: 1.1.0
-updated: 2026-09-05
+version: 1.2.0
+updated: 2026-09-06
 ---
 
 # Контракт Skills/Memory
@@ -14,6 +14,14 @@ updated: 2026-09-05
 SkillBundle, KodexMemoryRecord, role instructions, AGENTS.md, environment tools
 и knowledge artifacts остаются разными типами. Никакой VFS path не является
 источником полномочий либо путём материализации.
+
+После фактического provider выполнения безопасная native tool timeline
+фиксируется до повторной проверки workspace/quota. Если проверка отклоняет
+результат, Run завершается ошибкой без result artifacts; уже совершённые
+действия остаются в authoritative timeline. Startup barrier, свежая authority
+callback и отсутствие raw command/output в событиях сохраняются. Это позволяет
+отличить последующий quota failure от отказа запуска provider и выполняет
+инвариант наблюдаемости частичного результата `AGENT-DOC-001`.
 
 ## Producer и mounts
 
