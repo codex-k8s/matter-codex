@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import VoiceTextarea from "@/shared/ui/VoiceTextarea.vue";
+import PromptTargetPreview from "@/features/agents/detail/PromptTargetPreview.vue";
+import type { PromptTarget } from "@/features/agents/detail/prompt-context";
 import {
   Bot,
   Check,
@@ -17,6 +20,7 @@ import {
   createArtifactPickerLoader,
   createSessionPickerLoader,
 } from "@/features/new-run/api";
+import { loadAttachmentEligibility } from "@/features/new-run/attachment-eligibility";
 import NewRunFilePicker, {
   type NewRunFilePickerLabels,
 } from "@/features/new-run/components/NewRunFilePicker.vue";
@@ -42,6 +46,7 @@ import type {
   Artifact,
   AttachmentSetPurpose,
   Run,
+  RunAttachmentEligibility,
   Workflow,
   WorkflowInputField,
 } from "@/shared/api/generated/openapi/types.gen";
@@ -96,6 +101,70 @@ const form = reactive({
   task: "",
   sessionRef: "",
 });
+const continuationPreviewTarget = ref<PromptTarget>();
+const continuationPreview = ref<{ refresh: () => Promise<void> }>();
+const continuationPreviewBusy = ref(false);
+function isContinuationMode(): boolean {
+  return sessionMode.value === "CONTINUE";
+}
+const continuationPreviewIdentity = computed(() =>
+  JSON.stringify({
+    project: projectRef.value,
+    mode: sessionMode.value,
+    run: selectedSession.value?.ref,
+    session: selectedSession.value?.sessionRef,
+    task: form.task,
+    target: [
+      form.targetType,
+      form.targetRef,
+      selectedTargetValue.value?.version,
+    ],
+    attachments: attachmentState.value,
+    selected: selectedArtifactItems.value.map((item) => item.ref),
+  }),
+);
+watch(
+  continuationPreviewIdentity,
+  () => {
+    continuationPreviewTarget.value = undefined;
+  },
+  { flush: "sync" },
+);
+async function previewContinuation(): Promise<void> {
+  const selected = selectedSession.value;
+  if (
+    !selected ||
+    sessionMode.value !== "CONTINUE" ||
+    !canSubmit.value ||
+    busy.value ||
+    continuationPreviewBusy.value
+  )
+    return;
+  continuationPreviewBusy.value = true;
+  problem.value = undefined;
+  try {
+    const task = form.task.trim();
+    const attachmentSetRef = await attachmentComposer.value?.finalize();
+    if (
+      selectedSession.value !== selected ||
+      !isContinuationMode() ||
+      form.task.trim() !== task
+    )
+      return;
+    continuationPreviewTarget.value = {
+      projectRef: projectRef.value,
+      targetKind: "SESSION_CONTINUATION",
+      targetRef: selected.sessionRef,
+      context: { task, ...(attachmentSetRef ? { attachmentSetRef } : {}) },
+    };
+    await nextTick();
+    await continuationPreview.value?.refresh();
+  } catch (error) {
+    problem.value = asProblem(error);
+  } finally {
+    continuationPreviewBusy.value = false;
+  }
+}
 
 const targetLoader = computed(() =>
   createExecutionTargetPickerLoader(projectRef.value, form.targetType),
@@ -121,29 +190,58 @@ const attachmentPurpose = computed<AttachmentSetPurpose>(() => {
   if (sessionMode.value === "CONTINUE") return "SESSION_TURN";
   return form.targetType === "WORKFLOW" ? "WORKFLOW_INPUT" : "RUN_INPUT";
 });
-const artifactCapability = "platform.artifact.manage";
-const targetSupportsFiles = computed(() => {
-  if (!selectedTarget.value) return false;
-  if (form.targetType === "AGENT") {
-    return (selectedTarget.value as Agent).capabilities.some(
-      (capability) => capability.key === artifactCapability,
-    );
-  }
-  const references = new Set<string>();
-  if (selectedWorkflow.value?.coordinatorAgentRef)
-    references.add(selectedWorkflow.value.coordinatorAgentRef);
-  for (const step of selectedWorkflow.value?.steps ?? []) {
-    if (step.agentRef) references.add(step.agentRef);
-  }
-  return (
-    references.size > 0 &&
-    [...references].every((reference) =>
-      platform.agents[reference]?.capabilities.some(
-        (capability) => capability.key === artifactCapability,
-      ),
+const attachmentEligibility = ref<RunAttachmentEligibility>();
+const attachmentEligibilityBusy = ref(false);
+const attachmentEligibilityProblem = ref<AppProblem>();
+const attachmentEligibilityReload = ref(0);
+const targetSupportsFiles = computed(
+  () => attachmentEligibility.value?.eligible === true,
+);
+watch(
+  () =>
+    [
+      projectRef.value,
+      form.targetType,
+      form.targetRef,
+      selectedTarget.value?.version,
+      sessionMode.value,
+      selectedSession.value?.ref,
+      attachmentEligibilityReload.value,
+    ] as const,
+  async ([project, targetType, targetRef, , mode, runRef], _, onCleanup) => {
+    const controller = new AbortController();
+    onCleanup(() => controller.abort());
+    attachmentEligibility.value = undefined;
+    attachmentEligibilityProblem.value = undefined;
+    attachmentEligibilityBusy.value = false;
+    if (
+      !targetRef ||
+      selectedTarget.value?.ref !== targetRef ||
+      selectedTarget.value.projectRef !== project ||
+      (mode === "CONTINUE" && !runRef)
     )
-  );
-});
+      return;
+    attachmentEligibilityBusy.value = true;
+    try {
+      const result = await loadAttachmentEligibility(
+        {
+          projectRef: project,
+          targetType,
+          targetRef,
+          ...(mode === "CONTINUE" ? { runRef } : {}),
+        },
+        controller.signal,
+      );
+      if (!controller.signal.aborted) attachmentEligibility.value = result;
+    } catch (error) {
+      if (!controller.signal.aborted)
+        attachmentEligibilityProblem.value = asProblem(error);
+    } finally {
+      if (!controller.signal.aborted) attachmentEligibilityBusy.value = false;
+    }
+  },
+  { immediate: true, flush: "sync" },
+);
 const workflowInputValid = computed(() => {
   if (sessionMode.value !== "NEW") return true;
   for (const field of selectedWorkflow.value?.inputFields ?? []) {
@@ -162,6 +260,7 @@ const canSubmit = computed(
     Boolean(form.task.trim()) &&
     workflowInputValid.value &&
     attachmentState.value.ready &&
+    (attachmentState.value.count === 0 || targetSupportsFiles.value) &&
     (sessionMode.value === "NEW" || Boolean(form.sessionRef)),
 );
 
@@ -277,18 +376,6 @@ function selectTargetType(targetType: NewRunTargetType): void {
   selectedTargetValue.value = undefined;
 }
 
-async function hydrateWorkflowAgents(workflow: Workflow): Promise<void> {
-  const references = new Set<string>();
-  if (workflow.coordinatorAgentRef)
-    references.add(workflow.coordinatorAgentRef);
-  for (const step of workflow.steps) {
-    if (step.agentRef) references.add(step.agentRef);
-  }
-  for (const reference of references) {
-    if (!platform.agents[reference]) await platform.loadAgent(reference);
-  }
-}
-
 function selectTarget(option: ExecutionTargetPickerOption): void {
   if (
     option.targetType !== form.targetType ||
@@ -297,8 +384,6 @@ function selectTarget(option: ExecutionTargetPickerOption): void {
     return;
   selectedTargetValue.value = option.target;
   form.targetRef = option.ref;
-  if (option.targetType === "WORKFLOW")
-    void hydrateWorkflowAgents(option.target as Workflow);
 }
 
 function setSessionMode(mode: "NEW" | "CONTINUE"): void {
@@ -399,7 +484,6 @@ async function load(): Promise<void> {
         workflow?.projectRef === projectRef.value &&
         isEligibleWorkflow(workflow)
       ) {
-        await hydrateWorkflowAgents(workflow);
         selectedTargetValue.value = workflow;
         form.targetRef = workflow.ref;
       }
@@ -546,7 +630,7 @@ watch(
                   {{ $t("runs.task") }}
                   <span class="required-mark" aria-hidden="true">*</span>
                 </span>
-                <textarea
+                <VoiceTextarea
                   v-model="form.task"
                   required
                   maxlength="32768"
@@ -578,7 +662,7 @@ watch(
                 class="field field--wide"
               >
                 <span>{{ field.label }}</span>
-                <textarea
+                <VoiceTextarea
                   v-model="inputValues[field.key]"
                   :required="field.required"
                   maxlength="32768"
@@ -722,9 +806,14 @@ watch(
                 </h2>
                 <p>
                   {{
-                    selectedTarget && !targetSupportsFiles
-                      ? $t("runs.filesCapabilityRequired")
-                      : $t("runs.inputFilesHint")
+                    attachmentEligibilityBusy
+                      ? $t("common.loading")
+                      : attachmentEligibility && !targetSupportsFiles
+                        ? $t(
+                            "runs.attachmentEligibility." +
+                              attachmentEligibility.reason,
+                          )
+                        : $t("runs.inputFilesHint")
                   }}
                 </p>
               </div>
@@ -738,6 +827,11 @@ watch(
                 {{ $t("runs.newRun.files.choose") }}
               </button>
             </header>
+            <ProblemNotice
+              v-if="attachmentEligibilityProblem"
+              :problem="attachmentEligibilityProblem"
+              @retry="attachmentEligibilityReload++"
+            />
 
             <AttachmentComposer
               ref="attachmentComposer"
@@ -763,6 +857,23 @@ watch(
             </RouterLink>
           </section>
 
+          <section v-if="sessionMode === 'CONTINUE'" class="panel stack">
+            <button
+              v-if="!continuationPreviewTarget"
+              type="button"
+              class="button"
+              :disabled="!canSubmit || busy || continuationPreviewBusy"
+              @click="previewContinuation"
+            >
+              {{ $t("promptContext.continuation") }}
+            </button>
+            <PromptTargetPreview
+              v-if="continuationPreviewTarget"
+              ref="continuationPreview"
+              :target="continuationPreviewTarget"
+              :disabled="busy"
+            />
+          </section>
           <ProblemNotice v-if="problem" :problem="problem" compact />
         </div>
 

@@ -21,7 +21,10 @@ const { t } = useI18n();
     </header>
 
     <div class="approval-workspace">
-      <section class="approval-queue" aria-label="approval queue">
+      <section
+        class="approval-queue"
+        :aria-label="t('integrationsRedesign.approvalQueue')"
+      >
         <header>
           <h3>{{ t("integrationsRedesign.approvalQueue") }}</h3>
           <span>—</span>
@@ -35,10 +38,13 @@ const { t } = useI18n();
         </div>
       </section>
 
-      <section class="approval-preview" aria-label="effect preview">
+      <section
+        class="approval-preview"
+        :aria-label="t('integrationsRedesign.effectPreview')"
+      >
         <header>
           <div>
-            <span class="preview-eyebrow">Human Gate</span>
+            <span class="preview-eyebrow">{{ t("workflows.humanGate") }}</span>
             <h3>{{ t("integrationsRedesign.effectPreview") }}</h3>
           </div>
           <span class="locked-state">

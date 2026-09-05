@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LockKeyhole, Plus, ShieldCheck, Trash2 } from "@lucide/vue";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 import {
@@ -8,25 +8,32 @@ import {
   type IntegrationGrantPresentation,
 } from "@/features/integrations/ui/model";
 import type {
-  Agent,
   IntegrationConnection,
-  Project,
-  Workflow,
+  IntegrationGrantProjectCandidate,
+  IntegrationGrantRecipientCandidate,
+  IntegrationGrantCapabilityCandidate,
 } from "@/shared/api/generated/openapi/types.gen";
 import StatusBadge from "@/shared/ui/StatusBadge.vue";
+import AsyncEntityPicker from "@/shared/ui/AsyncEntityPicker.vue";
+import type {
+  AsyncEntityOption,
+  AsyncEntityOptionPage,
+} from "@/shared/ui/async-entity-picker";
+import {
+  connectionCandidates,
+  projectCandidates,
+  recipientCandidates,
+  capabilityCandidates,
+  type IntegrationGrantSelection,
+} from "@/features/integrations/grant-candidates";
 
 const props = defineProps<{
-  connections: readonly IntegrationConnection[];
   grants: readonly IntegrationGrantPresentation[];
   selectedConnection?: IntegrationConnection;
-  projects: readonly Project[];
-  agents: readonly Agent[];
-  workflows: readonly Workflow[];
   projectRef: string;
   targetKind: "AGENT" | "WORKFLOW";
   targetRef: string;
   capabilityKey: string;
-  targetsLoading: boolean;
   busy: boolean;
 }>();
 
@@ -36,19 +43,249 @@ const emit = defineEmits<{
   "update:targetKind": [value: "AGENT" | "WORKFLOW"];
   "update:targetRef": [value: string];
   "update:capabilityKey": [value: string];
-  loadTargets: [];
-  save: [];
+  save: [selection: IntegrationGrantSelection];
   revoke: [grant: IntegrationGrantPresentation];
 }>();
 
 const { t } = useI18n();
-const targets = computed(() =>
-  props.targetKind === "AGENT" ? props.agents : props.workflows,
+const chosenProject = ref<AsyncEntityOption>();
+const chosenTarget = ref<AsyncEntityOption>();
+const chosenCapability = ref<AsyncEntityOption>();
+const projectCandidate = ref<IntegrationGrantProjectCandidate>();
+const recipientCandidate = ref<IntegrationGrantRecipientCandidate>();
+const capabilityCandidate = ref<IntegrationGrantCapabilityCandidate>();
+const projectRows = new Map<string, IntegrationGrantProjectCandidate>();
+const recipientRows = new Map<string, IntegrationGrantRecipientCandidate>();
+const capabilityRows = new Map<string, IntegrationGrantCapabilityCandidate>();
+const connectionLoader = connectionCandidates({ purpose: "GRANT" });
+const projectLoader = computed(() =>
+  projectCandidates({ connectionRef: props.selectedConnection?.ref ?? "" }),
 );
-const selectedCapability = computed(() =>
-  props.selectedConnection?.capabilities.find(
-    (item) => item.key === props.capabilityKey,
+const recipientLoader = computed(() =>
+  recipientCandidates(
+    {
+      connectionRef: props.selectedConnection?.ref ?? "",
+      projectRef: props.projectRef,
+      recipientKind: props.targetKind,
+    },
+    projectCandidate.value?.pins,
   ),
+);
+const capabilityLoader = computed(() =>
+  capabilityCandidates(
+    {
+      connectionRef: props.selectedConnection?.ref ?? "",
+      projectRef: props.projectRef,
+      recipientKind: props.targetKind,
+      recipientRef: props.targetRef,
+    },
+    recipientCandidate.value?.pins,
+  ),
+);
+const selection = computed<IntegrationGrantSelection | undefined>(() => {
+  const connection = props.selectedConnection,
+    project = projectCandidate.value,
+    recipient = recipientCandidate.value,
+    capability = capabilityCandidate.value;
+  if (
+    !connection ||
+    !project?.grantable ||
+    !recipient?.grantable ||
+    !capability?.grantable ||
+    project.projectRef !== props.projectRef ||
+    recipient.recipientRef !== props.targetRef ||
+    recipient.recipientKind !== props.targetKind ||
+    capability.capability.key !== props.capabilityKey ||
+    capability.pins.connectionVersion !== connection.version
+  )
+    return undefined;
+  return {
+    connectionRef: connection.ref,
+    connectionVersion: connection.version,
+    projectRef: project.projectRef,
+    recipientKind: recipient.recipientKind,
+    recipientRef: recipient.recipientRef,
+    capabilityKey: capability.capability.key,
+  };
+});
+function submit(): void {
+  if (selection.value && !props.busy) emit("save", selection.value);
+}
+function chooseProject(option: AsyncEntityOption): void {
+  const candidate = projectRows.get(option.ref);
+  if (!candidate?.grantable) return;
+  projectCandidate.value = candidate;
+  chosenProject.value = option;
+  emit("update:projectRef", option.ref);
+}
+function chooseRecipient(option: AsyncEntityOption): void {
+  const candidate = recipientRows.get(option.ref);
+  if (!candidate?.grantable) return;
+  recipientCandidate.value = candidate;
+  chosenTarget.value = option;
+  emit("update:targetRef", option.ref);
+}
+function chooseCapability(option: AsyncEntityOption): void {
+  const candidate = capabilityRows.get(option.ref);
+  if (!candidate?.grantable) return;
+  capabilityCandidate.value = candidate;
+  chosenCapability.value = option;
+  emit("update:capabilityKey", option.ref);
+}
+const projectOption = computed(() =>
+  chosenProject.value?.ref === props.projectRef
+    ? chosenProject.value
+    : undefined,
+);
+const targetOption = computed(() =>
+  chosenTarget.value?.ref === props.targetRef ? chosenTarget.value : undefined,
+);
+const connectionOption = computed(() =>
+  props.selectedConnection
+    ? {
+        ref: props.selectedConnection.ref,
+        title: props.selectedConnection.name,
+        description: props.selectedConnection.credentialsHint,
+        meta: t(`states.${props.selectedConnection.state}`),
+      }
+    : undefined,
+);
+async function loadProjects(
+  query: string,
+  cursor: string | undefined,
+  signal: AbortSignal,
+): Promise<AsyncEntityOptionPage> {
+  if (!props.selectedConnection) return { items: [] };
+  const page = await projectLoader.value(query, cursor, signal);
+  if (page.pins.connectionVersion !== props.selectedConnection.version)
+    throw new Error("Integration connection version changed");
+  if (!cursor) projectRows.clear();
+  page.items.forEach((item) => projectRows.set(item.projectRef, item));
+  return {
+    items: page.items.map((item) => ({
+      ref: item.projectRef,
+      title: item.name,
+      meta: t(`integrationCandidates.${item.reason}`),
+      disabled: !item.grantable,
+      disabledReason: item.grantable
+        ? undefined
+        : t(`integrationCandidates.${item.reason}`),
+    })),
+    nextPageToken: page.nextPageToken,
+    total: page.total,
+  };
+}
+async function loadRecipients(
+  query: string,
+  cursor: string | undefined,
+  signal: AbortSignal,
+): Promise<AsyncEntityOptionPage> {
+  if (!props.projectRef || !props.selectedConnection) return { items: [] };
+  const page = await recipientLoader.value(query, cursor, signal);
+  if (!cursor) recipientRows.clear();
+  page.items.forEach((item) => recipientRows.set(item.recipientRef, item));
+  return {
+    items: page.items.map((item) => ({
+      ref: item.recipientRef,
+      title: item.name,
+      description: t(`integrationsRedesign.targetKind.${item.recipientKind}`),
+      meta: t(`integrationCandidates.${item.reason}`),
+      disabled: !item.grantable,
+      disabledReason: item.grantable
+        ? undefined
+        : t(`integrationCandidates.${item.reason}`),
+    })),
+    nextPageToken: page.nextPageToken,
+    total: page.total,
+  };
+}
+async function loadConnections(
+  query: string,
+  cursor: string | undefined,
+  signal: AbortSignal,
+): Promise<AsyncEntityOptionPage> {
+  const page = await connectionLoader(query, cursor, signal);
+  return {
+    items: page.items.map((item) => ({
+      ref: item.connectionRef,
+      title: item.name,
+      description: [item.providerName, item.credentialKind]
+        .filter(Boolean)
+        .join(" · "),
+      meta: t(`integrationCandidates.${item.reason}`),
+      disabled: !item.grantable,
+      disabledReason: item.grantable
+        ? undefined
+        : t(`integrationCandidates.${item.reason}`),
+    })),
+    nextPageToken: page.nextPageToken,
+    total: page.total,
+  };
+}
+async function loadCapabilities(
+  query: string,
+  cursor: string | undefined,
+  signal: AbortSignal,
+): Promise<AsyncEntityOptionPage> {
+  if (!recipientCandidate.value || !props.selectedConnection)
+    return { items: [] };
+  const page = await capabilityLoader.value(query, cursor, signal);
+  if (!cursor) capabilityRows.clear();
+  page.items.forEach((item) => capabilityRows.set(item.capability.key, item));
+  return {
+    items: page.items.map((item) => ({
+      ref: item.capability.key,
+      title: item.capability.name,
+      description: item.capability.description,
+      meta: [
+        item.capability.operation,
+        t(`integrations.risk.${item.capability.risk}`),
+        item.capability.resourceKind,
+        item.capability.approvalPolicy,
+      ].join(" · "),
+      disabled: !item.grantable,
+      disabledReason: item.grantable
+        ? undefined
+        : t(`integrationCandidates.${item.reason}`),
+    })),
+    total: page.total,
+    nextPageToken: page.nextPageToken,
+  };
+}
+watch(
+  () => [props.selectedConnection?.ref, props.selectedConnection?.version],
+  () => {
+    projectCandidate.value = undefined;
+    chosenProject.value = undefined;
+    emit("update:projectRef", "");
+  },
+  { flush: "sync" },
+);
+watch(
+  () => [props.projectRef, props.targetKind, props.selectedConnection?.ref],
+  () => {
+    chosenTarget.value = undefined;
+    recipientCandidate.value = undefined;
+    emit("update:targetRef", "");
+  },
+  { flush: "sync" },
+);
+watch(
+  () => [
+    props.selectedConnection?.version,
+    props.projectRef,
+    props.targetKind,
+    props.targetRef,
+  ],
+  () => {
+    capabilityCandidate.value = undefined;
+    chosenCapability.value = undefined;
+    emit("update:capabilityKey", "");
+  },
+  { flush: "sync" },
+);
+const selectedCapability = computed(
+  () => capabilityCandidate.value?.capability,
 );
 const canManageSelected = computed(
   () =>
@@ -73,26 +310,14 @@ const canManageSelected = computed(
       <div class="grant-list-column">
         <label class="connection-picker">
           <span>{{ t("integrationsRedesign.connectionPicker") }}</span>
-          <select
-            :value="selectedConnection?.ref ?? ''"
-            @change="
-              emit(
-                'selectConnection',
-                ($event.target as HTMLSelectElement).value,
-              )
-            "
-          >
-            <option value="">
-              {{ t("integrationsRedesign.allConnections") }}
-            </option>
-            <option
-              v-for="connection in connections"
-              :key="connection.ref"
-              :value="connection.ref"
-            >
-              {{ connection.name }}
-            </option>
-          </select>
+          <AsyncEntityPicker
+            :model-value="selectedConnection?.ref"
+            :selected="connectionOption"
+            :load-page="loadConnections"
+            :trigger-label="t('integrationsRedesign.connectionPicker')"
+            :placeholder="t('integrationsRedesign.allConnections')"
+            @select="emit('selectConnection', $event.ref)"
+          />
         </label>
 
         <div v-if="grants.length" class="grant-list" role="list">
@@ -169,30 +394,19 @@ const canManageSelected = computed(
           />
         </header>
 
-        <form class="grant-form" @submit.prevent="emit('save')">
+        <form class="grant-form" @submit.prevent="submit">
           <label class="field">
             <span>{{ t("integrations.project") }}</span>
-            <select
-              :value="projectRef"
+            <AsyncEntityPicker
+              :key="`${selectedConnection?.ref}:${selectedConnection?.version}`"
+              :model-value="projectRef"
+              :selected="projectOption"
+              :load-page="loadProjects"
               :disabled="!canManageSelected"
-              required
-              @change="
-                emit(
-                  'update:projectRef',
-                  ($event.target as HTMLSelectElement).value,
-                );
-                emit('loadTargets');
-              "
-            >
-              <option value="">{{ t("integrations.chooseProject") }}</option>
-              <option
-                v-for="project in projects"
-                :key="project.ref"
-                :value="project.ref"
-              >
-                {{ project.name }}
-              </option>
-            </select>
+              :trigger-label="t('integrations.project')"
+              :placeholder="t('integrations.chooseProject')"
+              @select="chooseProject"
+            />
           </label>
           <label class="field">
             <span>{{ t("integrations.targetType") }}</span>
@@ -215,55 +429,44 @@ const canManageSelected = computed(
           </label>
           <label class="field">
             <span>{{ t("integrations.target") }}</span>
-            <select
-              :value="targetRef"
-              :disabled="!canManageSelected || targetsLoading || !projectRef"
-              required
-              @change="
-                emit(
-                  'update:targetRef',
-                  ($event.target as HTMLSelectElement).value,
-                )
+            <AsyncEntityPicker
+              :key="
+                [
+                  'recipient',
+                  projectRef,
+                  targetKind,
+                  selectedConnection?.ref,
+                ].join(':')
               "
-            >
-              <option value="">
-                {{
-                  targetsLoading
-                    ? t("common.loading")
-                    : t("integrations.chooseTarget")
-                }}
-              </option>
-              <option
-                v-for="target in targets"
-                :key="target.ref"
-                :value="target.ref"
-              >
-                {{ target.name }}
-              </option>
-            </select>
+              :model-value="targetRef"
+              :selected="targetOption"
+              :load-page="loadRecipients"
+              :disabled="!canManageSelected || busy || !projectCandidate"
+              :trigger-label="t('integrations.target')"
+              :placeholder="t('integrations.chooseTarget')"
+              @select="chooseRecipient"
+            />
           </label>
           <label class="field">
             <span>{{ t("integrations.capability") }}</span>
-            <select
-              :value="capabilityKey"
-              :disabled="!canManageSelected"
-              required
-              @change="
-                emit(
-                  'update:capabilityKey',
-                  ($event.target as HTMLSelectElement).value,
-                )
+            <AsyncEntityPicker
+              :key="
+                [
+                  'capability',
+                  selectedConnection?.ref,
+                  projectRef,
+                  targetKind,
+                  targetRef,
+                ].join(':')
               "
-            >
-              <option
-                v-for="capability in selectedConnection?.capabilities ?? []"
-                :key="capability.key"
-                :value="capability.key"
-              >
-                {{ capability.name }} ·
-                {{ t(`integrations.risk.${capability.risk}`) }}
-              </option>
-            </select>
+              :model-value="capabilityKey"
+              :selected="chosenCapability"
+              :load-page="loadCapabilities"
+              :disabled="!canManageSelected || !recipientCandidate || busy"
+              :trigger-label="t('integrations.capability')"
+              :placeholder="t('integrations.capability')"
+              @select="chooseCapability"
+            />
           </label>
 
           <section
@@ -306,9 +509,7 @@ const canManageSelected = computed(
           <button
             class="button button--primary"
             type="submit"
-            :disabled="
-              !canManageSelected || busy || !targetRef || !capabilityKey
-            "
+            :disabled="!canManageSelected || busy || !selection"
           >
             <Plus :size="15" aria-hidden="true" />
             {{ t("integrations.grant") }}
