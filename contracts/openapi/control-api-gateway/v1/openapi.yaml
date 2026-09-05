@@ -3662,6 +3662,94 @@ paths:
           description: Неизменяемый план применения допущенного образа
           content: { application/json: { schema: { $ref: '#/components/schemas/RoleImageImpactPlan' } } }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/role-image-configurations/{configurationRef}/git-write-backs:
+    post:
+      tags: [Administration]
+      operationId: prepareRoleImageGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PrepareConfigurationWriteBackInput' } } }
+      responses:
+        '201':
+          description: Предложение отдельной ветки и PR для явного подтверждения
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBack' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/integration-definition-configurations/{configurationRef}/git-write-backs:
+    post:
+      tags: [Administration]
+      operationId: prepareIntegrationDefinitionGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PrepareConfigurationWriteBackInput' } } }
+      responses:
+        '201':
+          description: Предложение отдельной ветки и PR для явного подтверждения
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBack' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/managed-configuration-git-write-backs/{proposalRef}/approve:
+    post:
+      tags: [Administration]
+      operationId: approveManagedConfigurationGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/WriteBackProposalRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBackDecisionInput' } } }
+      responses:
+        '200':
+          description: Устойчивое состояние предложения
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBack' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/managed-configuration-git-write-backs/{proposalRef}/reject:
+    post:
+      tags: [Administration]
+      operationId: rejectManagedConfigurationGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/WriteBackProposalRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBackDecisionInput' } } }
+      responses:
+        '200':
+          description: Устойчивое состояние предложения
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBack' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel:
+    post:
+      tags: [Administration]
+      operationId: cancelManagedConfigurationGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/WriteBackProposalRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '200':
+          description: Устойчивое состояние предложения
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBack' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/managed-configuration-git-write-backs/{proposalRef}:
+    get:
+      tags: [Administration]
+      operationId: getManagedConfigurationGitWriteBack
+      parameters: [{ $ref: '#/components/parameters/WriteBackProposalRef' }]
+      responses:
+        '200':
+          description: Точный план и исходные документы
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBackView' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/managed-configurations/{configurationRef}/git-write-backs:
+    get:
+      tags: [Administration]
+      operationId: listManagedConfigurationGitWriteBacks
+      parameters: [{ $ref: '#/components/parameters/ConfigurationRef' }, { $ref: '#/components/parameters/PageSize' }, { $ref: '#/components/parameters/PageToken' }]
+      responses:
+        '200':
+          description: История предложений без содержимого документов
+          content: { application/json: { schema: { $ref: '#/components/schemas/ConfigurationWriteBackPage' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/role-image-impact-plans/{planRef}:
     get:
       tags: [Administration]
@@ -4527,6 +4615,11 @@ components:
       in: query
       required: false
       schema: { type: string, maxLength: 512 }
+    WriteBackProposalRef:
+      name: proposalRef
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/OpaqueRef' }
     VFSPageToken:
       name: pageToken
       in: query
@@ -4999,6 +5092,82 @@ components:
         ref: { type: string, minLength: 1, maxLength: 160 }
         revisionRef: { $ref: '#/components/schemas/OpaqueRef' }
         version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    PrepareConfigurationWriteBackInput:
+      type: object
+      additionalProperties: false
+      required: [expectedSourceVersion, content]
+      properties:
+        expectedSourceVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        content: { type: string, minLength: 1, maxLength: 262144 }
+    ConfigurationWriteBackDecisionInput:
+      type: object
+      additionalProperties: false
+      required: [approvalDigest]
+      properties:
+        approvalDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+    ConfigurationWriteBack:
+      type: object
+      additionalProperties: false
+      required: [ref, version, configurationRef, kind, configurationVersion, sourceRef, sourceVersion, connectionRef, connectionVersion, repositoryRef, sourceRefName, path, baseCommitSha, baseContentSha256, proposedContentSha256, contentFormat, proposalBranch, approvalDigest, state, createdAt, expiresAt, nextActions]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        configurationRef: { $ref: '#/components/schemas/OpaqueRef' }
+        sourceRef: { $ref: '#/components/schemas/OpaqueRef' }
+        connectionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        configurationVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        sourceVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        connectionVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        kind: { type: string, enum: [ROLE_IMAGE, INTEGRATION_DEFINITION] }
+        repositoryRef: { type: string, minLength: 1, maxLength: 256 }
+        sourceRefName: { type: string, minLength: 1, maxLength: 256 }
+        path: { type: string, minLength: 1, maxLength: 512 }
+        baseCommitSha: { type: string, pattern: '^([a-f0-9]{40}|[a-f0-9]{64})$' }
+        candidateCommitSha: { type: string, pattern: '^([a-f0-9]{40}|[a-f0-9]{64})$' }
+        baseContentSha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        proposedContentSha256: { type: string, pattern: '^[a-f0-9]{64}$' }
+        approvalDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        contentFormat: { type: string, enum: [JSON, YAML] }
+        proposalBranch: { type: string, minLength: 1, maxLength: 256 }
+        state: { type: string, enum: [WAITING_APPROVAL, QUEUED, CLAIMED, EFFECT_STARTED, SUCCEEDED, REJECTED, CANCELLED, EXPIRED, FAILED, UNKNOWN_OUTCOME] }
+        failureCode: { type: string, enum: [UNAVAILABLE, CREDENTIAL_REJECTED, ACCESS_DENIED, SOURCE_CHANGED, CONTENT_INVALID, RESPONSE_INVALID, AUTHORITY_CHANGED, DEADLINE_EXCEEDED, BRANCH_CONFLICT, OUTCOME_UNCONFIRMED] }
+        pullRequestRef: { type: string, minLength: 1, maxLength: 256 }
+        pullRequestUrl: { type: string, format: uri, maxLength: 2048 }
+        createdAt: { $ref: '#/components/schemas/Timestamp' }
+        expiresAt: { $ref: '#/components/schemas/Timestamp' }
+        approvedAt: { $ref: '#/components/schemas/Timestamp' }
+        completedAt: { $ref: '#/components/schemas/Timestamp' }
+        branchConfirmedAt: { $ref: '#/components/schemas/Timestamp' }
+        pullRequestConfirmedAt: { $ref: '#/components/schemas/Timestamp' }
+        nextActions:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items: { $ref: '#/components/schemas/ConfigurationWriteBackAction' }
+    ConfigurationWriteBackAction:
+      type: object
+      additionalProperties: false
+      required: [action, enabled, reason]
+      properties:
+        action: { type: string, enum: [APPROVE, REJECT, CANCEL] }
+        enabled: { type: boolean }
+        reason: { type: string, enum: [NONE, FORBIDDEN, STATE, SOURCE_CHANGED, EXPIRED, OUTCOME_UNKNOWN] }
+    ConfigurationWriteBackView:
+      type: object
+      additionalProperties: false
+      required: [proposal, baseContent, proposedContent]
+      properties:
+        proposal: { $ref: '#/components/schemas/ConfigurationWriteBack' }
+        baseContent: { type: string, maxLength: 262144 }
+        proposedContent: { type: string, minLength: 1, maxLength: 262144 }
+    ConfigurationWriteBackPage:
+      type: object
+      additionalProperties: false
+      required: [items, total]
+      properties:
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/ConfigurationWriteBack' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        nextPageToken: { type: string, maxLength: 512 }
     RoleImageRebindInput:
       type: object
       additionalProperties: false

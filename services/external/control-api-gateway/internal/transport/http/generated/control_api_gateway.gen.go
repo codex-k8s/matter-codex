@@ -1074,6 +1074,177 @@ func (e ConfigOverlaySchemaMaximumBytes) Valid() bool {
 	}
 }
 
+// Defines values for ConfigurationWriteBackContentFormat.
+const (
+	ConfigurationWriteBackContentFormatJSON ConfigurationWriteBackContentFormat = "JSON"
+	ConfigurationWriteBackContentFormatYAML ConfigurationWriteBackContentFormat = "YAML"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackContentFormat enum.
+func (e ConfigurationWriteBackContentFormat) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackContentFormatJSON:
+		return true
+	case ConfigurationWriteBackContentFormatYAML:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackFailureCode.
+const (
+	ConfigurationWriteBackFailureCodeACCESSDENIED       ConfigurationWriteBackFailureCode = "ACCESS_DENIED"
+	ConfigurationWriteBackFailureCodeAUTHORITYCHANGED   ConfigurationWriteBackFailureCode = "AUTHORITY_CHANGED"
+	ConfigurationWriteBackFailureCodeBRANCHCONFLICT     ConfigurationWriteBackFailureCode = "BRANCH_CONFLICT"
+	ConfigurationWriteBackFailureCodeCONTENTINVALID     ConfigurationWriteBackFailureCode = "CONTENT_INVALID"
+	ConfigurationWriteBackFailureCodeCREDENTIALREJECTED ConfigurationWriteBackFailureCode = "CREDENTIAL_REJECTED"
+	ConfigurationWriteBackFailureCodeDEADLINEEXCEEDED   ConfigurationWriteBackFailureCode = "DEADLINE_EXCEEDED"
+	ConfigurationWriteBackFailureCodeOUTCOMEUNCONFIRMED ConfigurationWriteBackFailureCode = "OUTCOME_UNCONFIRMED"
+	ConfigurationWriteBackFailureCodeRESPONSEINVALID    ConfigurationWriteBackFailureCode = "RESPONSE_INVALID"
+	ConfigurationWriteBackFailureCodeSOURCECHANGED      ConfigurationWriteBackFailureCode = "SOURCE_CHANGED"
+	ConfigurationWriteBackFailureCodeUNAVAILABLE        ConfigurationWriteBackFailureCode = "UNAVAILABLE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackFailureCode enum.
+func (e ConfigurationWriteBackFailureCode) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackFailureCodeACCESSDENIED:
+		return true
+	case ConfigurationWriteBackFailureCodeAUTHORITYCHANGED:
+		return true
+	case ConfigurationWriteBackFailureCodeBRANCHCONFLICT:
+		return true
+	case ConfigurationWriteBackFailureCodeCONTENTINVALID:
+		return true
+	case ConfigurationWriteBackFailureCodeCREDENTIALREJECTED:
+		return true
+	case ConfigurationWriteBackFailureCodeDEADLINEEXCEEDED:
+		return true
+	case ConfigurationWriteBackFailureCodeOUTCOMEUNCONFIRMED:
+		return true
+	case ConfigurationWriteBackFailureCodeRESPONSEINVALID:
+		return true
+	case ConfigurationWriteBackFailureCodeSOURCECHANGED:
+		return true
+	case ConfigurationWriteBackFailureCodeUNAVAILABLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackKind.
+const (
+	ConfigurationWriteBackKindINTEGRATIONDEFINITION ConfigurationWriteBackKind = "INTEGRATION_DEFINITION"
+	ConfigurationWriteBackKindROLEIMAGE             ConfigurationWriteBackKind = "ROLE_IMAGE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackKind enum.
+func (e ConfigurationWriteBackKind) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackKindINTEGRATIONDEFINITION:
+		return true
+	case ConfigurationWriteBackKindROLEIMAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackState.
+const (
+	ConfigurationWriteBackStateCANCELLED       ConfigurationWriteBackState = "CANCELLED"
+	ConfigurationWriteBackStateCLAIMED         ConfigurationWriteBackState = "CLAIMED"
+	ConfigurationWriteBackStateEFFECTSTARTED   ConfigurationWriteBackState = "EFFECT_STARTED"
+	ConfigurationWriteBackStateEXPIRED         ConfigurationWriteBackState = "EXPIRED"
+	ConfigurationWriteBackStateFAILED          ConfigurationWriteBackState = "FAILED"
+	ConfigurationWriteBackStateQUEUED          ConfigurationWriteBackState = "QUEUED"
+	ConfigurationWriteBackStateREJECTED        ConfigurationWriteBackState = "REJECTED"
+	ConfigurationWriteBackStateSUCCEEDED       ConfigurationWriteBackState = "SUCCEEDED"
+	ConfigurationWriteBackStateUNKNOWNOUTCOME  ConfigurationWriteBackState = "UNKNOWN_OUTCOME"
+	ConfigurationWriteBackStateWAITINGAPPROVAL ConfigurationWriteBackState = "WAITING_APPROVAL"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackState enum.
+func (e ConfigurationWriteBackState) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackStateCANCELLED:
+		return true
+	case ConfigurationWriteBackStateCLAIMED:
+		return true
+	case ConfigurationWriteBackStateEFFECTSTARTED:
+		return true
+	case ConfigurationWriteBackStateEXPIRED:
+		return true
+	case ConfigurationWriteBackStateFAILED:
+		return true
+	case ConfigurationWriteBackStateQUEUED:
+		return true
+	case ConfigurationWriteBackStateREJECTED:
+		return true
+	case ConfigurationWriteBackStateSUCCEEDED:
+		return true
+	case ConfigurationWriteBackStateUNKNOWNOUTCOME:
+		return true
+	case ConfigurationWriteBackStateWAITINGAPPROVAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackActionAction.
+const (
+	ConfigurationWriteBackActionActionAPPROVE ConfigurationWriteBackActionAction = "APPROVE"
+	ConfigurationWriteBackActionActionCANCEL  ConfigurationWriteBackActionAction = "CANCEL"
+	ConfigurationWriteBackActionActionREJECT  ConfigurationWriteBackActionAction = "REJECT"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackActionAction enum.
+func (e ConfigurationWriteBackActionAction) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackActionActionAPPROVE:
+		return true
+	case ConfigurationWriteBackActionActionCANCEL:
+		return true
+	case ConfigurationWriteBackActionActionREJECT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackActionReason.
+const (
+	ConfigurationWriteBackActionReasonEXPIRED        ConfigurationWriteBackActionReason = "EXPIRED"
+	ConfigurationWriteBackActionReasonFORBIDDEN      ConfigurationWriteBackActionReason = "FORBIDDEN"
+	ConfigurationWriteBackActionReasonNONE           ConfigurationWriteBackActionReason = "NONE"
+	ConfigurationWriteBackActionReasonOUTCOMEUNKNOWN ConfigurationWriteBackActionReason = "OUTCOME_UNKNOWN"
+	ConfigurationWriteBackActionReasonSOURCECHANGED  ConfigurationWriteBackActionReason = "SOURCE_CHANGED"
+	ConfigurationWriteBackActionReasonSTATE          ConfigurationWriteBackActionReason = "STATE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackActionReason enum.
+func (e ConfigurationWriteBackActionReason) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackActionReasonEXPIRED:
+		return true
+	case ConfigurationWriteBackActionReasonFORBIDDEN:
+		return true
+	case ConfigurationWriteBackActionReasonNONE:
+		return true
+	case ConfigurationWriteBackActionReasonOUTCOMEUNKNOWN:
+		return true
+	case ConfigurationWriteBackActionReasonSOURCECHANGED:
+		return true
+	case ConfigurationWriteBackActionReasonSTATE:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ContextResourceState.
 const (
 	ContextResourceStateACTIVE   ContextResourceState = "ACTIVE"
@@ -2900,40 +3071,40 @@ func (e ProviderAccountDefinitionKey) Valid() bool {
 
 // Defines values for ProviderAccountSafeStatusReason.
 const (
-	ProviderAccountSafeStatusReasonACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
-	ProviderAccountSafeStatusReasonACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
-	ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
-	ProviderAccountSafeStatusReasonAUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
-	ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
-	ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
-	ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
+	ACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
+	ACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
+	ACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
+	AUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
+	CREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
+	CREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
+	DEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
+	DEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
+	DEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
+	REAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
 )
 
 // Valid indicates whether the value is a known member of the ProviderAccountSafeStatusReason enum.
 func (e ProviderAccountSafeStatusReason) Valid() bool {
 	switch e {
-	case ProviderAccountSafeStatusReasonACCOUNTDISABLED:
+	case ACCOUNTDISABLED:
 		return true
-	case ProviderAccountSafeStatusReasonACCOUNTREVOKED:
+	case ACCOUNTREVOKED:
 		return true
-	case ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN:
+	case ACCOUNTSTATEUNKNOWN:
 		return true
-	case ProviderAccountSafeStatusReasonAUTHORIZED:
+	case AUTHORIZED:
 		return true
-	case ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED:
+	case CREDENTIALCONFIGURATIONREQUIRED:
 		return true
-	case ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED:
+	case CREDENTIALMATERIALIZATIONFAILED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED:
+	case DEVICEAUTHORIZATIONEXPIRED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED:
+	case DEVICEAUTHORIZATIONFAILED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING:
+	case DEVICEAUTHORIZATIONPENDING:
 		return true
-	case ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED:
+	case REAUTHORIZATIONREQUIRED:
 		return true
 	default:
 		return false
@@ -6026,25 +6197,25 @@ func (e GetArtifactImpactParamsAction) Valid() bool {
 
 // Defines values for ListManagedConfigurationsParamsKind.
 const (
-	EMAILMAILBOX          ListManagedConfigurationsParamsKind = "EMAIL_MAILBOX"
-	INTEGRATIONDEFINITION ListManagedConfigurationsParamsKind = "INTEGRATION_DEFINITION"
-	PROMPTTEMPLATE        ListManagedConfigurationsParamsKind = "PROMPT_TEMPLATE"
-	ROLEIMAGE             ListManagedConfigurationsParamsKind = "ROLE_IMAGE"
-	SYSTEMSTT             ListManagedConfigurationsParamsKind = "SYSTEM_STT"
+	ListManagedConfigurationsParamsKindEMAILMAILBOX          ListManagedConfigurationsParamsKind = "EMAIL_MAILBOX"
+	ListManagedConfigurationsParamsKindINTEGRATIONDEFINITION ListManagedConfigurationsParamsKind = "INTEGRATION_DEFINITION"
+	ListManagedConfigurationsParamsKindPROMPTTEMPLATE        ListManagedConfigurationsParamsKind = "PROMPT_TEMPLATE"
+	ListManagedConfigurationsParamsKindROLEIMAGE             ListManagedConfigurationsParamsKind = "ROLE_IMAGE"
+	ListManagedConfigurationsParamsKindSYSTEMSTT             ListManagedConfigurationsParamsKind = "SYSTEM_STT"
 )
 
 // Valid indicates whether the value is a known member of the ListManagedConfigurationsParamsKind enum.
 func (e ListManagedConfigurationsParamsKind) Valid() bool {
 	switch e {
-	case EMAILMAILBOX:
+	case ListManagedConfigurationsParamsKindEMAILMAILBOX:
 		return true
-	case INTEGRATIONDEFINITION:
+	case ListManagedConfigurationsParamsKindINTEGRATIONDEFINITION:
 		return true
-	case PROMPTTEMPLATE:
+	case ListManagedConfigurationsParamsKindPROMPTTEMPLATE:
 		return true
-	case ROLEIMAGE:
+	case ListManagedConfigurationsParamsKindROLEIMAGE:
 		return true
-	case SYSTEMSTT:
+	case ListManagedConfigurationsParamsKindSYSTEMSTT:
 		return true
 	default:
 		return false
@@ -6137,19 +6308,19 @@ func (e ListArtifactsParamsLifecycleState) Valid() bool {
 
 // Defines values for ListArtifactsParamsType.
 const (
-	DOCUMENT ListArtifactsParamsType = "DOCUMENT"
-	IMAGE    ListArtifactsParamsType = "IMAGE"
-	TEXT     ListArtifactsParamsType = "TEXT"
+	ListArtifactsParamsTypeDOCUMENT ListArtifactsParamsType = "DOCUMENT"
+	ListArtifactsParamsTypeIMAGE    ListArtifactsParamsType = "IMAGE"
+	ListArtifactsParamsTypeTEXT     ListArtifactsParamsType = "TEXT"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsType enum.
 func (e ListArtifactsParamsType) Valid() bool {
 	switch e {
-	case DOCUMENT:
+	case ListArtifactsParamsTypeDOCUMENT:
 		return true
-	case IMAGE:
+	case ListArtifactsParamsTypeIMAGE:
 		return true
-	case TEXT:
+	case ListArtifactsParamsTypeTEXT:
 		return true
 	default:
 		return false
@@ -6158,25 +6329,25 @@ func (e ListArtifactsParamsType) Valid() bool {
 
 // Defines values for ListArtifactsParamsScanState.
 const (
-	ListArtifactsParamsScanStateCLEAN       ListArtifactsParamsScanState = "CLEAN"
-	ListArtifactsParamsScanStateFAILED      ListArtifactsParamsScanState = "FAILED"
-	ListArtifactsParamsScanStatePENDING     ListArtifactsParamsScanState = "PENDING"
-	ListArtifactsParamsScanStateQUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
-	ListArtifactsParamsScanStateSCANNING    ListArtifactsParamsScanState = "SCANNING"
+	CLEAN       ListArtifactsParamsScanState = "CLEAN"
+	FAILED      ListArtifactsParamsScanState = "FAILED"
+	PENDING     ListArtifactsParamsScanState = "PENDING"
+	QUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
+	SCANNING    ListArtifactsParamsScanState = "SCANNING"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsScanState enum.
 func (e ListArtifactsParamsScanState) Valid() bool {
 	switch e {
-	case ListArtifactsParamsScanStateCLEAN:
+	case CLEAN:
 		return true
-	case ListArtifactsParamsScanStateFAILED:
+	case FAILED:
 		return true
-	case ListArtifactsParamsScanStatePENDING:
+	case PENDING:
 		return true
-	case ListArtifactsParamsScanStateQUARANTINED:
+	case QUARANTINED:
 		return true
-	case ListArtifactsParamsScanStateSCANNING:
+	case SCANNING:
 		return true
 	default:
 		return false
@@ -7176,6 +7347,84 @@ type ConfigOverlayVersion struct {
 	State              string                     `json:"state"`
 	ValidationMessages []string                   `json:"validationMessages"`
 	Version            int64                      `json:"version"`
+}
+
+// ConfigurationWriteBack defines model for ConfigurationWriteBack.
+type ConfigurationWriteBack struct {
+	ApprovalDigest         string                              `json:"approvalDigest"`
+	ApprovedAt             *Timestamp                          `json:"approvedAt,omitempty"`
+	BaseCommitSha          string                              `json:"baseCommitSha"`
+	BaseContentSha256      string                              `json:"baseContentSha256"`
+	BranchConfirmedAt      *Timestamp                          `json:"branchConfirmedAt,omitempty"`
+	CandidateCommitSha     *string                             `json:"candidateCommitSha,omitempty"`
+	CompletedAt            *Timestamp                          `json:"completedAt,omitempty"`
+	ConfigurationRef       OpaqueRef                           `json:"configurationRef"`
+	ConfigurationVersion   int64                               `json:"configurationVersion"`
+	ConnectionRef          OpaqueRef                           `json:"connectionRef"`
+	ConnectionVersion      int64                               `json:"connectionVersion"`
+	ContentFormat          ConfigurationWriteBackContentFormat `json:"contentFormat"`
+	CreatedAt              Timestamp                           `json:"createdAt"`
+	ExpiresAt              Timestamp                           `json:"expiresAt"`
+	FailureCode            *ConfigurationWriteBackFailureCode  `json:"failureCode,omitempty"`
+	Kind                   ConfigurationWriteBackKind          `json:"kind"`
+	NextActions            []ConfigurationWriteBackAction      `json:"nextActions"`
+	Path                   string                              `json:"path"`
+	ProposalBranch         string                              `json:"proposalBranch"`
+	ProposedContentSha256  string                              `json:"proposedContentSha256"`
+	PullRequestConfirmedAt *Timestamp                          `json:"pullRequestConfirmedAt,omitempty"`
+	PullRequestRef         *string                             `json:"pullRequestRef,omitempty"`
+	PullRequestUrl         *string                             `json:"pullRequestUrl,omitempty"`
+	Ref                    OpaqueRef                           `json:"ref"`
+	RepositoryRef          string                              `json:"repositoryRef"`
+	SourceRef              OpaqueRef                           `json:"sourceRef"`
+	SourceRefName          string                              `json:"sourceRefName"`
+	SourceVersion          int64                               `json:"sourceVersion"`
+	State                  ConfigurationWriteBackState         `json:"state"`
+	Version                int64                               `json:"version"`
+}
+
+// ConfigurationWriteBackContentFormat defines model for ConfigurationWriteBack.ContentFormat.
+type ConfigurationWriteBackContentFormat string
+
+// ConfigurationWriteBackFailureCode defines model for ConfigurationWriteBack.FailureCode.
+type ConfigurationWriteBackFailureCode string
+
+// ConfigurationWriteBackKind defines model for ConfigurationWriteBack.Kind.
+type ConfigurationWriteBackKind string
+
+// ConfigurationWriteBackState defines model for ConfigurationWriteBack.State.
+type ConfigurationWriteBackState string
+
+// ConfigurationWriteBackAction defines model for ConfigurationWriteBackAction.
+type ConfigurationWriteBackAction struct {
+	Action  ConfigurationWriteBackActionAction `json:"action"`
+	Enabled bool                               `json:"enabled"`
+	Reason  ConfigurationWriteBackActionReason `json:"reason"`
+}
+
+// ConfigurationWriteBackActionAction defines model for ConfigurationWriteBackAction.Action.
+type ConfigurationWriteBackActionAction string
+
+// ConfigurationWriteBackActionReason defines model for ConfigurationWriteBackAction.Reason.
+type ConfigurationWriteBackActionReason string
+
+// ConfigurationWriteBackDecisionInput defines model for ConfigurationWriteBackDecisionInput.
+type ConfigurationWriteBackDecisionInput struct {
+	ApprovalDigest string `json:"approvalDigest"`
+}
+
+// ConfigurationWriteBackPage defines model for ConfigurationWriteBackPage.
+type ConfigurationWriteBackPage struct {
+	Items         []ConfigurationWriteBack `json:"items"`
+	NextPageToken *string                  `json:"nextPageToken,omitempty"`
+	Total         int64                    `json:"total"`
+}
+
+// ConfigurationWriteBackView defines model for ConfigurationWriteBackView.
+type ConfigurationWriteBackView struct {
+	BaseContent     string                 `json:"baseContent"`
+	Proposal        ConfigurationWriteBack `json:"proposal"`
+	ProposedContent string                 `json:"proposedContent"`
 }
 
 // ContextProvenance defines model for ContextProvenance.
@@ -8213,6 +8462,12 @@ type PlatformMembershipCreateInput struct {
 
 // PlatformMembershipCreateInputPlatformRole defines model for PlatformMembershipCreateInput.PlatformRole.
 type PlatformMembershipCreateInputPlatformRole string
+
+// PrepareConfigurationWriteBackInput defines model for PrepareConfigurationWriteBackInput.
+type PrepareConfigurationWriteBackInput struct {
+	Content               string `json:"content"`
+	ExpectedSourceVersion int64  `json:"expectedSourceVersion"`
+}
 
 // Problem defines model for Problem.
 type Problem struct {
@@ -10456,6 +10711,9 @@ type VFSPageToken = string
 // WorkflowRef defines model for WorkflowRef.
 type WorkflowRef = OpaqueRef
 
+// WriteBackProposalRef defines model for WriteBackProposalRef.
+type WriteBackProposalRef = OpaqueRef
+
 // oidcBearerContextKey is the context key for oidcBearer security scheme
 type oidcBearerContextKey string
 
@@ -11129,6 +11387,13 @@ type RefreshIntegrationDefinitionGitSourceParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PrepareIntegrationDefinitionGitWriteBackParams defines parameters for PrepareIntegrationDefinitionGitWriteBack.
+type PrepareIntegrationDefinitionGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // RebindIntegrationDefinitionConsumersParams defines parameters for RebindIntegrationDefinitionConsumers.
 type RebindIntegrationDefinitionConsumersParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -11179,6 +11444,27 @@ type RevokeInteractionIdentityParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// ApproveManagedConfigurationGitWriteBackParams defines parameters for ApproveManagedConfigurationGitWriteBack.
+type ApproveManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// CancelManagedConfigurationGitWriteBackParams defines parameters for CancelManagedConfigurationGitWriteBack.
+type CancelManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// RejectManagedConfigurationGitWriteBackParams defines parameters for RejectManagedConfigurationGitWriteBack.
+type RejectManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // ListManagedConfigurationsParams defines parameters for ListManagedConfigurations.
 type ListManagedConfigurationsParams struct {
 	ProjectRef *ProjectRefQuery                     `form:"projectRef,omitempty" json:"projectRef,omitempty"`
@@ -11203,6 +11489,12 @@ type DetachGitManagedConfigurationParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// ListManagedConfigurationGitWriteBacksParams defines parameters for ListManagedConfigurationGitWriteBacks.
+type ListManagedConfigurationGitWriteBacksParams struct {
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListManagedConfigurationHistoryParams defines parameters for ListManagedConfigurationHistory.
@@ -11752,6 +12044,13 @@ type RefreshRoleImageGitSourceParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// PrepareRoleImageGitWriteBackParams defines parameters for PrepareRoleImageGitWriteBack.
+type PrepareRoleImageGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
 // RebindRoleImageConsumersParams defines parameters for RebindRoleImageConsumers.
@@ -12454,11 +12753,20 @@ type CreateIntegrationDefinitionDraftJSONRequestBody = ManagedConfigurationDraft
 // ConfigureIntegrationDefinitionGitSourceJSONRequestBody defines body for ConfigureIntegrationDefinitionGitSource for application/json ContentType.
 type ConfigureIntegrationDefinitionGitSourceJSONRequestBody = IntegrationDefinitionGitSourceInput
 
+// PrepareIntegrationDefinitionGitWriteBackJSONRequestBody defines body for PrepareIntegrationDefinitionGitWriteBack for application/json ContentType.
+type PrepareIntegrationDefinitionGitWriteBackJSONRequestBody = PrepareConfigurationWriteBackInput
+
 // RebindIntegrationDefinitionConsumersJSONRequestBody defines body for RebindIntegrationDefinitionConsumers for application/json ContentType.
 type RebindIntegrationDefinitionConsumersJSONRequestBody = ManagedConfigurationRebindInput
 
 // SaveIntegrationDefinitionDraftJSONRequestBody defines body for SaveIntegrationDefinitionDraft for application/json ContentType.
 type SaveIntegrationDefinitionDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
+
+// ApproveManagedConfigurationGitWriteBackJSONRequestBody defines body for ApproveManagedConfigurationGitWriteBack for application/json ContentType.
+type ApproveManagedConfigurationGitWriteBackJSONRequestBody = ConfigurationWriteBackDecisionInput
+
+// RejectManagedConfigurationGitWriteBackJSONRequestBody defines body for RejectManagedConfigurationGitWriteBack for application/json ContentType.
+type RejectManagedConfigurationGitWriteBackJSONRequestBody = ConfigurationWriteBackDecisionInput
 
 // CopyGitManagedConfigurationJSONRequestBody defines body for CopyGitManagedConfiguration for application/json ContentType.
 type CopyGitManagedConfigurationJSONRequestBody = ManagedConfigurationCopyInput
@@ -12555,6 +12863,9 @@ type CreateRoleImageRevisionDraftJSONRequestBody = ManagedConfigurationDraftInpu
 
 // ConfigureRoleImageGitSourceJSONRequestBody defines body for ConfigureRoleImageGitSource for application/json ContentType.
 type ConfigureRoleImageGitSourceJSONRequestBody = RoleImageGitSourceInput
+
+// PrepareRoleImageGitWriteBackJSONRequestBody defines body for PrepareRoleImageGitWriteBack for application/json ContentType.
+type PrepareRoleImageGitWriteBackJSONRequestBody = PrepareConfigurationWriteBackInput
 
 // RebindRoleImageConsumersJSONRequestBody defines body for RebindRoleImageConsumers for application/json ContentType.
 type RebindRoleImageConsumersJSONRequestBody = RoleImageRebindInput
@@ -12952,6 +13263,9 @@ type ServerInterface interface {
 	// (POST /api/v1/integration-definition-configurations/{configurationRef}/git-source/refresh)
 	RefreshIntegrationDefinitionGitSource(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params RefreshIntegrationDefinitionGitSourceParams)
 
+	// (POST /api/v1/integration-definition-configurations/{configurationRef}/git-write-backs)
+	PrepareIntegrationDefinitionGitWriteBack(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params PrepareIntegrationDefinitionGitWriteBackParams)
+
 	// (POST /api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings)
 	RebindIntegrationDefinitionConsumers(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params RebindIntegrationDefinitionConsumersParams)
 
@@ -12976,6 +13290,18 @@ type ServerInterface interface {
 	// (DELETE /api/v1/interaction-identities/{identityRef})
 	RevokeInteractionIdentity(w http.ResponseWriter, r *http.Request, identityRef InteractionIdentityRef, params RevokeInteractionIdentityParams)
 
+	// (GET /api/v1/managed-configuration-git-write-backs/{proposalRef})
+	GetManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/approve)
+	ApproveManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params ApproveManagedConfigurationGitWriteBackParams)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel)
+	CancelManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params CancelManagedConfigurationGitWriteBackParams)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/reject)
+	RejectManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params RejectManagedConfigurationGitWriteBackParams)
+
 	// (GET /api/v1/managed-configurations)
 	ListManagedConfigurations(w http.ResponseWriter, r *http.Request, params ListManagedConfigurationsParams)
 
@@ -12984,6 +13310,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/managed-configurations/{configurationRef}/detachment)
 	DetachGitManagedConfiguration(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params DetachGitManagedConfigurationParams)
+
+	// (GET /api/v1/managed-configurations/{configurationRef}/git-write-backs)
+	ListManagedConfigurationGitWriteBacks(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params ListManagedConfigurationGitWriteBacksParams)
 
 	// (GET /api/v1/managed-configurations/{configurationRef}/revisions)
 	ListManagedConfigurationHistory(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params ListManagedConfigurationHistoryParams)
@@ -13221,6 +13550,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/git-source/refresh)
 	RefreshRoleImageGitSource(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params RefreshRoleImageGitSourceParams)
+
+	// (POST /api/v1/role-image-configurations/{configurationRef}/git-write-backs)
+	PrepareRoleImageGitWriteBack(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params PrepareRoleImageGitWriteBackParams)
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings)
 	RebindRoleImageConsumers(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params RebindRoleImageConsumersParams)
@@ -22006,6 +22338,112 @@ func (siw *ServerInterfaceWrapper) RefreshIntegrationDefinitionGitSource(w http.
 	handler.ServeHTTP(w, r)
 }
 
+// PrepareIntegrationDefinitionGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) PrepareIntegrationDefinitionGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareIntegrationDefinitionGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareIntegrationDefinitionGitWriteBack(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RebindIntegrationDefinitionConsumers operation middleware
 func (siw *ServerInterfaceWrapper) RebindIntegrationDefinitionConsumers(w http.ResponseWriter, r *http.Request) {
 
@@ -22797,6 +23235,356 @@ func (siw *ServerInterfaceWrapper) RevokeInteractionIdentity(w http.ResponseWrit
 	handler.ServeHTTP(w, r)
 }
 
+// GetManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) GetManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetManagedConfigurationGitWriteBack(w, r, proposalRef)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApproveManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) ApproveManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ApproveManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApproveManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) CancelManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CancelManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RejectManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) RejectManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RejectManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RejectManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListManagedConfigurations operation middleware
 func (siw *ServerInterfaceWrapper) ListManagedConfigurations(w http.ResponseWriter, r *http.Request) {
 
@@ -23091,6 +23879,67 @@ func (siw *ServerInterfaceWrapper) DetachGitManagedConfiguration(w http.Response
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DetachGitManagedConfiguration(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListManagedConfigurationGitWriteBacks operation middleware
+func (siw *ServerInterfaceWrapper) ListManagedConfigurationGitWriteBacks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListManagedConfigurationGitWriteBacksParams
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListManagedConfigurationGitWriteBacks(w, r, configurationRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -29971,6 +30820,112 @@ func (siw *ServerInterfaceWrapper) RefreshRoleImageGitSource(w http.ResponseWrit
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RefreshRoleImageGitSource(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PrepareRoleImageGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) PrepareRoleImageGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareRoleImageGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareRoleImageGitWriteBack(w, r, configurationRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -37756,6 +38711,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/drafts", wrapper.CreateIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-source", wrapper.ConfigureIntegrationDefinitionGitSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-source/refresh", wrapper.RefreshIntegrationDefinitionGitSource)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-write-backs", wrapper.PrepareIntegrationDefinitionGitWriteBack)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindIntegrationDefinitionConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishIntegrationDefinitionDraft)
@@ -37764,9 +38720,14 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-definitions", wrapper.ListIntegrationDefinitions)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-invocations/{invocationRef}/email-effect-receipt", wrapper.GetEmailEffectReceipt)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/interaction-identities/{identityRef}", wrapper.RevokeInteractionIdentity)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}", wrapper.GetManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/approve", wrapper.ApproveManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel", wrapper.CancelManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/reject", wrapper.RejectManagedConfigurationGitWriteBack)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations", wrapper.ListManagedConfigurations)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/copies", wrapper.CopyGitManagedConfiguration)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/detachment", wrapper.DetachGitManagedConfiguration)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/git-write-backs", wrapper.ListManagedConfigurationGitWriteBacks)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/revisions", wrapper.ListManagedConfigurationHistory)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/revisions/{revisionRef}/impact", wrapper.GetManagedConfigurationImpact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/memory-records", wrapper.ListMemoryRecords)
@@ -37846,6 +38807,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/drafts", wrapper.CreateRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source", wrapper.ConfigureRoleImageGitSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source/refresh", wrapper.RefreshRoleImageGitSource)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-write-backs", wrapper.PrepareRoleImageGitWriteBack)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindRoleImageConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans", wrapper.PrepareRoleImageImpactPlan)

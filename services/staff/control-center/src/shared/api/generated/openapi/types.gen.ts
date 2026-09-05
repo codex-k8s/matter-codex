@@ -355,6 +355,70 @@ export type ManagedConfigurationConsumer = {
     version: number;
 };
 
+export type PrepareConfigurationWriteBackInput = {
+    expectedSourceVersion: number;
+    content: string;
+};
+
+export type ConfigurationWriteBackDecisionInput = {
+    approvalDigest: string;
+};
+
+export type ConfigurationWriteBack = {
+    ref: OpaqueRef;
+    configurationRef: OpaqueRef;
+    sourceRef: OpaqueRef;
+    connectionRef: OpaqueRef;
+    version: number;
+    configurationVersion: number;
+    sourceVersion: number;
+    connectionVersion: number;
+    kind: 'ROLE_IMAGE' | 'INTEGRATION_DEFINITION';
+    repositoryRef: string;
+    sourceRefName: string;
+    path: string;
+    baseCommitSha: string;
+    candidateCommitSha?: string;
+    baseContentSha256: string;
+    proposedContentSha256: string;
+    approvalDigest: string;
+    contentFormat: 'JSON' | 'YAML';
+    proposalBranch: string;
+    state: 'WAITING_APPROVAL' | 'QUEUED' | 'CLAIMED' | 'EFFECT_STARTED' | 'SUCCEEDED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED' | 'FAILED' | 'UNKNOWN_OUTCOME';
+    failureCode?: 'UNAVAILABLE' | 'CREDENTIAL_REJECTED' | 'ACCESS_DENIED' | 'SOURCE_CHANGED' | 'CONTENT_INVALID' | 'RESPONSE_INVALID' | 'AUTHORITY_CHANGED' | 'DEADLINE_EXCEEDED' | 'BRANCH_CONFLICT' | 'OUTCOME_UNCONFIRMED';
+    pullRequestRef?: string;
+    pullRequestUrl?: string;
+    createdAt: Timestamp;
+    expiresAt: Timestamp;
+    approvedAt?: Timestamp;
+    completedAt?: Timestamp;
+    branchConfirmedAt?: Timestamp;
+    pullRequestConfirmedAt?: Timestamp;
+    nextActions: [
+        ConfigurationWriteBackAction,
+        ConfigurationWriteBackAction,
+        ConfigurationWriteBackAction
+    ];
+};
+
+export type ConfigurationWriteBackAction = {
+    action: 'APPROVE' | 'REJECT' | 'CANCEL';
+    enabled: boolean;
+    reason: 'NONE' | 'FORBIDDEN' | 'STATE' | 'SOURCE_CHANGED' | 'EXPIRED' | 'OUTCOME_UNKNOWN';
+};
+
+export type ConfigurationWriteBackView = {
+    proposal: ConfigurationWriteBack;
+    baseContent: string;
+    proposedContent: string;
+};
+
+export type ConfigurationWriteBackPage = {
+    items: Array<ConfigurationWriteBack>;
+    total: number;
+    nextPageToken?: string;
+};
+
 export type RoleImageRebindInput = {
     planRef: OpaqueRef;
     impactDigest: string;
@@ -3181,6 +3245,8 @@ export type TemplateRuntimeRevisionRef = OpaqueRef;
 export type PageSize = number;
 
 export type PageToken = string;
+
+export type WriteBackProposalRef = OpaqueRef;
 
 export type VfsPageToken = string;
 
@@ -10407,6 +10473,223 @@ export type PrepareRoleImageImpactPlanResponses = {
 };
 
 export type PrepareRoleImageImpactPlanResponse = PrepareRoleImageImpactPlanResponses[keyof PrepareRoleImageImpactPlanResponses];
+
+export type PrepareRoleImageGitWriteBackData = {
+    body: PrepareConfigurationWriteBackInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/role-image-configurations/{configurationRef}/git-write-backs';
+};
+
+export type PrepareRoleImageGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareRoleImageGitWriteBackError = PrepareRoleImageGitWriteBackErrors[keyof PrepareRoleImageGitWriteBackErrors];
+
+export type PrepareRoleImageGitWriteBackResponses = {
+    /**
+     * Предложение отдельной ветки и PR для явного подтверждения
+     */
+    201: ConfigurationWriteBack;
+};
+
+export type PrepareRoleImageGitWriteBackResponse = PrepareRoleImageGitWriteBackResponses[keyof PrepareRoleImageGitWriteBackResponses];
+
+export type PrepareIntegrationDefinitionGitWriteBackData = {
+    body: PrepareConfigurationWriteBackInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/integration-definition-configurations/{configurationRef}/git-write-backs';
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackError = PrepareIntegrationDefinitionGitWriteBackErrors[keyof PrepareIntegrationDefinitionGitWriteBackErrors];
+
+export type PrepareIntegrationDefinitionGitWriteBackResponses = {
+    /**
+     * Предложение отдельной ветки и PR для явного подтверждения
+     */
+    201: ConfigurationWriteBack;
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackResponse = PrepareIntegrationDefinitionGitWriteBackResponses[keyof PrepareIntegrationDefinitionGitWriteBackResponses];
+
+export type ApproveManagedConfigurationGitWriteBackData = {
+    body: ConfigurationWriteBackDecisionInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/approve';
+};
+
+export type ApproveManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ApproveManagedConfigurationGitWriteBackError = ApproveManagedConfigurationGitWriteBackErrors[keyof ApproveManagedConfigurationGitWriteBackErrors];
+
+export type ApproveManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type ApproveManagedConfigurationGitWriteBackResponse = ApproveManagedConfigurationGitWriteBackResponses[keyof ApproveManagedConfigurationGitWriteBackResponses];
+
+export type RejectManagedConfigurationGitWriteBackData = {
+    body: ConfigurationWriteBackDecisionInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/reject';
+};
+
+export type RejectManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type RejectManagedConfigurationGitWriteBackError = RejectManagedConfigurationGitWriteBackErrors[keyof RejectManagedConfigurationGitWriteBackErrors];
+
+export type RejectManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type RejectManagedConfigurationGitWriteBackResponse = RejectManagedConfigurationGitWriteBackResponses[keyof RejectManagedConfigurationGitWriteBackResponses];
+
+export type CancelManagedConfigurationGitWriteBackData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel';
+};
+
+export type CancelManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type CancelManagedConfigurationGitWriteBackError = CancelManagedConfigurationGitWriteBackErrors[keyof CancelManagedConfigurationGitWriteBackErrors];
+
+export type CancelManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type CancelManagedConfigurationGitWriteBackResponse = CancelManagedConfigurationGitWriteBackResponses[keyof CancelManagedConfigurationGitWriteBackResponses];
+
+export type GetManagedConfigurationGitWriteBackData = {
+    body?: never;
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}';
+};
+
+export type GetManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetManagedConfigurationGitWriteBackError = GetManagedConfigurationGitWriteBackErrors[keyof GetManagedConfigurationGitWriteBackErrors];
+
+export type GetManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Точный план и исходные документы
+     */
+    200: ConfigurationWriteBackView;
+};
+
+export type GetManagedConfigurationGitWriteBackResponse = GetManagedConfigurationGitWriteBackResponses[keyof GetManagedConfigurationGitWriteBackResponses];
+
+export type ListManagedConfigurationGitWriteBacksData = {
+    body?: never;
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: {
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/managed-configurations/{configurationRef}/git-write-backs';
+};
+
+export type ListManagedConfigurationGitWriteBacksErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListManagedConfigurationGitWriteBacksError = ListManagedConfigurationGitWriteBacksErrors[keyof ListManagedConfigurationGitWriteBacksErrors];
+
+export type ListManagedConfigurationGitWriteBacksResponses = {
+    /**
+     * История предложений без содержимого документов
+     */
+    200: ConfigurationWriteBackPage;
+};
+
+export type ListManagedConfigurationGitWriteBacksResponse = ListManagedConfigurationGitWriteBacksResponses[keyof ListManagedConfigurationGitWriteBacksResponses];
 
 export type GetRoleImageImpactPlanData = {
     body?: never;
