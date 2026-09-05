@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.13.0
+version: 1.14.0
 updated: 2026-09-06
 ---
 
@@ -82,7 +82,7 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 
 ## Текущий состав интеграции
 
-На `bc6d9e99cb478ea7848ca263ce27a0128da0ad31` включены следующие
+На `25243d6fed407de937dd10771525f687336b5ffa` включены следующие
 проверяемые зависимости. Это промежуточная интеграция полного scope,
 а не завершённый `main` или допуск стенда.
 
@@ -92,8 +92,8 @@ timeout 240s bash scripts/tests/local-role-image-render-contract-test.sh \
 | Secret Broker #1068, PR #1069 | `af227acc60d9ca1bd0207429c6d8088fb9496af7` | Encrypted staged lifecycle и protected account model observer, fresh remote provenance, bounded actual Codex process и отказ refresh под read authority. |
 | EMAIL #1037, PR #1062 | `f977638e10509d83ce1f27c8b386fa9bd7472842` | Managed exact pins и protected callback до публикации нового serving snapshot. |
 | Egress #1029, PR #1065 | `5d8b177054dcf094830e32dceb7f9290d633920b` | Общие mail policy/DNS, admission и отзыв сетевых pins выключенного mailbox без потери общих активных endpoints. |
-| HTTP/SDK #1045, PR #1066 | `e66ab918d48b37f5354c9d8ebe526a53312e7076` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding и coherent canonical SDK; переданы потерянные state/definition/audit filters. Четыре typed integration candidates72 endpoint проверяют GRANT/USE, exact prefix/context/pins, reason/boolean/schema и pagination. |
-| PWA #1022, PR #1067 | `d21add2dd9e69d61d146f65e90eb7f9f060940fb` | Сохранены D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage, Files67 owner binding targets. Добавлены RoleImage643/revision644 impact, Instructions70 publication и binding645, explicit selected references и восстановление исходного immutable intent после неизвестного результата. Полные641/72 и Git write-back UI, актуализация raw E2E продолжаются. |
+| HTTP/SDK #1045, PR #1066 | `65b38abf4e5aa619ea17c2eb1f493ce74e32123c` | D1–D7, prompt context641, file catalogs/binding targets, sourceKinds, RoleImage643/revision644 impact и mandatory Instructions/Prompt publication plans70, active instruction binding; сохранены state/definition/audit filters. Четыре typed integration candidates72 endpoint проверяют GRANT/USE, exact prefix/context/pins, reason/boolean/schema и pagination. Workflow сохраняет отдельный typed draft и exact revision refs после PATCH→GET без подмены опубликованной карточки черновиком. |
+| PWA #1022, PR #1067 | `2d7478c6f776a548bc654545c07613169c24b3e4` | D2/TOML/source/overlay/effective capabilities, Home/NewRun catalog и lineage, Files67 owner binding targets. RoleImage643/revision644 impact, Instructions70 publication/binding645, explicit selected references и восстановление исходного immutable intent. Подключены641/72, сохранённый Workflow draft/preview, Git write-back и актуальные raw E2E model/effort/publication запросы; новые browser-сценарии и окончательная сверка потребителей продолжаются. |
 | STT #1020, PR #1070 | `a54db5b325f1f39142119cd92c3479df2049d9ed` | Administrative adapter catalog до configuration/credentials, policy60, согласованные limits и актуальная STT model profile revision. #1074 устраняет false PASS при удалении внутренних символов из transcript: только регистр, Unicode whitespace и конечная пунктуация. |
 | Runtime-controller #1025, PR #1063 | `297ea7a7e3be7233f521e5b4ded3c85a482c6a48` | Exact v7/context, четыре MCP file tools, initial-bound stream до512MiB, private unlink spool, проверка Complete/EOF/size/digest и свежая authority до выдачи HTTP body; оба profile render. |
 | Agent-runner #1026, PR #1058 | `5613b045c4d63956de96819d8e42fc7b2c13b8d9` | Сохранён v7 mode/effort/workspace lifecycle; отдельный bounded file client и закрытый GET через оба локальных MCP bridges. Native effects и Usage сохраняются при post-execution failure. #1072 согласует canary/publish/reset/prompt межпроцессным bounded lock; #1073 сохраняет расход пяти failure branches и callback retry. Actual non-root loopback→SO_PEERCRED UDS→TLS1.3/mTLS/ticket передаёт33MiB+7 без выдачи execution ticket provider-процессу. Live agent/artifact ещё NOT RUN. |
@@ -116,6 +116,29 @@ vet/build/OpenAPI/SDK/codegen/Proto/policy72/ABI **PASS**; первый compiler
 **PASS**6.696s, app full race15.846s. Длинный TMPDIR первоначально дал
 **FAIL** старого AF_UNIX fixture, короткий private path прошёл.
 Общие baseline/review/live checks нового интеграционного SHA — **NOT RUN**.
+
+На `53ae573c6f1823137b04591a2e9a6bc3ed4429fc` локально **PASS**:
+`lint-proto`, `build-proto`, `check-proto-codegen`,
+`test-authority-policy-codegen` и `test-internal-rpc-authority-abi-render`;
+tracked tree после codegen чистый. Безопасный лог —
+`integration-53ae-contracts.log` в приватном evidence-каталоге.
+
+HTTP unit 65b имеет полный race/vet/build, strict OpenAPI/SDK и canonical
+Go/TS replay **PASS**. Первый full gateway **FAIL** выявил четыре отсутствующих
+CP message IDs; оба locale registry исправлены, все используемые CP message IDs
+сверены, полный повтор прошёл. PWA unit 2d747 имеет 1107/1107 unit в 209 файлах,
+lint/format/build/typecheck/E2E TypeScript и canonical Go/TS replay **PASS**.
+Их merge в 25243d6 выполнен без конфликтов; OpenAPI/SDK совпадают с HTTP 65b.
+Интеграция сохраняет собственный regenerated package validator и более новый
+Secret Broker Proto, поэтому равенство всех файлов PWA/Proto с unit-ветками
+не заявляется. Общий baseline на 25243d6 ещё **NOT RUN**.
+
+Сверка исходных MVP-UI-41/42 выявила [дефект #1075](https://github.com/codex-k8s/kodex/issues/1075):
+integration gate создаётся, но owner read/caster не материализует уже
+объявленные `IntegrationIntent` и последствия решений. CP/HTTP исправляют
+авторитетный single/list/resolve readback и безопасный preview; PWA заменяет
+старую статическую заглушку входом в действующий экран решений. Это обязательная
+незавершённая реализация, не отсутствие только live evidence.
 
 На code SHA `2eda37a2ebb07b03ba68a5e7b555b37526e47424` локально **PASS**
 оба `local-role-image-render-contract-test.sh` профиля, включая положительный
@@ -156,6 +179,55 @@ EMAIL), full35 на50d5810 —34/35 с crash на2560. Установлена и
 Доказательства и точная команда записаны в PWA README; это устранение
 проблемы среды, а не полный browser PASS. Полный35 повторяется после всех
 оставшихся consumers; общий browser baseline нового SDK — **NOT RUN**.
+
+## Нормализация unit перед общим gate
+
+Read-only сверка относительно `8026633a9f92625df43163bf6dbef85df936289a`
+подтвердила смешанные prerequisite histories: CP содержит части EMAIL,
+integration-gateway, authority и broker, а HTTP/PWA/runner — реализацию
+producer-зависимостей. Один rebase на новый `main` не гарантирует один unit
+в diff. Нормализация ещё **NOT RUN**; текущие draft PR не являются готовым
+пакетом для merge.
+
+Первый возможный scoped PR — authority #1060. Перед финальной проверкой в него
+должно войти также согласованное исправление signature из интеграции вместе
+с соответствующими authority Proto/generated. Дальнейшая локальная цепочка:
+CP #1071 → broker #1069 → egress #1065 → STT #1070 → EMAIL #1062 →
+integration #1064 → interaction #1061 → controller #1063 → runner #1058 →
+HTTP #1066 → PWA #1067 → acceptance #1051. Scheduler уже присутствует в `main`.
+Это порядок подготовки кода, не разрешение частичного deploy.
+
+После последних fixes фиксируются целевой интеграционный commit и tree ID.
+Каждый изменённый путь получает unit-владельца; shared Makefile, registry,
+profiles и install/render scripts распределяются по смысловым изменениям.
+Общие source-only prerequisites допустимы в producer-пакете по
+`GUIDE-DOC-004`, но их происхождение сохраняется как
+`исходный SHA → новый SHA → owner → пути`. Например, CP импортирует новые
+emailbridgeapi/mailpolicy/dnsresolver, а EMAIL использует новые CP API;
+перестановка веток сама по себе этот цикл исходных зависимостей не устраняет.
+Handwritten implementation другого deployable не переносится вместе с такими
+контрактами. Generated code воспроизводится из согласованного source.
+
+Последовательная локальная сборка сохраняет исходные refs для восстановления,
+проверяет allowlist каждого unit diff и его собственное subtree. Прежняя
+смешанная ветка после этого не сливается обратно. Перед публикацией сверяются
+точные remote head/base/body/draft и identity; переписанный ref публикуется
+только с exact ожидаемым old SHA в `--force-with-lease`. Owner/main операции
+остаются за отдельным human gate.
+
+Финальное доказательство сохранения дерева:
+
+```bash
+git diff --exit-code "$TARGET_COMMIT" "$NORMALIZED_TIP"
+test "$(git rev-parse "$TARGET_COMMIT^{tree}")" = \
+  "$(git rev-parse "$NORMALIZED_TIP^{tree}")"
+```
+
+Затем выполняются targeted checks изменённых unit и общий Web-first baseline
+на одном окончательном интеграционном SHA. Три направления общего review
+проверяют тот же SHA. После owner gate и реального merge сравнение tree
+повторяется для `main`; совпадение содержимого не выводится из количества
+слитых PR или совпадения их названий.
 
 ## Настоящий файловый запуск в приёмке
 
@@ -343,11 +415,12 @@ readback до TLS/provider bytes. `EMAIL_BRIDGE_EGRESS_POLICY_DIGEST` больш
 Локальные fixtures используют только пустые поколения, не обращаются к живым
 mail hosts и не назначают owner allowlist. Для непустого source требуется
 разрешённый оператором resolver и hosts; `--mail-resolv-conf` задаёт точный файл.
-Остаются отдельные зависимости полного прототипа: завершение CP owner D5,
-новые HTTP/PWA consumers и автоматическая доставка mail policy после
-UI transition D5. D2/D4/D6 уже включены в промежуточную интеграцию;
-их сквозная приёмка ещё не выполнена. Повторный
-разрешённый `up` реализует локальную доставку, но не является фоновым reconciler.
+Исторический checkpoint требовал завершения CP owner D5 и новых HTTP/PWA
+consumers. В текущий состав включены owner publication/delivery/readback,
+EMAIL callback и согласованные egress pins; сквозная приёмка изменения mailbox
+через UI ещё не выполнена. D2/D4/D6 также включены, их live acceptance остаётся
+отдельной обязательной проверкой. Повторный разрешённый `up` реализует локальную
+доставку и сам по себе не доказывает работу owner publisher после UI transition.
 Локальный render не заменяет
 общий gate на точном интегрированном SHA.
 До разрешения владельца `up`, import в k3s, apply/deploy, SSH, live provider
