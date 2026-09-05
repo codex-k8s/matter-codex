@@ -86,8 +86,13 @@ func (server *Server) PublishRoleImageRevisionDraft(ctx context.Context, request
 	return &controlplanev1.PublishRoleImageRevisionDraftResponse{Configuration: configuration, Revision: revision}, err
 }
 func (server *Server) RebindRoleImageConsumers(ctx context.Context, request *controlplanev1.RebindRoleImageConsumersRequest) (*controlplanev1.RebindRoleImageConsumersResponse, error) {
-	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_RebindRoleImageConsumers_FullMethodName, command.RebindRoleImage, request.GetMutation(), managedRebindInput(request))
-	return &controlplanev1.RebindRoleImageConsumersResponse{Configuration: configuration, Revision: revision}, err
+	input := managedRebindInput(request)
+	input.PlanRef, input.SelectedItemRefs = request.GetPlanRef(), append([]string{}, request.GetSelectedItemRefs()...)
+	result, err := execute(ctx, server.service, controlplanev1.PlatformCommandService_RebindRoleImageConsumers_FullMethodName, command.RebindRoleImage, request.GetMutation(), input)
+	if err != nil {
+		return nil, err
+	}
+	return &controlplanev1.RebindRoleImageConsumersResponse{Configuration: castManagedConfiguration(result.ManagedConfiguration), Revision: castManagedRevision(result.ManagedRevision), Plan: castRoleImageImpactPlan(result.RoleImageImpactPlan)}, nil
 }
 func (server *Server) CreateIntegrationDefinitionDraft(ctx context.Context, request *controlplanev1.CreateIntegrationDefinitionDraftRequest) (*controlplanev1.CreateIntegrationDefinitionDraftResponse, error) {
 	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_CreateIntegrationDefinitionDraft_FullMethodName, command.CreateIntegrationDefinition, request.GetMutation(), managedDraftInput(request))

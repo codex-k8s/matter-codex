@@ -183,6 +183,7 @@ const (
 	ValidateRoleImageRevision          Kind = "VALIDATE_ROLE_IMAGE_REVISION_DRAFT"
 	PublishRoleImageRevision           Kind = "PUBLISH_ROLE_IMAGE_REVISION_DRAFT"
 	RebindRoleImage                    Kind = "REBIND_ROLE_IMAGE_CONSUMERS"
+	PrepareRoleImageImpactPlan         Kind = "PREPARE_ROLE_IMAGE_IMPACT_PLAN"
 	CreateIntegrationDefinition        Kind = "CREATE_INTEGRATION_DEFINITION_DRAFT"
 	ValidateIntegrationDefinition      Kind = "VALIDATE_INTEGRATION_DEFINITION_DRAFT"
 	PublishIntegrationDefinition       Kind = "PUBLISH_INTEGRATION_DEFINITION_DRAFT"
@@ -453,6 +454,8 @@ type InteractionIdentityInput struct {
 }
 
 type ManagedConfigurationInput struct {
+	PlanRef                                                                                     string
+	SelectedItemRefs                                                                            []string
 	ConfigurationRef, ProjectRef, Name, Kind, ContentFormat, Content, RevisionRef, ImpactDigest string
 	Consumers                                                                                   []entity.ManagedConfigurationConsumer
 }
@@ -506,6 +509,7 @@ type Result struct {
 	ManagedConfiguration    *entity.ManagedConfigurationSet
 	ConfigurationWriteBack  *entity.ConfigurationWriteBack
 	ManagedRevision         *entity.ManagedConfigurationRevision
+	RoleImageImpactPlan     *entity.RoleImageImpactPlan
 }
 
 type EmailReconciliationInput struct {

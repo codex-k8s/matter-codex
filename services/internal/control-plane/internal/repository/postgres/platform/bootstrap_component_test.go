@@ -682,9 +682,8 @@ LIMIT 1`, ownerScope.organizationID).Scan(&environmentRef, &environmentProjectRe
 		CallerWorkload: "runtime-controller", Operation: "platform.runtime.role-image-configuration.get",
 	}, "runtime-controller")
 	roleImageBinding, err := service.GetEffectiveManagedConfiguration(ctx, runtimeReader, "ROLE_IMAGE", "RUNTIME_ENVIRONMENT", environmentRef)
-	if err != nil || roleImageBinding.Revision.Ref != roleImage.ManagedRevision.Ref ||
-		roleImageBinding.Configuration.Ref != roleImage.ManagedConfiguration.Ref || roleImageBinding.ConsumerRef != environmentRef {
-		t.Fatalf("read pinned role image configuration: binding=%#v err=%v", roleImageBinding, err)
+	if err == nil || roleImageBinding.Ref != "" || roleImage.ManagedRevision.State != "PUBLISHED" {
+		t.Fatalf("unpromoted recipe became an effective image binding: binding=%#v err=%v", roleImageBinding, err)
 	}
 	foreignRuntimeReader := runtimeReader
 	foreignRuntimeReader.AuthorityTenant = "ffffffff-ffff-4fff-8fff-ffffffffffff"
@@ -960,6 +959,16 @@ func publishAndRebindManagedConfiguration(
 			RevisionRef: created.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.State != "PUBLISHED" {
 		t.Fatalf("publish %s draft: result=%#v err=%v", key, published, err)
+	}
+	if rebindKind == command.RebindRoleImage {
+		version = published.ManagedConfiguration.Version
+		if _, err = service.Execute(ctx, command.Command{Kind: rebindKind, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-legacy-rebind", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref, Consumers: []entity.ManagedConfigurationConsumer{consumer}}}); err == nil {
+			t.Fatal("metadata-only role image rebind accepted")
+		}
+		if _, err = service.Execute(ctx, command.Command{Kind: command.PrepareRoleImageImpactPlan, Principal: principal, Mutation: value.Mutation{IdempotencyKey: key + "-unpromoted-plan", ExpectedVersion: &version}, Payload: command.ManagedConfigurationInput{ConfigurationRef: created.ManagedConfiguration.Ref, RevisionRef: created.ManagedRevision.Ref}}); !errors.Is(err, domainerrs.ErrConflict) {
+			t.Fatalf("unpromoted role image plan: %v", err)
+		}
+		return published
 	}
 	impact, err := service.GetManagedConfigurationImpact(ctx, principal, created.ManagedConfiguration.Ref, created.ManagedRevision.Ref, query.Filter{})
 	if err != nil || impact.Digest == "" {

@@ -348,7 +348,7 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 		command.SaveSystemSTTConfigurationDraft,
 		command.DiscardSystemSTTConfigurationDraft,
 		command.CreateRoleImageRevisionDraft, command.ValidateRoleImageRevision,
-		command.PublishRoleImageRevision, command.RebindRoleImage,
+		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan,
 		command.CreateIntegrationDefinition, command.ValidateIntegrationDefinition,
 		command.PublishIntegrationDefinition, command.RebindIntegrationDefinition,
 		command.CreateSystemSTTDraft, command.ValidateSystemSTTDraft,

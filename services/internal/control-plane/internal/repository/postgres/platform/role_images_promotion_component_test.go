@@ -264,6 +264,7 @@ SET source_sha256 = $2
 WHERE ref = $1`, revisionRef, strings.Repeat("0", 64)); err == nil {
 		t.Fatal("immutable promoted role image revision was mutable")
 	}
+	testRoleImageImpactLifecycle(t, ctx, repository, platform, roleImages, owner, resolvedOwner, readback, *activeArtifact, agent)
 }
 
 func promotionComponentCatalog(t *testing.T) (*roleimageservice.Catalog, entity.RoleImageRecipeInput) {

@@ -67,6 +67,8 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		return commandOutcome{}, errs.ErrConflict
 	}
 	switch action {
+	case "PREPARE_IMPACT":
+		return repository.prepareRoleImageImpact(ctx, tx, current, configuration, input)
 	case "SAVE", "DISCARD":
 		locked, lockErr := repository.lockManagedRevision(ctx, tx, current, configuration, payload.RevisionRef)
 		if lockErr != nil {
@@ -225,6 +227,9 @@ func (repository *Repository) changeManagedConfiguration(ctx context.Context, tx
 		revision, configuration.Version, configuration.UpdatedAt = &item.ManagedConfigurationRevision, setVersion, updatedAt
 		configuration.CurrentRevision, configuration.currentRevisionID = revision, locked.RefID
 	case "REBIND":
+		if kind == revisionservice.KindRoleImage {
+			return repository.applyRoleImageImpact(ctx, tx, current, configuration, input)
+		}
 		locked, lockErr := repository.lockManagedRevision(ctx, tx, current, configuration, payload.RevisionRef)
 		if lockErr != nil || locked.State != "PUBLISHED" {
 			return commandOutcome{}, errs.ErrConflict
@@ -456,6 +461,7 @@ func (repository *Repository) copyManagedConfiguration(ctx context.Context, tx p
 
 func managedCommand(kind command.Kind) (string, string) {
 	mapping := map[command.Kind][2]string{
+		command.PrepareRoleImageImpactPlan:         {revisionservice.KindRoleImage, "PREPARE_IMPACT"},
 		command.CreateEmailMailboxDraft:            {revisionservice.KindEmailMailbox, "CREATE"},
 		command.SaveEmailMailboxDraft:              {revisionservice.KindEmailMailbox, "SAVE"},
 		command.ValidateEmailMailboxDraft:          {revisionservice.KindEmailMailbox, "VALIDATE"},

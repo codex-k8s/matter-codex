@@ -18,9 +18,9 @@ Generic metadata binding не считается применением RoleImag
 
 | Сценарий | Authority и точность | Owner переход и readback |
 | --- | --- | --- |
-| Prepare | Verified actor → specialized PrepareRoleImageImpactPlan, actual project image.build; set/revision разрешаются до OCC/idempotency | Назначенные server ref/version/TTL, immutable mapping revision→recipe generation/build→promoted artifact и current policy; исходные Environment/Agent bindings зафиксированы до применения |
+| Prepare | Verified actor → specialized PrepareRoleImageImpactPlan, существующая managed source authority project.manage; set/revision разрешаются до OCC/idempotency | Назначенные server ref/version/TTL, immutable mapping revision→recipe generation/build→promoted artifact и current policy; исходные Environment/Agent bindings зафиксированы до применения |
 | Повтор Prepare | Тот же actor/tenant/idempotency и exact input; текущая source authority | Та же квитанция, без пересчёта immutable item set; изменённый input закрывается |
-| Get/search/page | Verified actor → GetRoleImageImpactPlan, exact owner/tenant и текущая image/source permission | Read-only, никакого скрытого создания плана; cursor связан с actor/plan/version/query, literal query и authoritative total |
+| Get/search/page | Verified actor → GetRoleImageImpactPlan, exact owner/tenant и текущая managed source permission | Read-only, никакого скрытого создания плана; cursor связан с actor/plan/version/query, literal query и authoritative total |
 | Apply | Existing RebindRoleImageConsumers с planRef и selectedItemRefs, set OCC и digest плана | PREPARED→APPLIED в одной owner TX; legacy metadata-only consumers для RoleImage не допускаются |
 | Environment item | Текущая project.manage, exact setVersion/sourceVersion/digest, повторный current artifact admission | Новая immutable EnvironmentVersion со всеми прежними values/Secret revision pins/tools/policy и новым image; прежняя версия неизменна |
 | Agent item | Environment authority плюс текущая agent.manage и exact agent/binding versions | Создаётся/переиспользуется новая версия выбранного source Environment, изменяется только выбранный binding; будущий turn получает свежую RuntimeRevision |
@@ -43,10 +43,37 @@ GetRoleImageImpactPlan и command receipt/audit являются readback. Ре�
 cardinality; selective binding использует существующий owner transition.
 Gateway/PWA читают nonterminal plan через bounded polling.
 
-# Статус реализации
+# Проверка owner
 
-Контракт подготовлен; owner migration643, SQL/producer, policy68 и consumer
-ещё NOT RUN. Этот документ фиксирует полную lifecycle-матрицу до реализации,
-а не заявляет завершение функции. Полные prepublication планы других видов
-Environment/Prompt/Instructions остаются отдельными обязательными сценариями
-того же unit.
+Migration643, owner Prepare/Get и existing specialized Rebind исполняются.
+Policy68 регистрирует два новых unary RPC: Prepare resource=configurationRef,
+version=set OCC, idempotency required; Get resource=planRef, version/attempt/
+idempotency forbidden. Старые `consumers` для RoleImage должны быть пустыми;
+`impactDigest` равен immutable plan digest, selection содержит только server
+item refs (не более1000). Пустая selection явно завершает план без effect.
+Apply увеличивает set version и plan version до2. Plan.configurationVersion
+сохраняет исходный pin; APPLIED items не бывают PENDING. Get total учитывает
+query и текущую видимость, plan.total сохраняет размер исходного snapshot.
+
+PASS на итоговом owner tree: полный Bootstrap27.116s; targeted PostgreSQL
+1.189s проверяет expired plan tombstone/apply denial и immutable update
+negatives. Три package race, полный vet/build, SQL/Proto, policy68 replay,
+authority ABI render и web-only release также PASS.
+Actual recipe update/build/admission/promotion → plan → Environment
+и Agent binding проверены вместе с replay, сохранением values и прежних
+версий, общим clone, NOT_SELECTED и per-item CONFLICT. Failed-only group
+откатывает новую Environment и её event. Новый managed binding фиксируется
+только в той же транзакции с фактическим применением образа. Foreign tenant и
+изменившаяся policy отклоняются перед receipt replay. Commitment проверяет
+actor, artifact и все source/binding pins независимо от порядка items и
+terminal outcomes.
+
+Исторический полный FAIL22.823s: foreign fixture пыталась разрешить новый
+неподготовленный OIDC tenant, а переименование общей recipe нарушало
+precondition следующего теста. Исправлена fixture: используется закрытый
+tenant mismatch и прежнее имя recipe. Старый положительный metadata-only
+rebind тест заменён доказанным отказом до promotion и actual effect scenario.
+
+HTTP/SDK/PWA этого нового plan, live runtime acceptance и общий review —
+NOT RUN. Полные prepublication планы Environment/Prompt/Instructions остаются
+обязательными сценариями того же unit.

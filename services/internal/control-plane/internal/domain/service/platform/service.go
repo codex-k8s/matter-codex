@@ -521,6 +521,17 @@ func (service *Service) ListManagedConfigurationHistory(ctx context.Context, p v
 	}
 	return service.repository.ListManagedConfigurationHistory(ctx, p, strings.TrimSpace(ref), page)
 }
+func (service *Service) GetRoleImageImpactPlan(ctx context.Context, p value.Principal, ref, search string, page query.Page) (entity.RoleImageImpactPage, error) {
+	p, err := service.principal(ctx, p)
+	if err != nil {
+		return entity.RoleImageImpactPage{}, err
+	}
+	if strings.TrimSpace(ref) == "" {
+		return entity.RoleImageImpactPage{}, errs.ErrInvalid
+	}
+	return service.repository.GetRoleImageImpactPlan(ctx, p, ref, search, page)
+}
+
 func (service *Service) GetManagedConfigurationImpact(ctx context.Context, p value.Principal, ref, revisionRef string, filter query.Filter) (entity.ManagedConfigurationImpact, error) {
 	p, err := service.principal(ctx, p)
 	if err != nil {
@@ -1267,7 +1278,7 @@ func knownCommand(kind command.Kind) bool {
 		command.SaveSystemSTTConfigurationDraft,
 		command.DiscardSystemSTTConfigurationDraft,
 		command.CreateRoleImageRevisionDraft, command.ValidateRoleImageRevision,
-		command.PublishRoleImageRevision, command.RebindRoleImage,
+		command.PublishRoleImageRevision, command.RebindRoleImage, command.PrepareRoleImageImpactPlan,
 		command.CreateIntegrationDefinition, command.ValidateIntegrationDefinition,
 		command.PublishIntegrationDefinition, command.RebindIntegrationDefinition,
 		command.CreateSystemSTTDraft, command.ValidateSystemSTTDraft,
