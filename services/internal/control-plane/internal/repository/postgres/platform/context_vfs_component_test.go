@@ -64,7 +64,7 @@ func testContextVFS(t *testing.T, ctx context.Context, service *platformservice.
 	if visible && (nodes[0].EntityRef != resourceRef || nodes[0].Kind != kind || nodes[0].Digest != digest || nodes[0].Path != parent+"/"+resourceRef) {
 		t.Fatal("typed context VFS lost owner identity/digest")
 	}
-	nodes, total, next, err = service.SearchVFS(ctx, owner, query.Filter{Query: resourceRef, Page: query.Page{Size: 1}})
+	nodes, total, next, err = service.SearchVFS(ctx, owner, query.Filter{Query: resourceRef, VFSKinds: []string{kind}, Page: query.Page{Size: 1}})
 	if err != nil || total != int64(want) || len(nodes) != want || next != "" {
 		t.Fatalf("typed context VFS global search: count=%d total=%d err=%v", len(nodes), total, err)
 	}

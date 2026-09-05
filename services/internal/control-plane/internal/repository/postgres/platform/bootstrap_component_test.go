@@ -504,7 +504,7 @@ func testManagedConfigurationLifecycle(t *testing.T, ctx context.Context, reposi
 	}
 	agentNodes, agentTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{
 		ProjectRef:  projectResult.Project.Ref,
-		ResourceRef: "/projects/" + projectResult.Project.Ref + "/entities/agents", Page: query.Page{Size: 20},
+		ResourceRef: "/projects/" + projectResult.Project.Ref + "/agents", Page: query.Page{Size: 20},
 	})
 	if err != nil || agentTotal != 1 || len(agentNodes) != 1 || agentNodes[0].EntityRef != agent.Ref {
 		t.Fatalf("list VFS agents: nodes=%#v total=%d err=%v", agentNodes, agentTotal, err)
@@ -3660,7 +3660,7 @@ func testProjectMembershipCandidate(t *testing.T, ctx context.Context, repositor
 		t.Fatalf("legacy project VIEW leaked resource metadata: results=%#v err=%v", visibleSearch, err)
 	}
 	legacyVFS, legacyVFSTotal, _, err := service.ListVFSNodes(ctx, candidate, query.Filter{
-		ProjectRef: projectRef, ResourceRef: "/projects/" + projectRef + "/entities/agents", Page: query.Page{Size: 20},
+		ProjectRef: projectRef, ResourceRef: "/projects/" + projectRef + "/agents", Page: query.Page{Size: 20},
 	})
 	if err != nil || legacyVFSTotal != 0 || len(legacyVFS) != 0 {
 		t.Fatalf("legacy project VIEW leaked VFS agent metadata: nodes=%#v total=%d err=%v", legacyVFS, legacyVFSTotal, err)
@@ -5664,6 +5664,11 @@ func testDirectRunLifecycle(t *testing.T, ctx context.Context, repository *Repos
 	boundAgent, err := service.GetAgent(ctx, owner, agent.Agent.Ref)
 	if err != nil || len(boundAgent.KnowledgeArtifactRefs) != 1 || boundAgent.KnowledgeArtifactRefs[0] != uploaded.Ref || boundAgent.Version != agent.Agent.Version+1 {
 		t.Fatalf("read normalized knowledge binding: agent=%#v err=%v", boundAgent, err)
+	}
+	workspaceFiles, workspaceTotal, _, err := service.ListVFSNodes(ctx, owner, query.Filter{ProjectRef: project.Project.Ref,
+		ResourceRef: "/projects/" + project.Project.Ref + "/agents/" + agent.Agent.Ref + "/workspace/inputs"})
+	if err != nil || workspaceTotal != 1 || len(workspaceFiles) != 1 || workspaceFiles[0].EntityRef != uploaded.Ref || workspaceFiles[0].Revision != uploaded.Revision || workspaceFiles[0].Selectable || workspaceFiles[0].SelectionReason != "IMMUTABLE_CONTEXT" {
+		t.Fatalf("agent workspace source projection: total=%d err=%v", workspaceTotal, err)
 	}
 	secondRevision, err := service.UploadArtifact(ctx, owner, value.Mutation{IdempotencyKey: "artifact-upload-2"}, platformrepo.ArtifactUpload{
 		ProjectRef: project.Project.Ref, FileName: "support-policy.md", MediaType: "text/markdown",
