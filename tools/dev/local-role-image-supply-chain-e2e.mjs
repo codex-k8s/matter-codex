@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
+import {
+  boundedResponseBody,
+  verifyWorkspaceAcceptance,
+  workspaceAcceptanceTask,
+} from "./runtime-workspace-acceptance.mjs";
 import {
   chmodSync,
   lstatSync,
@@ -16,8 +21,8 @@ function fail(message) {
 }
 
 const phase = process.argv[2] ?? "";
-if (!new Set(["prepare", "launch"]).has(phase)) {
-  fail("phase must be prepare or launch");
+if (!new Set(["prepare", "launch", "verify-workspace"]).has(phase)) {
+  fail("phase must be prepare, launch or verify-workspace");
 }
 
 const baseURL = new URL(process.env.KODEX_ROLE_IMAGE_E2E_BASE_URL ?? "");
@@ -43,6 +48,13 @@ if (
   timeoutMilliseconds > 1_800_000
 ) {
   fail("timeout is invalid");
+}
+const phaseDeadline = Date.now() + timeoutMilliseconds;
+
+function requestSignal() {
+  const remaining = phaseDeadline - Date.now();
+  if (remaining <= 0) fail("phase deadline exceeded");
+  return AbortSignal.timeout(Math.min(30_000, remaining));
 }
 
 function privateRegularFile(path, maximumBytes) {
@@ -101,11 +113,14 @@ async function request(method, path, { body, version, expectedStatus } = {}) {
     Cookie: cookieHeader,
     Origin: baseURL.origin,
   };
-  const idempotencyKey = body === undefined ? "" : randomUUID();
-  if (body !== undefined) {
-    headers["Content-Type"] = "application/json";
+  const mutation = ["POST", "PUT", "PATCH", "DELETE"].includes(method);
+  const idempotencyKey = mutation ? randomUUID() : "";
+  if (mutation) {
     headers["Idempotency-Key"] = idempotencyKey;
     headers["X-CSRF-Token"] = csrf;
+  }
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
   }
   if (version !== undefined) headers["If-Match"] = `"${String(version)}"`;
   const requestBody = body === undefined ? undefined : JSON.stringify(body);
@@ -117,6 +132,7 @@ async function request(method, path, { body, version, expectedStatus } = {}) {
         headers,
         body: requestBody,
         redirect: "error",
+        signal: requestSignal(),
       });
     } catch (error) {
       if (attempt < 3) {
@@ -127,9 +143,9 @@ async function request(method, path, { body, version, expectedStatus } = {}) {
         `${method} ${path} failed before a response (${error instanceof Error ? error.name : "UNKNOWN"})`,
       );
     }
-    const text = await response.text();
-    if (Buffer.byteLength(text) > 2 << 20)
-      fail(`oversized API response: ${path}`);
+    const text = (await boundedResponseBody(response, 2 << 20)).toString(
+      "utf8",
+    );
     let value = {};
     if (text) {
       try {
@@ -147,7 +163,10 @@ async function request(method, path, { body, version, expectedStatus } = {}) {
       await retryDelay(attempt);
       continue;
     }
-    const code = typeof value.code === "string" ? value.code : "UNKNOWN";
+    const code =
+      typeof value.code === "string" && /^[A-Z0-9_]{1,80}$/.test(value.code)
+        ? value.code
+        : "UNKNOWN";
     fail(`${method} ${path} returned ${String(response.status)} (${code})`);
   }
   fail(`${method} ${path} exhausted bounded retries`);
@@ -409,13 +428,102 @@ async function launch() {
   const agentRef = boundedString(state.agentRef, "agent ref");
   exactImage(state.promotedReference, "promoted reference");
   exactDigest(state.manifestDigest, "manifest digest");
+  const nonce = randomBytes(16).toString("hex");
+  const currentAgent = await request(
+    "GET",
+    `/api/v1/agents/${encodeURIComponent(agentRef)}`,
+    { expectedStatus: 200 },
+  );
+  if (currentAgent.ref !== agentRef || currentAgent.projectRef !== projectRef)
+    fail("workspace agent binding is invalid");
+  if (
+    !currentAgent.capabilities?.some(
+      (capability) => capability.key === "platform.artifact.manage",
+    )
+  ) {
+    await request(
+      "POST",
+      `/api/v1/agents/${encodeURIComponent(agentRef)}/commands`,
+      {
+        body: {
+          action: "GRANT_CAPABILITY",
+          capabilityKey: "platform.artifact.manage",
+        },
+        version: currentAgent.version,
+        expectedStatus: 200,
+      },
+    );
+  }
+  const runtime = await request(
+    "GET",
+    `/api/v1/agents/${encodeURIComponent(agentRef)}/runtime-configuration`,
+    { expectedStatus: 200 },
+  );
+  const modelQuery = new URLSearchParams({
+    query: runtime.configuration.model,
+    providerDefinitionKey: "openai-codex",
+    pageSize: "100",
+  });
+  const models = await request(
+    "GET",
+    `/api/v1/model-capabilities?${modelQuery}`,
+    { expectedStatus: 200 },
+  );
+  const accountRef = models.items?.find(
+    (model) => model.id === runtime.configuration.model && model.available,
+  )?.eligibleProviderAccountRefs?.[0];
+  if (
+    typeof accountRef !== "string" ||
+    !/^pacc_[A-Za-z0-9_-]+$/.test(accountRef)
+  )
+    fail("configured runtime model has no eligible provider account");
+  modelQuery.set("providerAccountRef", accountRef);
+  const accountModels = await request(
+    "GET",
+    `/api/v1/model-capabilities?${modelQuery}`,
+    { expectedStatus: 200 },
+  );
+  const selectedModel = accountModels.items?.find(
+    (model) =>
+      model.id === runtime.configuration.model &&
+      model.available &&
+      model.eligibleProviderAccountRefs?.includes(accountRef),
+  );
+  if (
+    !selectedModel ||
+    !/^mcat_[a-f0-9]{64}$/.test(accountModels.catalogRevision) ||
+    !/^[a-f0-9]{64}$/.test(accountModels.catalogDigest)
+  )
+    fail("exact account model catalog is unavailable");
+  await request(
+    "PUT",
+    `/api/v1/agents/${encodeURIComponent(agentRef)}/runtime-configuration`,
+    {
+      body: {
+        runtimeProfileRef: runtime.configuration.runtimeProfileRef,
+        model: runtime.configuration.model,
+        providerPolicyMode: "FIXED",
+        providerAccounts: [
+          {
+            accountRef,
+            weight: 1,
+            catalogRevision: accountModels.catalogRevision,
+            catalogDigest: accountModels.catalogDigest,
+            providerDefinitionKey: selectedModel.providerDefinitionKey,
+          },
+        ],
+      },
+      version: runtime.agentVersion,
+      expectedStatus: 200,
+    },
+  );
   const workspace = await request("POST", "/api/v1/runs", {
     body: {
       projectRef,
       targetRef: agentRef,
       targetType: "AGENT",
       title: `${prefix} promoted runtime readback`,
-      task: "Ответь одним коротким предложением, что локальный RoleImage runtime запущен.",
+      task: workspaceAcceptanceTask(nonce),
     },
     expectedStatus: 201,
   });
@@ -424,13 +532,76 @@ async function launch() {
     ...state,
     status: "launched",
     runRef,
+    workspaceNonce: nonce,
     launchedAt: new Date().toISOString(),
+  });
+}
+
+async function verifyWorkspace() {
+  privateRegularFile(statePath, 1 << 20);
+  const state = JSON.parse(readFileSync(statePath, "utf8"));
+  if (
+    state.version !== 1 ||
+    state.status !== "runtime-observed" ||
+    !state.runtimePod?.uid
+  )
+    fail("runtime image readback is absent");
+  const runRef = boundedString(state.runRef, "run ref");
+  for (;;) {
+    const run = await request(
+      "GET",
+      `/api/v1/runs/${encodeURIComponent(runRef)}`,
+      { expectedStatus: 200 },
+    );
+    if (run.state === "SUCCEEDED") break;
+    if (!["QUEUED", "RUNNING"].includes(run.state))
+      fail("workspace run did not succeed");
+    if (Date.now() >= phaseDeadline) fail("workspace run deadline exceeded");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  const verification = {
+    getJSON: (path) => request("GET", path, { expectedStatus: 200 }),
+    getContent: async (path, maximumBytes) => {
+      const response = await fetch(new URL(path, baseURL), {
+        headers: { Cookie: cookieHeader, Origin: baseURL.origin },
+        redirect: "error",
+        signal: requestSignal(),
+      });
+      if (response.status !== 200) fail("workspace artifact download failed");
+      return boundedResponseBody(response, maximumBytes);
+    },
+    runRef,
+    projectRef: state.projectRef,
+    agentRef: state.agentRef,
+    nonce: state.workspaceNonce,
+  };
+  let evidence;
+  for (;;) {
+    try {
+      evidence = await verifyWorkspaceAcceptance(verification);
+      break;
+    } catch (error) {
+      if (
+        error?.code !== "ARTIFACT_SCAN_PENDING" ||
+        Date.now() >= phaseDeadline
+      )
+        throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  const { workspaceNonce: _nonce, ...safeState } = state;
+  writeState({
+    ...safeState,
+    status: "passed",
+    workspaceEvidence: evidence,
+    finishedAt: new Date().toISOString(),
   });
 }
 
 try {
   if (phase === "prepare") await prepare();
-  else await launch();
+  else if (phase === "launch") await launch();
+  else await verifyWorkspace();
 } catch (error) {
   console.error(
     error instanceof Error ? error.message : "Kodex local RoleImage E2E failed",

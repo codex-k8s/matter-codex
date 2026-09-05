@@ -132,6 +132,10 @@ test-agent-runner:
 test-runtime-controller-artifact-transfer:
 	@bash ./scripts/tests/runtime-controller-artifact-transfer-test.sh
 
+.PHONY: test-runtime-workspace-acceptance
+test-runtime-workspace-acceptance:
+	@timeout 30s node --test tools/dev/runtime-workspace-acceptance.test.mjs
+
 test-stt-tts-service-contract:
 	@./scripts/tests/stt-tts-service-contract-test.sh
 
