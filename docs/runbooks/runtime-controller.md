@@ -4,8 +4,8 @@ title: Диагностика runtime-controller
 type: runbook
 status: approved
 owner: sre
-version: 3.0.0
-updated: 2026-09-04
+version: 3.1.0
+updated: 2026-09-05
 ---
 
 # Диагностика runtime-controller
@@ -18,7 +18,7 @@ fence/generation, image `repository@sha256`, runtime ABI, ServiceAccount,
 resources, PVC и callback ticket. Display role name, prompt или caller-supplied
 Kubernetes locator не являются authority.
 
-`kodex.agent-runner-input.v6` должен пройти schema validation. Mutable
+`kodex.agent-runner-input.v7` должен пройти schema validation. Mutable
 tag, image вне promoted repository, ABI mismatch, stale fence, extra container,
 broad ServiceAccount или host access закрыто отклоняются admission.
 
@@ -44,6 +44,32 @@ Runtime ConfigMap должен быть immutable и содержать ровн
 `skills.json`, `memories.json`, `mcp.json`, `callback.json`,
 `provider-auth.sha256`. Их annotations должны совпадать с Pod по organization,
 project, session, turn, attempt, execution/MCP binding и всем policy digests.
+
+Skills и Memory являются отдельными typed snapshots, не tools/knowledge.
+Сверить metadata exact binding/revision/digest и наличие `context_snapshot`;
+содержимое Memory summary и Skill files в диагностику не выводить.
+Controller проверяет полный RuntimeRevision digest после hydration. Отсутствие
+нового snapshot в producer не исправляется fallback на mutable catalog.
+
+Отдельный `runtime-context` emptyDir (520Mi) монтируется ровно в
+`/workspace/context`: init RW, role/provider RO, credential relay без mount.
+Admission запрещает alias, subPath и вложенные mounts. Canary не заменяет
+проверку реального RO filesystem перед запуском provider.
+Подробный callback-контракт и интеграционные зависимости:
+[`OPS-RUNTIME-1025`](../operations/runtime-context-1025.md).
+
+## Временные файлы transfer
+
+При причине readiness `artifact_spool` сверить metadata тома `artifact-spool`
+(disk emptyDir2Gi, mount только у controller), UID10001 и fsGroup29000,
+настройки `RUNTIME_CONTROLLER_ARTIFACT_SPOOL_DIRECTORY` и
+`RUNTIME_CONTROLLER_FILE_TRANSFER_TIMEOUT`. Не читать содержимое private
+каталога или файловых дескрипторов процесса. Временные файлы unlink сразу после
+открытия; отсутствие pathname во время передачи является ожидаемым.
+Исчерпание двух transfer slots возвращает503 без частичного body. Нельзя
+обходить отказ увеличением unary message limit или общим writable root.
+Локальное воспроизведение: `make test-runtime-controller-artifact-transfer`;
+он проверяет stream/spool и оба profile renders без обращения к кластеру.
 
 ## Always-hot assistant
 
