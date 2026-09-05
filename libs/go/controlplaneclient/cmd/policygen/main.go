@@ -297,6 +297,8 @@ func operationRequestProfile(operationID, fullMethod string) requestProfile {
 		return "FORBIDDEN"
 	}
 	switch operationID {
+	case "platform.query.artifact-binding-targets.list", "platform.query.run-attachment-eligibility.get":
+		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
 	case "platform.query.configuration-writebacks.get", "platform.query.configuration-writebacks.list":
 		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}
 	case "platform.command.role-image-writebacks.prepare", "platform.command.integration-definition-writebacks.prepare", "platform.command.configuration-writebacks.approve", "platform.command.configuration-writebacks.reject", "platform.command.configuration-writebacks.cancel":

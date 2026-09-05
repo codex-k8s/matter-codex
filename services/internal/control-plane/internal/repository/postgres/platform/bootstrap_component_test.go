@@ -168,6 +168,7 @@ func TestBootstrapComponent(t *testing.T) {
 	t.Run("model catalog is version bound", func(t *testing.T) { testModelCatalogVersion(t, ctx, repository) })
 	t.Run("config overlay published history and rollback", func(t *testing.T) { testConfigOverlayHistory(t, ctx, repository) })
 	t.Run("effective capabilities use current exact authority", func(t *testing.T) { testEffectiveCapabilities(t, ctx, repository) })
+	t.Run("file binding target authority and tombstone cleanup", func(t *testing.T) { testFileBindingTargets(t, ctx, repository) })
 	t.Run("prompt context preview before launch", func(t *testing.T) { testPromptContextPreview(t, ctx, repository) })
 	t.Run("STT catalog requires organization management before configuration", func(t *testing.T) { testSTTCatalogAuthority(t, ctx, repository) })
 	t.Run("authority proof revision keeps platform cursor stable", func(t *testing.T) {

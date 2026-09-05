@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/errs"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/command"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/entity"
@@ -1481,7 +1480,7 @@ func (repository *Repository) launchRunWithAttachmentPolicy(ctx context.Context,
 		return commandOutcome{}, err
 	}
 	if attachmentSet.ID != "" {
-		allowed, err := repository.agentsHaveCapabilities(ctx, tx, scope.organizationID, projectID, targetAgentRefs, []string{runtimecontract.ArtifactCapability})
+		allowed, err := repository.attachmentAgentsAllowed(ctx, tx, scope.organizationID, projectID, targetAgentRefs)
 		if err != nil {
 			return commandOutcome{}, errs.ErrUnavailable
 		}

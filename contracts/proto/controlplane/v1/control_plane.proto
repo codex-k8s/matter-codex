@@ -72,6 +72,8 @@ service PlatformQueryService {
   rpc ListAuditEvents(ListAuditEventsRequest) returns (ListAuditEventsResponse);
   rpc GetAgentRuntimeConfiguration(GetAgentRuntimeConfigurationRequest) returns (GetAgentRuntimeConfigurationResponse);
   rpc GetAgentEffectiveCapabilities(GetAgentEffectiveCapabilitiesRequest) returns (GetAgentEffectiveCapabilitiesResponse);
+  rpc ListArtifactBindingTargets(ListArtifactBindingTargetsRequest) returns (ListArtifactBindingTargetsResponse);
+  rpc GetRunAttachmentEligibility(GetRunAttachmentEligibilityRequest) returns (GetRunAttachmentEligibilityResponse);
   rpc ListConfigOverlayRevisions(ListConfigOverlayRevisionsRequest) returns (ListConfigOverlayRevisionsResponse);
   rpc GetConfigOverlayRevision(GetConfigOverlayRevisionRequest) returns (GetConfigOverlayRevisionResponse);
   rpc ListAgentRuntimeConfigurationVersions(ListAgentRuntimeConfigurationVersionsRequest) returns (ListAgentRuntimeConfigurationVersionsResponse);
@@ -3632,6 +3634,65 @@ message GetAgentEffectiveCapabilitiesRequest {
   string step_key = 3;
   string query = 4;
   PageRequest page = 5;
+}
+enum ArtifactBindingTargetReason {
+  ARTIFACT_BINDING_TARGET_REASON_UNSPECIFIED = 0;
+  ARTIFACT_BINDING_TARGET_REASON_AVAILABLE = 1;
+  ARTIFACT_BINDING_TARGET_REASON_ALREADY_BOUND = 2;
+  ARTIFACT_BINDING_TARGET_REASON_NOT_BOUND = 3;
+  ARTIFACT_BINDING_TARGET_REASON_AGENT_CAPABILITY_REQUIRED = 4;
+  ARTIFACT_BINDING_TARGET_REASON_AGENT_ARCHIVED = 5;
+  ARTIFACT_BINDING_TARGET_REASON_ARTIFACT_UNAVAILABLE = 6;
+}
+message ArtifactBindingTarget {
+  string agent_ref = 1;
+  int64 agent_version = 2;
+  string name = 3;
+  AgentState state = 4;
+  bool bound = 5;
+  bool can_bind = 6;
+  bool can_unbind = 7;
+  ArtifactBindingTargetReason bind_reason = 8;
+  ArtifactBindingTargetReason unbind_reason = 9;
+}
+message ListArtifactBindingTargetsRequest {
+  string artifact_ref = 1;
+  string query = 2;
+  PageRequest page = 3;
+}
+message ListArtifactBindingTargetsResponse {
+  string artifact_ref = 1;
+  int64 artifact_version = 2;
+  string project_ref = 3;
+  repeated ArtifactBindingTarget items = 4;
+  int64 total = 5;
+  PageInfo page = 6;
+  string digest = 7;
+  google.protobuf.Timestamp evaluated_at = 8;
+}
+enum RunAttachmentEligibilityReason {
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_UNSPECIFIED = 0;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_AVAILABLE = 1;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_TARGET_UNAVAILABLE = 2;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_RUNTIME_NOT_READY = 3;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_AGENT_CAPABILITY_REQUIRED = 4;
+  RUN_ATTACHMENT_ELIGIBILITY_REASON_SESSION_UNAVAILABLE = 5;
+}
+message GetRunAttachmentEligibilityRequest {
+  string project_ref = 1;
+  RunTarget target = 2;
+  string run_ref = 3;
+}
+message GetRunAttachmentEligibilityResponse {
+  string project_ref = 1;
+  RunTarget target = 2;
+  string run_ref = 3;
+  int64 run_version = 4;
+  string workflow_version_ref = 5;
+  bool eligible = 6;
+  RunAttachmentEligibilityReason reason = 7;
+  google.protobuf.Timestamp evaluated_at = 8;
+  string digest = 9;
 }
 message EffectiveCapability {
   string key = 1;

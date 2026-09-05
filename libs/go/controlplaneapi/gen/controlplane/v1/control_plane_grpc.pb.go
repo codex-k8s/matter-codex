@@ -77,6 +77,8 @@ const (
 	PlatformQueryService_ListAuditEvents_FullMethodName                       = "/controlplane.v1.PlatformQueryService/ListAuditEvents"
 	PlatformQueryService_GetAgentRuntimeConfiguration_FullMethodName          = "/controlplane.v1.PlatformQueryService/GetAgentRuntimeConfiguration"
 	PlatformQueryService_GetAgentEffectiveCapabilities_FullMethodName         = "/controlplane.v1.PlatformQueryService/GetAgentEffectiveCapabilities"
+	PlatformQueryService_ListArtifactBindingTargets_FullMethodName            = "/controlplane.v1.PlatformQueryService/ListArtifactBindingTargets"
+	PlatformQueryService_GetRunAttachmentEligibility_FullMethodName           = "/controlplane.v1.PlatformQueryService/GetRunAttachmentEligibility"
 	PlatformQueryService_ListConfigOverlayRevisions_FullMethodName            = "/controlplane.v1.PlatformQueryService/ListConfigOverlayRevisions"
 	PlatformQueryService_GetConfigOverlayRevision_FullMethodName              = "/controlplane.v1.PlatformQueryService/GetConfigOverlayRevision"
 	PlatformQueryService_ListAgentRuntimeConfigurationVersions_FullMethodName = "/controlplane.v1.PlatformQueryService/ListAgentRuntimeConfigurationVersions"
@@ -170,6 +172,8 @@ type PlatformQueryServiceClient interface {
 	ListAuditEvents(ctx context.Context, in *ListAuditEventsRequest, opts ...grpc.CallOption) (*ListAuditEventsResponse, error)
 	GetAgentRuntimeConfiguration(ctx context.Context, in *GetAgentRuntimeConfigurationRequest, opts ...grpc.CallOption) (*GetAgentRuntimeConfigurationResponse, error)
 	GetAgentEffectiveCapabilities(ctx context.Context, in *GetAgentEffectiveCapabilitiesRequest, opts ...grpc.CallOption) (*GetAgentEffectiveCapabilitiesResponse, error)
+	ListArtifactBindingTargets(ctx context.Context, in *ListArtifactBindingTargetsRequest, opts ...grpc.CallOption) (*ListArtifactBindingTargetsResponse, error)
+	GetRunAttachmentEligibility(ctx context.Context, in *GetRunAttachmentEligibilityRequest, opts ...grpc.CallOption) (*GetRunAttachmentEligibilityResponse, error)
 	ListConfigOverlayRevisions(ctx context.Context, in *ListConfigOverlayRevisionsRequest, opts ...grpc.CallOption) (*ListConfigOverlayRevisionsResponse, error)
 	GetConfigOverlayRevision(ctx context.Context, in *GetConfigOverlayRevisionRequest, opts ...grpc.CallOption) (*GetConfigOverlayRevisionResponse, error)
 	ListAgentRuntimeConfigurationVersions(ctx context.Context, in *ListAgentRuntimeConfigurationVersionsRequest, opts ...grpc.CallOption) (*ListAgentRuntimeConfigurationVersionsResponse, error)
@@ -787,6 +791,26 @@ func (c *platformQueryServiceClient) GetAgentEffectiveCapabilities(ctx context.C
 	return out, nil
 }
 
+func (c *platformQueryServiceClient) ListArtifactBindingTargets(ctx context.Context, in *ListArtifactBindingTargetsRequest, opts ...grpc.CallOption) (*ListArtifactBindingTargetsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListArtifactBindingTargetsResponse)
+	err := c.cc.Invoke(ctx, PlatformQueryService_ListArtifactBindingTargets_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformQueryServiceClient) GetRunAttachmentEligibility(ctx context.Context, in *GetRunAttachmentEligibilityRequest, opts ...grpc.CallOption) (*GetRunAttachmentEligibilityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRunAttachmentEligibilityResponse)
+	err := c.cc.Invoke(ctx, PlatformQueryService_GetRunAttachmentEligibility_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformQueryServiceClient) ListConfigOverlayRevisions(ctx context.Context, in *ListConfigOverlayRevisionsRequest, opts ...grpc.CallOption) (*ListConfigOverlayRevisionsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListConfigOverlayRevisionsResponse)
@@ -1121,6 +1145,8 @@ type PlatformQueryServiceServer interface {
 	ListAuditEvents(context.Context, *ListAuditEventsRequest) (*ListAuditEventsResponse, error)
 	GetAgentRuntimeConfiguration(context.Context, *GetAgentRuntimeConfigurationRequest) (*GetAgentRuntimeConfigurationResponse, error)
 	GetAgentEffectiveCapabilities(context.Context, *GetAgentEffectiveCapabilitiesRequest) (*GetAgentEffectiveCapabilitiesResponse, error)
+	ListArtifactBindingTargets(context.Context, *ListArtifactBindingTargetsRequest) (*ListArtifactBindingTargetsResponse, error)
+	GetRunAttachmentEligibility(context.Context, *GetRunAttachmentEligibilityRequest) (*GetRunAttachmentEligibilityResponse, error)
 	ListConfigOverlayRevisions(context.Context, *ListConfigOverlayRevisionsRequest) (*ListConfigOverlayRevisionsResponse, error)
 	GetConfigOverlayRevision(context.Context, *GetConfigOverlayRevisionRequest) (*GetConfigOverlayRevisionResponse, error)
 	ListAgentRuntimeConfigurationVersions(context.Context, *ListAgentRuntimeConfigurationVersionsRequest) (*ListAgentRuntimeConfigurationVersionsResponse, error)
@@ -1331,6 +1357,12 @@ func (UnimplementedPlatformQueryServiceServer) GetAgentRuntimeConfiguration(cont
 }
 func (UnimplementedPlatformQueryServiceServer) GetAgentEffectiveCapabilities(context.Context, *GetAgentEffectiveCapabilitiesRequest) (*GetAgentEffectiveCapabilitiesResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetAgentEffectiveCapabilities not implemented")
+}
+func (UnimplementedPlatformQueryServiceServer) ListArtifactBindingTargets(context.Context, *ListArtifactBindingTargetsRequest) (*ListArtifactBindingTargetsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListArtifactBindingTargets not implemented")
+}
+func (UnimplementedPlatformQueryServiceServer) GetRunAttachmentEligibility(context.Context, *GetRunAttachmentEligibilityRequest) (*GetRunAttachmentEligibilityResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetRunAttachmentEligibility not implemented")
 }
 func (UnimplementedPlatformQueryServiceServer) ListConfigOverlayRevisions(context.Context, *ListConfigOverlayRevisionsRequest) (*ListConfigOverlayRevisionsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListConfigOverlayRevisions not implemented")
@@ -2478,6 +2510,42 @@ func _PlatformQueryService_GetAgentEffectiveCapabilities_Handler(srv interface{}
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformQueryService_ListArtifactBindingTargets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListArtifactBindingTargetsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformQueryServiceServer).ListArtifactBindingTargets(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformQueryService_ListArtifactBindingTargets_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformQueryServiceServer).ListArtifactBindingTargets(ctx, req.(*ListArtifactBindingTargetsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformQueryService_GetRunAttachmentEligibility_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRunAttachmentEligibilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformQueryServiceServer).GetRunAttachmentEligibility(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformQueryService_GetRunAttachmentEligibility_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformQueryServiceServer).GetRunAttachmentEligibility(ctx, req.(*GetRunAttachmentEligibilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformQueryService_ListConfigOverlayRevisions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListConfigOverlayRevisionsRequest)
 	if err := dec(in); err != nil {
@@ -3202,6 +3270,14 @@ var PlatformQueryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAgentEffectiveCapabilities",
 			Handler:    _PlatformQueryService_GetAgentEffectiveCapabilities_Handler,
+		},
+		{
+			MethodName: "ListArtifactBindingTargets",
+			Handler:    _PlatformQueryService_ListArtifactBindingTargets_Handler,
+		},
+		{
+			MethodName: "GetRunAttachmentEligibility",
+			Handler:    _PlatformQueryService_GetRunAttachmentEligibility_Handler,
 		},
 		{
 			MethodName: "ListConfigOverlayRevisions",

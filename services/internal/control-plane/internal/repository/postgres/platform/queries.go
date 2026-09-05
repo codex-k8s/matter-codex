@@ -1385,9 +1385,9 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 			return result, nil
 		}, func(item entity.Artifact) entity.AccessScope {
 			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "ARTIFACT", ResourceRef: item.Ref, ProjectRef: item.ProjectRef}
-		}, func(_ pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
+		}, func(tx pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
 			item.NextActions = permittedArtifactActions(item.ScanState, item.LifecycleState, allowed)
-			return nil
+			return projectArtifactBindingRefs(ctx, tx, scope, item)
 		}, func(ctx context.Context, tx pgx.Tx) (int64, error) {
 			var total int64
 			err := tx.QueryRow(ctx, queryCatalogArtifactsCount, pgx.StrictNamedArgs{

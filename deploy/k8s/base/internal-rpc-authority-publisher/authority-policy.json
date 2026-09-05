@@ -494,6 +494,7 @@
           "platform.query.agent-runtime-configuration.get",
           "platform.query.agents.get",
           "platform.query.agents.list",
+          "platform.query.artifact-binding-targets.list",
           "platform.query.artifacts.get",
           "platform.query.artifacts.impact.get",
           "platform.query.artifacts.list",
@@ -539,6 +540,7 @@
           "platform.query.provider-definitions.list",
           "platform.query.role-image-impact-plans.get",
           "platform.query.role-image-revisions.list",
+          "platform.query.run-attachment-eligibility.get",
           "platform.query.run-events.list",
           "platform.query.run-graph.get",
           "platform.query.runs.get",
@@ -8990,6 +8992,42 @@
         }
       },
       {
+        "operation_id": "platform.query.artifact-binding-targets.list",
+        "caller_workload_id": "control-api-gateway",
+        "caller_spiffe_id": "spiffe://kodex.local/ns/kodex-system/sa/control-api-gateway",
+        "issuer": "spiffe://kodex.local/ns/kodex-system/sa/control-api-gateway",
+        "target_workload_id": "control-plane",
+        "target_spiffe_id": "spiffe://kodex.local/ns/kodex-system/sa/control-plane",
+        "audience": "urn:kodex:internal-rpc:control-plane",
+        "full_method": "/controlplane.v1.PlatformQueryService/ListArtifactBindingTargets",
+        "target_tls_server_name": "control-plane.kodex-system.svc.cluster.local",
+        "target_trust_bundle_id": "kodex-internal-ca-g1",
+        "permission": "platform.query.artifact-binding-targets.list",
+        "authority_proof_producer_id": "control-plane.oidc",
+        "authority_sources": [
+          "OIDC_SESSION",
+          "DOMAIN_STATE"
+        ],
+        "project_required": false,
+        "local_caller": {
+          "uid": 10001,
+          "primary_gid": 10001,
+          "shared_fs_gid": 29000
+        },
+        "local_target": {
+          "uid": 10001,
+          "primary_gid": 10001,
+          "shared_fs_gid": 29000
+        },
+        "request_profile": {
+          "mode": "UNARY_PROTO_SHA256",
+          "resource": "REQUIRED",
+          "version": "FORBIDDEN",
+          "attempt": "FORBIDDEN",
+          "idempotency": "FORBIDDEN"
+        }
+      },
+      {
         "operation_id": "platform.query.artifacts.get",
         "caller_workload_id": "control-api-gateway",
         "caller_spiffe_id": "spiffe://kodex.local/ns/kodex-system/sa/control-api-gateway",
@@ -10604,6 +10642,42 @@
         "request_profile": {
           "mode": "UNARY_PROTO_SHA256",
           "resource": "FORBIDDEN",
+          "version": "FORBIDDEN",
+          "attempt": "FORBIDDEN",
+          "idempotency": "FORBIDDEN"
+        }
+      },
+      {
+        "operation_id": "platform.query.run-attachment-eligibility.get",
+        "caller_workload_id": "control-api-gateway",
+        "caller_spiffe_id": "spiffe://kodex.local/ns/kodex-system/sa/control-api-gateway",
+        "issuer": "spiffe://kodex.local/ns/kodex-system/sa/control-api-gateway",
+        "target_workload_id": "control-plane",
+        "target_spiffe_id": "spiffe://kodex.local/ns/kodex-system/sa/control-plane",
+        "audience": "urn:kodex:internal-rpc:control-plane",
+        "full_method": "/controlplane.v1.PlatformQueryService/GetRunAttachmentEligibility",
+        "target_tls_server_name": "control-plane.kodex-system.svc.cluster.local",
+        "target_trust_bundle_id": "kodex-internal-ca-g1",
+        "permission": "platform.query.run-attachment-eligibility.get",
+        "authority_proof_producer_id": "control-plane.oidc",
+        "authority_sources": [
+          "OIDC_SESSION",
+          "DOMAIN_STATE"
+        ],
+        "project_required": false,
+        "local_caller": {
+          "uid": 10001,
+          "primary_gid": 10001,
+          "shared_fs_gid": 29000
+        },
+        "local_target": {
+          "uid": 10001,
+          "primary_gid": 10001,
+          "shared_fs_gid": 29000
+        },
+        "request_profile": {
+          "mode": "UNARY_PROTO_SHA256",
+          "resource": "REQUIRED",
           "version": "FORBIDDEN",
           "attempt": "FORBIDDEN",
           "idempotency": "FORBIDDEN"
