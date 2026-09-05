@@ -7,6 +7,7 @@ package generated
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -465,6 +466,63 @@ func (e ArtifactSource) Valid() bool {
 	case ArtifactSourceINTERACTIONATTACHMENT:
 		return true
 	case ArtifactSourceKNOWLEDGESOURCE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ArtifactBindingTargetState.
+const (
+	ArtifactBindingTargetStateARCHIVED ArtifactBindingTargetState = "ARCHIVED"
+	ArtifactBindingTargetStateDISABLED ArtifactBindingTargetState = "DISABLED"
+	ArtifactBindingTargetStateDRAFT    ArtifactBindingTargetState = "DRAFT"
+	ArtifactBindingTargetStateREADY    ArtifactBindingTargetState = "READY"
+	ArtifactBindingTargetStateRUNNING  ArtifactBindingTargetState = "RUNNING"
+)
+
+// Valid indicates whether the value is a known member of the ArtifactBindingTargetState enum.
+func (e ArtifactBindingTargetState) Valid() bool {
+	switch e {
+	case ArtifactBindingTargetStateARCHIVED:
+		return true
+	case ArtifactBindingTargetStateDISABLED:
+		return true
+	case ArtifactBindingTargetStateDRAFT:
+		return true
+	case ArtifactBindingTargetStateREADY:
+		return true
+	case ArtifactBindingTargetStateRUNNING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ArtifactBindingTargetReason.
+const (
+	ArtifactBindingTargetReasonAGENTARCHIVED           ArtifactBindingTargetReason = "AGENT_ARCHIVED"
+	ArtifactBindingTargetReasonAGENTCAPABILITYREQUIRED ArtifactBindingTargetReason = "AGENT_CAPABILITY_REQUIRED"
+	ArtifactBindingTargetReasonALREADYBOUND            ArtifactBindingTargetReason = "ALREADY_BOUND"
+	ArtifactBindingTargetReasonARTIFACTUNAVAILABLE     ArtifactBindingTargetReason = "ARTIFACT_UNAVAILABLE"
+	ArtifactBindingTargetReasonAVAILABLE               ArtifactBindingTargetReason = "AVAILABLE"
+	ArtifactBindingTargetReasonNOTBOUND                ArtifactBindingTargetReason = "NOT_BOUND"
+)
+
+// Valid indicates whether the value is a known member of the ArtifactBindingTargetReason enum.
+func (e ArtifactBindingTargetReason) Valid() bool {
+	switch e {
+	case ArtifactBindingTargetReasonAGENTARCHIVED:
+		return true
+	case ArtifactBindingTargetReasonAGENTCAPABILITYREQUIRED:
+		return true
+	case ArtifactBindingTargetReasonALREADYBOUND:
+		return true
+	case ArtifactBindingTargetReasonARTIFACTUNAVAILABLE:
+		return true
+	case ArtifactBindingTargetReasonAVAILABLE:
+		return true
+	case ArtifactBindingTargetReasonNOTBOUND:
 		return true
 	default:
 		return false
@@ -1011,6 +1069,177 @@ const (
 func (e ConfigOverlaySchemaMaximumBytes) Valid() bool {
 	switch e {
 	case N65536:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackContentFormat.
+const (
+	ConfigurationWriteBackContentFormatJSON ConfigurationWriteBackContentFormat = "JSON"
+	ConfigurationWriteBackContentFormatYAML ConfigurationWriteBackContentFormat = "YAML"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackContentFormat enum.
+func (e ConfigurationWriteBackContentFormat) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackContentFormatJSON:
+		return true
+	case ConfigurationWriteBackContentFormatYAML:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackFailureCode.
+const (
+	ConfigurationWriteBackFailureCodeACCESSDENIED       ConfigurationWriteBackFailureCode = "ACCESS_DENIED"
+	ConfigurationWriteBackFailureCodeAUTHORITYCHANGED   ConfigurationWriteBackFailureCode = "AUTHORITY_CHANGED"
+	ConfigurationWriteBackFailureCodeBRANCHCONFLICT     ConfigurationWriteBackFailureCode = "BRANCH_CONFLICT"
+	ConfigurationWriteBackFailureCodeCONTENTINVALID     ConfigurationWriteBackFailureCode = "CONTENT_INVALID"
+	ConfigurationWriteBackFailureCodeCREDENTIALREJECTED ConfigurationWriteBackFailureCode = "CREDENTIAL_REJECTED"
+	ConfigurationWriteBackFailureCodeDEADLINEEXCEEDED   ConfigurationWriteBackFailureCode = "DEADLINE_EXCEEDED"
+	ConfigurationWriteBackFailureCodeOUTCOMEUNCONFIRMED ConfigurationWriteBackFailureCode = "OUTCOME_UNCONFIRMED"
+	ConfigurationWriteBackFailureCodeRESPONSEINVALID    ConfigurationWriteBackFailureCode = "RESPONSE_INVALID"
+	ConfigurationWriteBackFailureCodeSOURCECHANGED      ConfigurationWriteBackFailureCode = "SOURCE_CHANGED"
+	ConfigurationWriteBackFailureCodeUNAVAILABLE        ConfigurationWriteBackFailureCode = "UNAVAILABLE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackFailureCode enum.
+func (e ConfigurationWriteBackFailureCode) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackFailureCodeACCESSDENIED:
+		return true
+	case ConfigurationWriteBackFailureCodeAUTHORITYCHANGED:
+		return true
+	case ConfigurationWriteBackFailureCodeBRANCHCONFLICT:
+		return true
+	case ConfigurationWriteBackFailureCodeCONTENTINVALID:
+		return true
+	case ConfigurationWriteBackFailureCodeCREDENTIALREJECTED:
+		return true
+	case ConfigurationWriteBackFailureCodeDEADLINEEXCEEDED:
+		return true
+	case ConfigurationWriteBackFailureCodeOUTCOMEUNCONFIRMED:
+		return true
+	case ConfigurationWriteBackFailureCodeRESPONSEINVALID:
+		return true
+	case ConfigurationWriteBackFailureCodeSOURCECHANGED:
+		return true
+	case ConfigurationWriteBackFailureCodeUNAVAILABLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackKind.
+const (
+	ConfigurationWriteBackKindINTEGRATIONDEFINITION ConfigurationWriteBackKind = "INTEGRATION_DEFINITION"
+	ConfigurationWriteBackKindROLEIMAGE             ConfigurationWriteBackKind = "ROLE_IMAGE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackKind enum.
+func (e ConfigurationWriteBackKind) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackKindINTEGRATIONDEFINITION:
+		return true
+	case ConfigurationWriteBackKindROLEIMAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackState.
+const (
+	ConfigurationWriteBackStateCANCELLED       ConfigurationWriteBackState = "CANCELLED"
+	ConfigurationWriteBackStateCLAIMED         ConfigurationWriteBackState = "CLAIMED"
+	ConfigurationWriteBackStateEFFECTSTARTED   ConfigurationWriteBackState = "EFFECT_STARTED"
+	ConfigurationWriteBackStateEXPIRED         ConfigurationWriteBackState = "EXPIRED"
+	ConfigurationWriteBackStateFAILED          ConfigurationWriteBackState = "FAILED"
+	ConfigurationWriteBackStateQUEUED          ConfigurationWriteBackState = "QUEUED"
+	ConfigurationWriteBackStateREJECTED        ConfigurationWriteBackState = "REJECTED"
+	ConfigurationWriteBackStateSUCCEEDED       ConfigurationWriteBackState = "SUCCEEDED"
+	ConfigurationWriteBackStateUNKNOWNOUTCOME  ConfigurationWriteBackState = "UNKNOWN_OUTCOME"
+	ConfigurationWriteBackStateWAITINGAPPROVAL ConfigurationWriteBackState = "WAITING_APPROVAL"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackState enum.
+func (e ConfigurationWriteBackState) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackStateCANCELLED:
+		return true
+	case ConfigurationWriteBackStateCLAIMED:
+		return true
+	case ConfigurationWriteBackStateEFFECTSTARTED:
+		return true
+	case ConfigurationWriteBackStateEXPIRED:
+		return true
+	case ConfigurationWriteBackStateFAILED:
+		return true
+	case ConfigurationWriteBackStateQUEUED:
+		return true
+	case ConfigurationWriteBackStateREJECTED:
+		return true
+	case ConfigurationWriteBackStateSUCCEEDED:
+		return true
+	case ConfigurationWriteBackStateUNKNOWNOUTCOME:
+		return true
+	case ConfigurationWriteBackStateWAITINGAPPROVAL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackActionAction.
+const (
+	ConfigurationWriteBackActionActionAPPROVE ConfigurationWriteBackActionAction = "APPROVE"
+	ConfigurationWriteBackActionActionCANCEL  ConfigurationWriteBackActionAction = "CANCEL"
+	ConfigurationWriteBackActionActionREJECT  ConfigurationWriteBackActionAction = "REJECT"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackActionAction enum.
+func (e ConfigurationWriteBackActionAction) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackActionActionAPPROVE:
+		return true
+	case ConfigurationWriteBackActionActionCANCEL:
+		return true
+	case ConfigurationWriteBackActionActionREJECT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ConfigurationWriteBackActionReason.
+const (
+	ConfigurationWriteBackActionReasonEXPIRED        ConfigurationWriteBackActionReason = "EXPIRED"
+	ConfigurationWriteBackActionReasonFORBIDDEN      ConfigurationWriteBackActionReason = "FORBIDDEN"
+	ConfigurationWriteBackActionReasonNONE           ConfigurationWriteBackActionReason = "NONE"
+	ConfigurationWriteBackActionReasonOUTCOMEUNKNOWN ConfigurationWriteBackActionReason = "OUTCOME_UNKNOWN"
+	ConfigurationWriteBackActionReasonSOURCECHANGED  ConfigurationWriteBackActionReason = "SOURCE_CHANGED"
+	ConfigurationWriteBackActionReasonSTATE          ConfigurationWriteBackActionReason = "STATE"
+)
+
+// Valid indicates whether the value is a known member of the ConfigurationWriteBackActionReason enum.
+func (e ConfigurationWriteBackActionReason) Valid() bool {
+	switch e {
+	case ConfigurationWriteBackActionReasonEXPIRED:
+		return true
+	case ConfigurationWriteBackActionReasonFORBIDDEN:
+		return true
+	case ConfigurationWriteBackActionReasonNONE:
+		return true
+	case ConfigurationWriteBackActionReasonOUTCOMEUNKNOWN:
+		return true
+	case ConfigurationWriteBackActionReasonSOURCECHANGED:
+		return true
+	case ConfigurationWriteBackActionReasonSTATE:
 		return true
 	default:
 		return false
@@ -1917,6 +2146,7 @@ func (e ManagedConfigurationManagedBy) Valid() bool {
 // Defines values for ManagedConfigurationConsumerKind.
 const (
 	ManagedConfigurationConsumerKindAGENT                 ManagedConfigurationConsumerKind = "AGENT"
+	ManagedConfigurationConsumerKindAGENTCONTINUATION     ManagedConfigurationConsumerKind = "AGENT_CONTINUATION"
 	ManagedConfigurationConsumerKindINTEGRATIONCONNECTION ManagedConfigurationConsumerKind = "INTEGRATION_CONNECTION"
 	ManagedConfigurationConsumerKindRUNTIMEENVIRONMENT    ManagedConfigurationConsumerKind = "RUNTIME_ENVIRONMENT"
 	ManagedConfigurationConsumerKindSCHEDULE              ManagedConfigurationConsumerKind = "SCHEDULE"
@@ -1928,6 +2158,8 @@ const (
 func (e ManagedConfigurationConsumerKind) Valid() bool {
 	switch e {
 	case ManagedConfigurationConsumerKindAGENT:
+		return true
+	case ManagedConfigurationConsumerKindAGENTCONTINUATION:
 		return true
 	case ManagedConfigurationConsumerKindINTEGRATIONCONNECTION:
 		return true
@@ -2787,6 +3019,186 @@ func (e ProjectMembershipCreateInputPermissions) Valid() bool {
 	}
 }
 
+// Defines values for PromptPreviewSectionUserKind.
+const (
+	AUTOMATIONTASK  PromptPreviewSectionUserKind = "AUTOMATION_TASK"
+	BASETEMPLATE    PromptPreviewSectionUserKind = "BASE_TEMPLATE"
+	WORKFLOWCONTEXT PromptPreviewSectionUserKind = "WORKFLOW_CONTEXT"
+)
+
+// Valid indicates whether the value is a known member of the PromptPreviewSectionUserKind enum.
+func (e PromptPreviewSectionUserKind) Valid() bool {
+	switch e {
+	case AUTOMATIONTASK:
+		return true
+	case BASETEMPLATE:
+		return true
+	case WORKFLOWCONTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptPreviewTargetKind.
+const (
+	PromptPreviewTargetKindAGENT               PromptPreviewTargetKind = "AGENT"
+	PromptPreviewTargetKindRUN                 PromptPreviewTargetKind = "RUN"
+	PromptPreviewTargetKindSESSION             PromptPreviewTargetKind = "SESSION"
+	PromptPreviewTargetKindSESSIONCONTINUATION PromptPreviewTargetKind = "SESSION_CONTINUATION"
+	PromptPreviewTargetKindSYNTHETIC           PromptPreviewTargetKind = "SYNTHETIC"
+	PromptPreviewTargetKindWORKFLOWSTAGE       PromptPreviewTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptPreviewTargetKind enum.
+func (e PromptPreviewTargetKind) Valid() bool {
+	switch e {
+	case PromptPreviewTargetKindAGENT:
+		return true
+	case PromptPreviewTargetKindRUN:
+		return true
+	case PromptPreviewTargetKindSESSION:
+		return true
+	case PromptPreviewTargetKindSESSIONCONTINUATION:
+		return true
+	case PromptPreviewTargetKindSYNTHETIC:
+		return true
+	case PromptPreviewTargetKindWORKFLOWSTAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptRuntimeChangeAction.
+const (
+	USECURRENTCONTEXT PromptRuntimeChangeAction = "USE_CURRENT_CONTEXT"
+)
+
+// Valid indicates whether the value is a known member of the PromptRuntimeChangeAction enum.
+func (e PromptRuntimeChangeAction) Valid() bool {
+	switch e {
+	case USECURRENTCONTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptRuntimeChangeComponent.
+const (
+	PromptRuntimeChangeComponentCAPABILITIES PromptRuntimeChangeComponent = "CAPABILITIES"
+	PromptRuntimeChangeComponentENVIRONMENT  PromptRuntimeChangeComponent = "ENVIRONMENT"
+	PromptRuntimeChangeComponentFILES        PromptRuntimeChangeComponent = "FILES"
+	PromptRuntimeChangeComponentIMAGE        PromptRuntimeChangeComponent = "IMAGE"
+	PromptRuntimeChangeComponentINSTRUCTIONS PromptRuntimeChangeComponent = "INSTRUCTIONS"
+	PromptRuntimeChangeComponentINTEGRATIONS PromptRuntimeChangeComponent = "INTEGRATIONS"
+	PromptRuntimeChangeComponentMCP          PromptRuntimeChangeComponent = "MCP"
+	PromptRuntimeChangeComponentMEMORY       PromptRuntimeChangeComponent = "MEMORY"
+	PromptRuntimeChangeComponentMODEL        PromptRuntimeChangeComponent = "MODEL"
+	PromptRuntimeChangeComponentPOLICY       PromptRuntimeChangeComponent = "POLICY"
+	PromptRuntimeChangeComponentREASONING    PromptRuntimeChangeComponent = "REASONING"
+	PromptRuntimeChangeComponentSKILLS       PromptRuntimeChangeComponent = "SKILLS"
+	PromptRuntimeChangeComponentTOOLS        PromptRuntimeChangeComponent = "TOOLS"
+)
+
+// Valid indicates whether the value is a known member of the PromptRuntimeChangeComponent enum.
+func (e PromptRuntimeChangeComponent) Valid() bool {
+	switch e {
+	case PromptRuntimeChangeComponentCAPABILITIES:
+		return true
+	case PromptRuntimeChangeComponentENVIRONMENT:
+		return true
+	case PromptRuntimeChangeComponentFILES:
+		return true
+	case PromptRuntimeChangeComponentIMAGE:
+		return true
+	case PromptRuntimeChangeComponentINSTRUCTIONS:
+		return true
+	case PromptRuntimeChangeComponentINTEGRATIONS:
+		return true
+	case PromptRuntimeChangeComponentMCP:
+		return true
+	case PromptRuntimeChangeComponentMEMORY:
+		return true
+	case PromptRuntimeChangeComponentMODEL:
+		return true
+	case PromptRuntimeChangeComponentPOLICY:
+		return true
+	case PromptRuntimeChangeComponentREASONING:
+		return true
+	case PromptRuntimeChangeComponentSKILLS:
+		return true
+	case PromptRuntimeChangeComponentTOOLS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptSectionSource.
+const (
+	PromptSectionSourcePLATFORM     PromptSectionSource = "PLATFORM"
+	PromptSectionSourceUSERTEMPLATE PromptSectionSource = "USER_TEMPLATE"
+)
+
+// Valid indicates whether the value is a known member of the PromptSectionSource enum.
+func (e PromptSectionSource) Valid() bool {
+	switch e {
+	case PromptSectionSourcePLATFORM:
+		return true
+	case PromptSectionSourceUSERTEMPLATE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptSemanticSlot.
+const (
+	PromptSemanticSlotCONSTRAINTS           PromptSemanticSlot = "CONSTRAINTS"
+	PromptSemanticSlotEFFECTIVECAPABILITIES PromptSemanticSlot = "EFFECTIVE_CAPABILITIES"
+	PromptSemanticSlotEXPECTEDRESULT        PromptSemanticSlot = "EXPECTED_RESULT"
+	PromptSemanticSlotFILES                 PromptSemanticSlot = "FILES"
+	PromptSemanticSlotINPUT                 PromptSemanticSlot = "INPUT"
+	PromptSemanticSlotINTEGRATIONS          PromptSemanticSlot = "INTEGRATIONS"
+	PromptSemanticSlotPURPOSE               PromptSemanticSlot = "PURPOSE"
+	PromptSemanticSlotRUNTIMECHANGES        PromptSemanticSlot = "RUNTIME_CHANGES"
+	PromptSemanticSlotSTAGE                 PromptSemanticSlot = "STAGE"
+	PromptSemanticSlotTOOLS                 PromptSemanticSlot = "TOOLS"
+	PromptSemanticSlotWORKFLOW              PromptSemanticSlot = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the PromptSemanticSlot enum.
+func (e PromptSemanticSlot) Valid() bool {
+	switch e {
+	case PromptSemanticSlotCONSTRAINTS:
+		return true
+	case PromptSemanticSlotEFFECTIVECAPABILITIES:
+		return true
+	case PromptSemanticSlotEXPECTEDRESULT:
+		return true
+	case PromptSemanticSlotFILES:
+		return true
+	case PromptSemanticSlotINPUT:
+		return true
+	case PromptSemanticSlotINTEGRATIONS:
+		return true
+	case PromptSemanticSlotPURPOSE:
+		return true
+	case PromptSemanticSlotRUNTIMECHANGES:
+		return true
+	case PromptSemanticSlotSTAGE:
+		return true
+	case PromptSemanticSlotTOOLS:
+		return true
+	case PromptSemanticSlotWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PromptTemplateDiagnosticSeverity.
 const (
 	PromptTemplateDiagnosticSeverityERROR   PromptTemplateDiagnosticSeverity = "ERROR"
@@ -2805,21 +3217,93 @@ func (e PromptTemplateDiagnosticSeverity) Valid() bool {
 	}
 }
 
-// Defines values for PromptTemplatePreviewInputTargetKind.
+// Defines values for PromptTemplateScopeTargetKind.
 const (
-	PromptTemplatePreviewInputTargetKindRUN       PromptTemplatePreviewInputTargetKind = "RUN"
-	PromptTemplatePreviewInputTargetKindSESSION   PromptTemplatePreviewInputTargetKind = "SESSION"
-	PromptTemplatePreviewInputTargetKindSYNTHETIC PromptTemplatePreviewInputTargetKind = "SYNTHETIC"
+	PromptTemplateScopeTargetKindAGENT         PromptTemplateScopeTargetKind = "AGENT"
+	PromptTemplateScopeTargetKindWORKFLOWSTAGE PromptTemplateScopeTargetKind = "WORKFLOW_STAGE"
 )
 
-// Valid indicates whether the value is a known member of the PromptTemplatePreviewInputTargetKind enum.
-func (e PromptTemplatePreviewInputTargetKind) Valid() bool {
+// Valid indicates whether the value is a known member of the PromptTemplateScopeTargetKind enum.
+func (e PromptTemplateScopeTargetKind) Valid() bool {
 	switch e {
-	case PromptTemplatePreviewInputTargetKindRUN:
+	case PromptTemplateScopeTargetKindAGENT:
 		return true
-	case PromptTemplatePreviewInputTargetKindSESSION:
+	case PromptTemplateScopeTargetKindWORKFLOWSTAGE:
 		return true
-	case PromptTemplatePreviewInputTargetKindSYNTHETIC:
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeTemplateKind.
+const (
+	PromptTemplateScopeTemplateKindCONTINUATION PromptTemplateScopeTemplateKind = "CONTINUATION"
+	PromptTemplateScopeTemplateKindINSTRUCTIONS PromptTemplateScopeTemplateKind = "INSTRUCTIONS"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeTemplateKind enum.
+func (e PromptTemplateScopeTemplateKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeTemplateKindCONTINUATION:
+		return true
+	case PromptTemplateScopeTemplateKindINSTRUCTIONS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeInputTargetKind.
+const (
+	PromptTemplateScopeInputTargetKindAGENT         PromptTemplateScopeInputTargetKind = "AGENT"
+	PromptTemplateScopeInputTargetKindWORKFLOWSTAGE PromptTemplateScopeInputTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeInputTargetKind enum.
+func (e PromptTemplateScopeInputTargetKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeInputTargetKindAGENT:
+		return true
+	case PromptTemplateScopeInputTargetKindWORKFLOWSTAGE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptTemplateScopeInputTemplateKind.
+const (
+	PromptTemplateScopeInputTemplateKindCONTINUATION PromptTemplateScopeInputTemplateKind = "CONTINUATION"
+	PromptTemplateScopeInputTemplateKindINSTRUCTIONS PromptTemplateScopeInputTemplateKind = "INSTRUCTIONS"
+)
+
+// Valid indicates whether the value is a known member of the PromptTemplateScopeInputTemplateKind enum.
+func (e PromptTemplateScopeInputTemplateKind) Valid() bool {
+	switch e {
+	case PromptTemplateScopeInputTemplateKindCONTINUATION:
+		return true
+	case PromptTemplateScopeInputTemplateKindINSTRUCTIONS:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PromptVariableCatalogInputTargetKind.
+const (
+	PromptVariableCatalogInputTargetKindAGENT               PromptVariableCatalogInputTargetKind = "AGENT"
+	PromptVariableCatalogInputTargetKindSESSIONCONTINUATION PromptVariableCatalogInputTargetKind = "SESSION_CONTINUATION"
+	PromptVariableCatalogInputTargetKindWORKFLOWSTAGE       PromptVariableCatalogInputTargetKind = "WORKFLOW_STAGE"
+)
+
+// Valid indicates whether the value is a known member of the PromptVariableCatalogInputTargetKind enum.
+func (e PromptVariableCatalogInputTargetKind) Valid() bool {
+	switch e {
+	case PromptVariableCatalogInputTargetKindAGENT:
+		return true
+	case PromptVariableCatalogInputTargetKindSESSIONCONTINUATION:
+		return true
+	case PromptVariableCatalogInputTargetKindWORKFLOWSTAGE:
 		return true
 	default:
 		return false
@@ -2843,40 +3327,40 @@ func (e ProviderAccountDefinitionKey) Valid() bool {
 
 // Defines values for ProviderAccountSafeStatusReason.
 const (
-	ProviderAccountSafeStatusReasonACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
-	ProviderAccountSafeStatusReasonACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
-	ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
-	ProviderAccountSafeStatusReasonAUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
-	ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
-	ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
-	ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
-	ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
+	ACCOUNTDISABLED                 ProviderAccountSafeStatusReason = "ACCOUNT_DISABLED"
+	ACCOUNTREVOKED                  ProviderAccountSafeStatusReason = "ACCOUNT_REVOKED"
+	ACCOUNTSTATEUNKNOWN             ProviderAccountSafeStatusReason = "ACCOUNT_STATE_UNKNOWN"
+	AUTHORIZED                      ProviderAccountSafeStatusReason = "AUTHORIZED"
+	CREDENTIALCONFIGURATIONREQUIRED ProviderAccountSafeStatusReason = "CREDENTIAL_CONFIGURATION_REQUIRED"
+	CREDENTIALMATERIALIZATIONFAILED ProviderAccountSafeStatusReason = "CREDENTIAL_MATERIALIZATION_FAILED"
+	DEVICEAUTHORIZATIONEXPIRED      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_EXPIRED"
+	DEVICEAUTHORIZATIONFAILED       ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_FAILED"
+	DEVICEAUTHORIZATIONPENDING      ProviderAccountSafeStatusReason = "DEVICE_AUTHORIZATION_PENDING"
+	REAUTHORIZATIONREQUIRED         ProviderAccountSafeStatusReason = "REAUTHORIZATION_REQUIRED"
 )
 
 // Valid indicates whether the value is a known member of the ProviderAccountSafeStatusReason enum.
 func (e ProviderAccountSafeStatusReason) Valid() bool {
 	switch e {
-	case ProviderAccountSafeStatusReasonACCOUNTDISABLED:
+	case ACCOUNTDISABLED:
 		return true
-	case ProviderAccountSafeStatusReasonACCOUNTREVOKED:
+	case ACCOUNTREVOKED:
 		return true
-	case ProviderAccountSafeStatusReasonACCOUNTSTATEUNKNOWN:
+	case ACCOUNTSTATEUNKNOWN:
 		return true
-	case ProviderAccountSafeStatusReasonAUTHORIZED:
+	case AUTHORIZED:
 		return true
-	case ProviderAccountSafeStatusReasonCREDENTIALCONFIGURATIONREQUIRED:
+	case CREDENTIALCONFIGURATIONREQUIRED:
 		return true
-	case ProviderAccountSafeStatusReasonCREDENTIALMATERIALIZATIONFAILED:
+	case CREDENTIALMATERIALIZATIONFAILED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONEXPIRED:
+	case DEVICEAUTHORIZATIONEXPIRED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONFAILED:
+	case DEVICEAUTHORIZATIONFAILED:
 		return true
-	case ProviderAccountSafeStatusReasonDEVICEAUTHORIZATIONPENDING:
+	case DEVICEAUTHORIZATIONPENDING:
 		return true
-	case ProviderAccountSafeStatusReasonREAUTHORIZATIONREQUIRED:
+	case REAUTHORIZATIONREQUIRED:
 		return true
 	default:
 		return false
@@ -3087,6 +3571,99 @@ func (e ProviderModelCatalogStatusState) Valid() bool {
 	}
 }
 
+// Defines values for RevisionImpactItemConsumerKind.
+const (
+	RevisionImpactItemConsumerKindAGENT             RevisionImpactItemConsumerKind = "AGENT"
+	RevisionImpactItemConsumerKindAGENTCONTINUATION RevisionImpactItemConsumerKind = "AGENT_CONTINUATION"
+	RevisionImpactItemConsumerKindSCHEDULE          RevisionImpactItemConsumerKind = "SCHEDULE"
+	RevisionImpactItemConsumerKindWORKFLOW          RevisionImpactItemConsumerKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactItemConsumerKind enum.
+func (e RevisionImpactItemConsumerKind) Valid() bool {
+	switch e {
+	case RevisionImpactItemConsumerKindAGENT:
+		return true
+	case RevisionImpactItemConsumerKindAGENTCONTINUATION:
+		return true
+	case RevisionImpactItemConsumerKindSCHEDULE:
+		return true
+	case RevisionImpactItemConsumerKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactItemOutcome.
+const (
+	RevisionImpactItemOutcomeAPPLIED     RevisionImpactItemOutcome = "APPLIED"
+	RevisionImpactItemOutcomeCONFLICT    RevisionImpactItemOutcome = "CONFLICT"
+	RevisionImpactItemOutcomeFORBIDDEN   RevisionImpactItemOutcome = "FORBIDDEN"
+	RevisionImpactItemOutcomeNOTSELECTED RevisionImpactItemOutcome = "NOT_SELECTED"
+	RevisionImpactItemOutcomePENDING     RevisionImpactItemOutcome = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactItemOutcome enum.
+func (e RevisionImpactItemOutcome) Valid() bool {
+	switch e {
+	case RevisionImpactItemOutcomeAPPLIED:
+		return true
+	case RevisionImpactItemOutcomeCONFLICT:
+		return true
+	case RevisionImpactItemOutcomeFORBIDDEN:
+		return true
+	case RevisionImpactItemOutcomeNOTSELECTED:
+		return true
+	case RevisionImpactItemOutcomePENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactPlanKind.
+const (
+	RevisionImpactPlanKindAGENTINSTRUCTIONS  RevisionImpactPlanKind = "AGENT_INSTRUCTIONS"
+	RevisionImpactPlanKindPROMPTTEMPLATE     RevisionImpactPlanKind = "PROMPT_TEMPLATE"
+	RevisionImpactPlanKindRUNTIMEENVIRONMENT RevisionImpactPlanKind = "RUNTIME_ENVIRONMENT"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactPlanKind enum.
+func (e RevisionImpactPlanKind) Valid() bool {
+	switch e {
+	case RevisionImpactPlanKindAGENTINSTRUCTIONS:
+		return true
+	case RevisionImpactPlanKindPROMPTTEMPLATE:
+		return true
+	case RevisionImpactPlanKindRUNTIMEENVIRONMENT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactPlanState.
+const (
+	RevisionImpactPlanStateAPPLIED  RevisionImpactPlanState = "APPLIED"
+	RevisionImpactPlanStateEXPIRED  RevisionImpactPlanState = "EXPIRED"
+	RevisionImpactPlanStatePREPARED RevisionImpactPlanState = "PREPARED"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactPlanState enum.
+func (e RevisionImpactPlanState) Valid() bool {
+	switch e {
+	case RevisionImpactPlanStateAPPLIED:
+		return true
+	case RevisionImpactPlanStateEXPIRED:
+		return true
+	case RevisionImpactPlanStatePREPARED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoleEnvironmentPlatformArchitecture.
 const (
 	Amd64 RoleEnvironmentPlatformArchitecture = "amd64"
@@ -3204,6 +3781,54 @@ func (e RoleImageGitSourceInputContentFormat) Valid() bool {
 	case RoleImageGitSourceInputContentFormatJSON:
 		return true
 	case RoleImageGitSourceInputContentFormatYAML:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RoleImageImpactItemOutcome.
+const (
+	RoleImageImpactItemOutcomeAPPLIED     RoleImageImpactItemOutcome = "APPLIED"
+	RoleImageImpactItemOutcomeCONFLICT    RoleImageImpactItemOutcome = "CONFLICT"
+	RoleImageImpactItemOutcomeFORBIDDEN   RoleImageImpactItemOutcome = "FORBIDDEN"
+	RoleImageImpactItemOutcomeNOTSELECTED RoleImageImpactItemOutcome = "NOT_SELECTED"
+	RoleImageImpactItemOutcomePENDING     RoleImageImpactItemOutcome = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the RoleImageImpactItemOutcome enum.
+func (e RoleImageImpactItemOutcome) Valid() bool {
+	switch e {
+	case RoleImageImpactItemOutcomeAPPLIED:
+		return true
+	case RoleImageImpactItemOutcomeCONFLICT:
+		return true
+	case RoleImageImpactItemOutcomeFORBIDDEN:
+		return true
+	case RoleImageImpactItemOutcomeNOTSELECTED:
+		return true
+	case RoleImageImpactItemOutcomePENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RoleImageImpactPlanState.
+const (
+	RoleImageImpactPlanStateAPPLIED  RoleImageImpactPlanState = "APPLIED"
+	RoleImageImpactPlanStateEXPIRED  RoleImageImpactPlanState = "EXPIRED"
+	RoleImageImpactPlanStatePREPARED RoleImageImpactPlanState = "PREPARED"
+)
+
+// Valid indicates whether the value is a known member of the RoleImageImpactPlanState enum.
+func (e RoleImageImpactPlanState) Valid() bool {
+	switch e {
+	case RoleImageImpactPlanStateAPPLIED:
+		return true
+	case RoleImageImpactPlanStateEXPIRED:
+		return true
+	case RoleImageImpactPlanStatePREPARED:
 		return true
 	default:
 		return false
@@ -3390,6 +4015,51 @@ func (e RunTitleSource) Valid() bool {
 	case RunTitleSourceSERVERDEFAULT:
 		return true
 	case RunTitleSourceUSEREDITED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunAttachmentEligibilityReason.
+const (
+	RunAttachmentEligibilityReasonAGENTCAPABILITYREQUIRED RunAttachmentEligibilityReason = "AGENT_CAPABILITY_REQUIRED"
+	RunAttachmentEligibilityReasonAVAILABLE               RunAttachmentEligibilityReason = "AVAILABLE"
+	RunAttachmentEligibilityReasonRUNTIMENOTREADY         RunAttachmentEligibilityReason = "RUNTIME_NOT_READY"
+	RunAttachmentEligibilityReasonSESSIONUNAVAILABLE      RunAttachmentEligibilityReason = "SESSION_UNAVAILABLE"
+	RunAttachmentEligibilityReasonTARGETUNAVAILABLE       RunAttachmentEligibilityReason = "TARGET_UNAVAILABLE"
+)
+
+// Valid indicates whether the value is a known member of the RunAttachmentEligibilityReason enum.
+func (e RunAttachmentEligibilityReason) Valid() bool {
+	switch e {
+	case RunAttachmentEligibilityReasonAGENTCAPABILITYREQUIRED:
+		return true
+	case RunAttachmentEligibilityReasonAVAILABLE:
+		return true
+	case RunAttachmentEligibilityReasonRUNTIMENOTREADY:
+		return true
+	case RunAttachmentEligibilityReasonSESSIONUNAVAILABLE:
+		return true
+	case RunAttachmentEligibilityReasonTARGETUNAVAILABLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunAttachmentEligibilityTargetType.
+const (
+	RunAttachmentEligibilityTargetTypeAGENT    RunAttachmentEligibilityTargetType = "AGENT"
+	RunAttachmentEligibilityTargetTypeWORKFLOW RunAttachmentEligibilityTargetType = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the RunAttachmentEligibilityTargetType enum.
+func (e RunAttachmentEligibilityTargetType) Valid() bool {
+	switch e {
+	case RunAttachmentEligibilityTargetTypeAGENT:
+		return true
+	case RunAttachmentEligibilityTargetTypeWORKFLOW:
 		return true
 	default:
 		return false
@@ -5036,16 +5706,16 @@ func (e SystemSTTConfigurationPermissionKey) Valid() bool {
 
 // Defines values for SystemSTTParametersChunkingStrategy.
 const (
-	Auto  SystemSTTParametersChunkingStrategy = "auto"
-	Empty SystemSTTParametersChunkingStrategy = ""
+	SystemSTTParametersChunkingStrategyAuto  SystemSTTParametersChunkingStrategy = "auto"
+	SystemSTTParametersChunkingStrategyEmpty SystemSTTParametersChunkingStrategy = ""
 )
 
 // Valid indicates whether the value is a known member of the SystemSTTParametersChunkingStrategy enum.
 func (e SystemSTTParametersChunkingStrategy) Valid() bool {
 	switch e {
-	case Auto:
+	case SystemSTTParametersChunkingStrategyAuto:
 		return true
-	case Empty:
+	case SystemSTTParametersChunkingStrategyEmpty:
 		return true
 	default:
 		return false
@@ -5084,14 +5754,15 @@ func (e SystemSTTSpecificationPermissionKey) Valid() bool {
 
 // Defines values for TemplateVariableItemValueType.
 const (
-	TemplateVariableItemValueTypeBOOLEAN        TemplateVariableItemValueType = "BOOLEAN"
-	TemplateVariableItemValueTypeFILEDESCRIPTOR TemplateVariableItemValueType = "FILE_DESCRIPTOR"
-	TemplateVariableItemValueTypeINTEGER        TemplateVariableItemValueType = "INTEGER"
-	TemplateVariableItemValueTypeOBJECT         TemplateVariableItemValueType = "OBJECT"
-	TemplateVariableItemValueTypeOPAQUEREF      TemplateVariableItemValueType = "OPAQUE_REF"
-	TemplateVariableItemValueTypeSTRING         TemplateVariableItemValueType = "STRING"
-	TemplateVariableItemValueTypeTIMESTAMP      TemplateVariableItemValueType = "TIMESTAMP"
-	TemplateVariableItemValueTypeTOOLDESCRIPTOR TemplateVariableItemValueType = "TOOL_DESCRIPTOR"
+	TemplateVariableItemValueTypeBOOLEAN               TemplateVariableItemValueType = "BOOLEAN"
+	TemplateVariableItemValueTypeFILEDESCRIPTOR        TemplateVariableItemValueType = "FILE_DESCRIPTOR"
+	TemplateVariableItemValueTypeINTEGER               TemplateVariableItemValueType = "INTEGER"
+	TemplateVariableItemValueTypeINTEGRATIONDESCRIPTOR TemplateVariableItemValueType = "INTEGRATION_DESCRIPTOR"
+	TemplateVariableItemValueTypeOBJECT                TemplateVariableItemValueType = "OBJECT"
+	TemplateVariableItemValueTypeOPAQUEREF             TemplateVariableItemValueType = "OPAQUE_REF"
+	TemplateVariableItemValueTypeSTRING                TemplateVariableItemValueType = "STRING"
+	TemplateVariableItemValueTypeTIMESTAMP             TemplateVariableItemValueType = "TIMESTAMP"
+	TemplateVariableItemValueTypeTOOLDESCRIPTOR        TemplateVariableItemValueType = "TOOL_DESCRIPTOR"
 )
 
 // Valid indicates whether the value is a known member of the TemplateVariableItemValueType enum.
@@ -5102,6 +5773,8 @@ func (e TemplateVariableItemValueType) Valid() bool {
 	case TemplateVariableItemValueTypeFILEDESCRIPTOR:
 		return true
 	case TemplateVariableItemValueTypeINTEGER:
+		return true
+	case TemplateVariableItemValueTypeINTEGRATIONDESCRIPTOR:
 		return true
 	case TemplateVariableItemValueTypeOBJECT:
 		return true
@@ -5224,7 +5897,9 @@ func (e TemplateVariableValueType) Valid() bool {
 const (
 	TemplateVariableAvailabilityReasonAGENTCONTEXTREQUIRED   TemplateVariableAvailabilityReason = "AGENT_CONTEXT_REQUIRED"
 	TemplateVariableAvailabilityReasonAVAILABLE              TemplateVariableAvailabilityReason = "AVAILABLE"
+	TemplateVariableAvailabilityReasonCAPABILITYREQUIRED     TemplateVariableAvailabilityReason = "CAPABILITY_REQUIRED"
 	TemplateVariableAvailabilityReasonNOTMATERIALIZED        TemplateVariableAvailabilityReason = "NOT_MATERIALIZED"
+	TemplateVariableAvailabilityReasonPERMISSIONREQUIRED     TemplateVariableAvailabilityReason = "PERMISSION_REQUIRED"
 	TemplateVariableAvailabilityReasonPROJECTCONTEXTREQUIRED TemplateVariableAvailabilityReason = "PROJECT_CONTEXT_REQUIRED"
 	TemplateVariableAvailabilityReasonRUNTIMECONTEXTREQUIRED TemplateVariableAvailabilityReason = "RUNTIME_CONTEXT_REQUIRED"
 )
@@ -5236,7 +5911,11 @@ func (e TemplateVariableAvailabilityReason) Valid() bool {
 		return true
 	case TemplateVariableAvailabilityReasonAVAILABLE:
 		return true
+	case TemplateVariableAvailabilityReasonCAPABILITYREQUIRED:
+		return true
 	case TemplateVariableAvailabilityReasonNOTMATERIALIZED:
+		return true
+	case TemplateVariableAvailabilityReasonPERMISSIONREQUIRED:
 		return true
 	case TemplateVariableAvailabilityReasonPROJECTCONTEXTREQUIRED:
 		return true
@@ -5274,48 +5953,195 @@ func (e TemplateVariableFieldValueType) Valid() bool {
 	}
 }
 
-// Defines values for VFSNodeKind.
+// Defines values for VFSKind.
 const (
-	VFSNodeKindAGENT       VFSNodeKind = "AGENT"
-	VFSNodeKindAUTOMATION  VFSNodeKind = "AUTOMATION"
-	VFSNodeKindAVATAR      VFSNodeKind = "AVATAR"
-	VFSNodeKindDIRECTORY   VFSNodeKind = "DIRECTORY"
-	VFSNodeKindENVIRONMENT VFSNodeKind = "ENVIRONMENT"
-	VFSNodeKindINPUT       VFSNodeKind = "INPUT"
-	VFSNodeKindMEMORY      VFSNodeKind = "MEMORY"
-	VFSNodeKindPROJECT     VFSNodeKind = "PROJECT"
-	VFSNodeKindRESULT      VFSNodeKind = "RESULT"
-	VFSNodeKindRUN         VFSNodeKind = "RUN"
-	VFSNodeKindSKILL       VFSNodeKind = "SKILL"
-	VFSNodeKindWORKFLOW    VFSNodeKind = "WORKFLOW"
+	VFSKindAGENT       VFSKind = "AGENT"
+	VFSKindAUTOMATION  VFSKind = "AUTOMATION"
+	VFSKindAVATAR      VFSKind = "AVATAR"
+	VFSKindDIRECTORY   VFSKind = "DIRECTORY"
+	VFSKindENVIRONMENT VFSKind = "ENVIRONMENT"
+	VFSKindINPUT       VFSKind = "INPUT"
+	VFSKindMEMORY      VFSKind = "MEMORY"
+	VFSKindPROJECT     VFSKind = "PROJECT"
+	VFSKindRESULT      VFSKind = "RESULT"
+	VFSKindRUN         VFSKind = "RUN"
+	VFSKindSKILL       VFSKind = "SKILL"
+	VFSKindWORKFLOW    VFSKind = "WORKFLOW"
 )
 
-// Valid indicates whether the value is a known member of the VFSNodeKind enum.
-func (e VFSNodeKind) Valid() bool {
+// Valid indicates whether the value is a known member of the VFSKind enum.
+func (e VFSKind) Valid() bool {
 	switch e {
-	case VFSNodeKindAGENT:
+	case VFSKindAGENT:
 		return true
-	case VFSNodeKindAUTOMATION:
+	case VFSKindAUTOMATION:
 		return true
-	case VFSNodeKindAVATAR:
+	case VFSKindAVATAR:
 		return true
-	case VFSNodeKindDIRECTORY:
+	case VFSKindDIRECTORY:
 		return true
-	case VFSNodeKindENVIRONMENT:
+	case VFSKindENVIRONMENT:
 		return true
-	case VFSNodeKindINPUT:
+	case VFSKindINPUT:
 		return true
-	case VFSNodeKindMEMORY:
+	case VFSKindMEMORY:
 		return true
-	case VFSNodeKindPROJECT:
+	case VFSKindPROJECT:
 		return true
-	case VFSNodeKindRESULT:
+	case VFSKindRESULT:
 		return true
-	case VFSNodeKindRUN:
+	case VFSKindRUN:
 		return true
-	case VFSNodeKindSKILL:
+	case VFSKindSKILL:
 		return true
-	case VFSNodeKindWORKFLOW:
+	case VFSKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeLifecycleState.
+const (
+	VFSNodeLifecycleStateACTIVE   VFSNodeLifecycleState = "ACTIVE"
+	VFSNodeLifecycleStateARCHIVED VFSNodeLifecycleState = "ARCHIVED"
+	VFSNodeLifecycleStateDELETED  VFSNodeLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeLifecycleState enum.
+func (e VFSNodeLifecycleState) Valid() bool {
+	switch e {
+	case VFSNodeLifecycleStateACTIVE:
+		return true
+	case VFSNodeLifecycleStateARCHIVED:
+		return true
+	case VFSNodeLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeNextActions.
+const (
+	VFSNodeNextActionsARCHIVE  VFSNodeNextActions = "ARCHIVE"
+	VFSNodeNextActionsBIND     VFSNodeNextActions = "BIND"
+	VFSNodeNextActionsDELETE   VFSNodeNextActions = "DELETE"
+	VFSNodeNextActionsDOWNLOAD VFSNodeNextActions = "DOWNLOAD"
+	VFSNodeNextActionsPURGE    VFSNodeNextActions = "PURGE"
+	VFSNodeNextActionsRESTORE  VFSNodeNextActions = "RESTORE"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeNextActions enum.
+func (e VFSNodeNextActions) Valid() bool {
+	switch e {
+	case VFSNodeNextActionsARCHIVE:
+		return true
+	case VFSNodeNextActionsBIND:
+		return true
+	case VFSNodeNextActionsDELETE:
+		return true
+	case VFSNodeNextActionsDOWNLOAD:
+		return true
+	case VFSNodeNextActionsPURGE:
+		return true
+	case VFSNodeNextActionsRESTORE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeResourceKind.
+const (
+	VFSNodeResourceKindARTIFACT     VFSNodeResourceKind = "ARTIFACT"
+	VFSNodeResourceKindEmpty        VFSNodeResourceKind = ""
+	VFSNodeResourceKindMEMORYRECORD VFSNodeResourceKind = "MEMORY_RECORD"
+	VFSNodeResourceKindSKILLBUNDLE  VFSNodeResourceKind = "SKILL_BUNDLE"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeResourceKind enum.
+func (e VFSNodeResourceKind) Valid() bool {
+	switch e {
+	case VFSNodeResourceKindARTIFACT:
+		return true
+	case VFSNodeResourceKindEmpty:
+		return true
+	case VFSNodeResourceKindMEMORYRECORD:
+		return true
+	case VFSNodeResourceKindSKILLBUNDLE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeScanState.
+const (
+	VFSNodeScanStateCLEAN       VFSNodeScanState = "CLEAN"
+	VFSNodeScanStateEmpty       VFSNodeScanState = ""
+	VFSNodeScanStateFAILED      VFSNodeScanState = "FAILED"
+	VFSNodeScanStatePENDING     VFSNodeScanState = "PENDING"
+	VFSNodeScanStateQUARANTINED VFSNodeScanState = "QUARANTINED"
+	VFSNodeScanStateSCANNING    VFSNodeScanState = "SCANNING"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeScanState enum.
+func (e VFSNodeScanState) Valid() bool {
+	switch e {
+	case VFSNodeScanStateCLEAN:
+		return true
+	case VFSNodeScanStateEmpty:
+		return true
+	case VFSNodeScanStateFAILED:
+		return true
+	case VFSNodeScanStatePENDING:
+		return true
+	case VFSNodeScanStateQUARANTINED:
+		return true
+	case VFSNodeScanStateSCANNING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for VFSNodeSelectionReason.
+const (
+	VFSNodeSelectionReasonACTIVERUNUSESARTIFACT VFSNodeSelectionReason = "ACTIVE_RUN_USES_ARTIFACT"
+	VFSNodeSelectionReasonARTIFACTHASBINDINGS   VFSNodeSelectionReason = "ARTIFACT_HAS_BINDINGS"
+	VFSNodeSelectionReasonARTIFACTNOTACTIVE     VFSNodeSelectionReason = "ARTIFACT_NOT_ACTIVE"
+	VFSNodeSelectionReasonARTIFACTNOTDELETED    VFSNodeSelectionReason = "ARTIFACT_NOT_DELETED"
+	VFSNodeSelectionReasonARTIFACTUSEDBYSKILL   VFSNodeSelectionReason = "ARTIFACT_USED_BY_SKILL"
+	VFSNodeSelectionReasonAVAILABLE             VFSNodeSelectionReason = "AVAILABLE"
+	VFSNodeSelectionReasonDIRECTORY             VFSNodeSelectionReason = "DIRECTORY"
+	VFSNodeSelectionReasonIMMUTABLECONTEXT      VFSNodeSelectionReason = "IMMUTABLE_CONTEXT"
+	VFSNodeSelectionReasonLIFECYCLEBLOCKED      VFSNodeSelectionReason = "LIFECYCLE_BLOCKED"
+	VFSNodeSelectionReasonPERMISSIONREQUIRED    VFSNodeSelectionReason = "PERMISSION_REQUIRED"
+)
+
+// Valid indicates whether the value is a known member of the VFSNodeSelectionReason enum.
+func (e VFSNodeSelectionReason) Valid() bool {
+	switch e {
+	case VFSNodeSelectionReasonACTIVERUNUSESARTIFACT:
+		return true
+	case VFSNodeSelectionReasonARTIFACTHASBINDINGS:
+		return true
+	case VFSNodeSelectionReasonARTIFACTNOTACTIVE:
+		return true
+	case VFSNodeSelectionReasonARTIFACTNOTDELETED:
+		return true
+	case VFSNodeSelectionReasonARTIFACTUSEDBYSKILL:
+		return true
+	case VFSNodeSelectionReasonAVAILABLE:
+		return true
+	case VFSNodeSelectionReasonDIRECTORY:
+		return true
+	case VFSNodeSelectionReasonIMMUTABLECONTEXT:
+		return true
+	case VFSNodeSelectionReasonLIFECYCLEBLOCKED:
+		return true
+	case VFSNodeSelectionReasonPERMISSIONREQUIRED:
 		return true
 	default:
 		return false
@@ -5574,6 +6400,24 @@ func (e ArtifactTypeQuery) Valid() bool {
 	}
 }
 
+// Defines values for VFSLifecycleState.
+const (
+	VFSLifecycleStateACTIVE  VFSLifecycleState = "ACTIVE"
+	VFSLifecycleStateDELETED VFSLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the VFSLifecycleState enum.
+func (e VFSLifecycleState) Valid() bool {
+	switch e {
+	case VFSLifecycleStateACTIVE:
+		return true
+	case VFSLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListOrganizationArtifactsParamsLifecycleState.
 const (
 	ListOrganizationArtifactsParamsLifecycleStateACTIVE       ListOrganizationArtifactsParamsLifecycleState = "ACTIVE"
@@ -5667,6 +6511,33 @@ func (e ListOrganizationArtifactsParamsSourceKind) Valid() bool {
 	case ListOrganizationArtifactsParamsSourceKindINTERACTIONATTACHMENT:
 		return true
 	case ListOrganizationArtifactsParamsSourceKindKNOWLEDGESOURCE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListOrganizationArtifactsParamsSourceKinds.
+const (
+	ListOrganizationArtifactsParamsSourceKindsAGENTRESULT           ListOrganizationArtifactsParamsSourceKinds = "AGENT_RESULT"
+	ListOrganizationArtifactsParamsSourceKindsCONTROLCENTER         ListOrganizationArtifactsParamsSourceKinds = "CONTROL_CENTER"
+	ListOrganizationArtifactsParamsSourceKindsINTEGRATIONRESULT     ListOrganizationArtifactsParamsSourceKinds = "INTEGRATION_RESULT"
+	ListOrganizationArtifactsParamsSourceKindsINTERACTIONATTACHMENT ListOrganizationArtifactsParamsSourceKinds = "INTERACTION_ATTACHMENT"
+	ListOrganizationArtifactsParamsSourceKindsKNOWLEDGESOURCE       ListOrganizationArtifactsParamsSourceKinds = "KNOWLEDGE_SOURCE"
+)
+
+// Valid indicates whether the value is a known member of the ListOrganizationArtifactsParamsSourceKinds enum.
+func (e ListOrganizationArtifactsParamsSourceKinds) Valid() bool {
+	switch e {
+	case ListOrganizationArtifactsParamsSourceKindsAGENTRESULT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsCONTROLCENTER:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsINTEGRATIONRESULT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsINTERACTIONATTACHMENT:
+		return true
+	case ListOrganizationArtifactsParamsSourceKindsKNOWLEDGESOURCE:
 		return true
 	default:
 		return false
@@ -5822,19 +6693,19 @@ func (e ListArtifactsParamsLifecycleState) Valid() bool {
 
 // Defines values for ListArtifactsParamsType.
 const (
-	DOCUMENT ListArtifactsParamsType = "DOCUMENT"
-	IMAGE    ListArtifactsParamsType = "IMAGE"
-	TEXT     ListArtifactsParamsType = "TEXT"
+	ListArtifactsParamsTypeDOCUMENT ListArtifactsParamsType = "DOCUMENT"
+	ListArtifactsParamsTypeIMAGE    ListArtifactsParamsType = "IMAGE"
+	ListArtifactsParamsTypeTEXT     ListArtifactsParamsType = "TEXT"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsType enum.
 func (e ListArtifactsParamsType) Valid() bool {
 	switch e {
-	case DOCUMENT:
+	case ListArtifactsParamsTypeDOCUMENT:
 		return true
-	case IMAGE:
+	case ListArtifactsParamsTypeIMAGE:
 		return true
-	case TEXT:
+	case ListArtifactsParamsTypeTEXT:
 		return true
 	default:
 		return false
@@ -5843,25 +6714,25 @@ func (e ListArtifactsParamsType) Valid() bool {
 
 // Defines values for ListArtifactsParamsScanState.
 const (
-	ListArtifactsParamsScanStateCLEAN       ListArtifactsParamsScanState = "CLEAN"
-	ListArtifactsParamsScanStateFAILED      ListArtifactsParamsScanState = "FAILED"
-	ListArtifactsParamsScanStatePENDING     ListArtifactsParamsScanState = "PENDING"
-	ListArtifactsParamsScanStateQUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
-	ListArtifactsParamsScanStateSCANNING    ListArtifactsParamsScanState = "SCANNING"
+	CLEAN       ListArtifactsParamsScanState = "CLEAN"
+	FAILED      ListArtifactsParamsScanState = "FAILED"
+	PENDING     ListArtifactsParamsScanState = "PENDING"
+	QUARANTINED ListArtifactsParamsScanState = "QUARANTINED"
+	SCANNING    ListArtifactsParamsScanState = "SCANNING"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsScanState enum.
 func (e ListArtifactsParamsScanState) Valid() bool {
 	switch e {
-	case ListArtifactsParamsScanStateCLEAN:
+	case CLEAN:
 		return true
-	case ListArtifactsParamsScanStateFAILED:
+	case FAILED:
 		return true
-	case ListArtifactsParamsScanStatePENDING:
+	case PENDING:
 		return true
-	case ListArtifactsParamsScanStateQUARANTINED:
+	case QUARANTINED:
 		return true
-	case ListArtifactsParamsScanStateSCANNING:
+	case SCANNING:
 		return true
 	default:
 		return false
@@ -5870,15 +6741,42 @@ func (e ListArtifactsParamsScanState) Valid() bool {
 
 // Defines values for ListArtifactsParamsSourceKind.
 const (
-	AGENTRESULT           ListArtifactsParamsSourceKind = "AGENT_RESULT"
-	CONTROLCENTER         ListArtifactsParamsSourceKind = "CONTROL_CENTER"
-	INTEGRATIONRESULT     ListArtifactsParamsSourceKind = "INTEGRATION_RESULT"
-	INTERACTIONATTACHMENT ListArtifactsParamsSourceKind = "INTERACTION_ATTACHMENT"
-	KNOWLEDGESOURCE       ListArtifactsParamsSourceKind = "KNOWLEDGE_SOURCE"
+	ListArtifactsParamsSourceKindAGENTRESULT           ListArtifactsParamsSourceKind = "AGENT_RESULT"
+	ListArtifactsParamsSourceKindCONTROLCENTER         ListArtifactsParamsSourceKind = "CONTROL_CENTER"
+	ListArtifactsParamsSourceKindINTEGRATIONRESULT     ListArtifactsParamsSourceKind = "INTEGRATION_RESULT"
+	ListArtifactsParamsSourceKindINTERACTIONATTACHMENT ListArtifactsParamsSourceKind = "INTERACTION_ATTACHMENT"
+	ListArtifactsParamsSourceKindKNOWLEDGESOURCE       ListArtifactsParamsSourceKind = "KNOWLEDGE_SOURCE"
 )
 
 // Valid indicates whether the value is a known member of the ListArtifactsParamsSourceKind enum.
 func (e ListArtifactsParamsSourceKind) Valid() bool {
+	switch e {
+	case ListArtifactsParamsSourceKindAGENTRESULT:
+		return true
+	case ListArtifactsParamsSourceKindCONTROLCENTER:
+		return true
+	case ListArtifactsParamsSourceKindINTEGRATIONRESULT:
+		return true
+	case ListArtifactsParamsSourceKindINTERACTIONATTACHMENT:
+		return true
+	case ListArtifactsParamsSourceKindKNOWLEDGESOURCE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListArtifactsParamsSourceKinds.
+const (
+	AGENTRESULT           ListArtifactsParamsSourceKinds = "AGENT_RESULT"
+	CONTROLCENTER         ListArtifactsParamsSourceKinds = "CONTROL_CENTER"
+	INTEGRATIONRESULT     ListArtifactsParamsSourceKinds = "INTEGRATION_RESULT"
+	INTERACTIONATTACHMENT ListArtifactsParamsSourceKinds = "INTERACTION_ATTACHMENT"
+	KNOWLEDGESOURCE       ListArtifactsParamsSourceKinds = "KNOWLEDGE_SOURCE"
+)
+
+// Valid indicates whether the value is a known member of the ListArtifactsParamsSourceKinds enum.
+func (e ListArtifactsParamsSourceKinds) Valid() bool {
 	switch e {
 	case AGENTRESULT:
 		return true
@@ -5907,6 +6805,24 @@ func (e ListRoleImageRecipesParamsState) Valid() bool {
 	case ListRoleImageRecipesParamsStateACTIVE:
 		return true
 	case ListRoleImageRecipesParamsStateARCHIVED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetRunAttachmentEligibilityParamsTargetType.
+const (
+	GetRunAttachmentEligibilityParamsTargetTypeAGENT    GetRunAttachmentEligibilityParamsTargetType = "AGENT"
+	GetRunAttachmentEligibilityParamsTargetTypeWORKFLOW GetRunAttachmentEligibilityParamsTargetType = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the GetRunAttachmentEligibilityParamsTargetType enum.
+func (e GetRunAttachmentEligibilityParamsTargetType) Valid() bool {
+	switch e {
+	case GetRunAttachmentEligibilityParamsTargetTypeAGENT:
+		return true
+	case GetRunAttachmentEligibilityParamsTargetTypeWORKFLOW:
 		return true
 	default:
 		return false
@@ -5948,31 +6864,31 @@ func (e ListRunsParamsTargetType) Valid() bool {
 
 // Defines values for ListRunsParamsStates.
 const (
-	CANCELLED    ListRunsParamsStates = "CANCELLED"
-	CANCELLING   ListRunsParamsStates = "CANCELLING"
-	FAILED       ListRunsParamsStates = "FAILED"
-	QUEUED       ListRunsParamsStates = "QUEUED"
-	RUNNING      ListRunsParamsStates = "RUNNING"
-	SUCCEEDED    ListRunsParamsStates = "SUCCEEDED"
-	WAITINGHUMAN ListRunsParamsStates = "WAITING_HUMAN"
+	ListRunsParamsStatesCANCELLED    ListRunsParamsStates = "CANCELLED"
+	ListRunsParamsStatesCANCELLING   ListRunsParamsStates = "CANCELLING"
+	ListRunsParamsStatesFAILED       ListRunsParamsStates = "FAILED"
+	ListRunsParamsStatesQUEUED       ListRunsParamsStates = "QUEUED"
+	ListRunsParamsStatesRUNNING      ListRunsParamsStates = "RUNNING"
+	ListRunsParamsStatesSUCCEEDED    ListRunsParamsStates = "SUCCEEDED"
+	ListRunsParamsStatesWAITINGHUMAN ListRunsParamsStates = "WAITING_HUMAN"
 )
 
 // Valid indicates whether the value is a known member of the ListRunsParamsStates enum.
 func (e ListRunsParamsStates) Valid() bool {
 	switch e {
-	case CANCELLED:
+	case ListRunsParamsStatesCANCELLED:
 		return true
-	case CANCELLING:
+	case ListRunsParamsStatesCANCELLING:
 		return true
-	case FAILED:
+	case ListRunsParamsStatesFAILED:
 		return true
-	case QUEUED:
+	case ListRunsParamsStatesQUEUED:
 		return true
-	case RUNNING:
+	case ListRunsParamsStatesRUNNING:
 		return true
-	case SUCCEEDED:
+	case ListRunsParamsStatesSUCCEEDED:
 		return true
-	case WAITINGHUMAN:
+	case ListRunsParamsStatesWAITINGHUMAN:
 		return true
 	default:
 		return false
@@ -5988,6 +6904,42 @@ const (
 func (e CommandSystemAssistantJSONBodyAction) Valid() bool {
 	switch e {
 	case RECOVER:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for ListVFSNodesParamsLifecycleState.
+const (
+	ListVFSNodesParamsLifecycleStateACTIVE  ListVFSNodesParamsLifecycleState = "ACTIVE"
+	ListVFSNodesParamsLifecycleStateDELETED ListVFSNodesParamsLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the ListVFSNodesParamsLifecycleState enum.
+func (e ListVFSNodesParamsLifecycleState) Valid() bool {
+	switch e {
+	case ListVFSNodesParamsLifecycleStateACTIVE:
+		return true
+	case ListVFSNodesParamsLifecycleStateDELETED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SearchVFSParamsLifecycleState.
+const (
+	ACTIVE  SearchVFSParamsLifecycleState = "ACTIVE"
+	DELETED SearchVFSParamsLifecycleState = "DELETED"
+)
+
+// Valid indicates whether the value is a known member of the SearchVFSParamsLifecycleState enum.
+func (e SearchVFSParamsLifecycleState) Valid() bool {
+	switch e {
+	case ACTIVE:
+		return true
+	case DELETED:
 		return true
 	default:
 		return false
@@ -6171,33 +7123,34 @@ type AdministrationStateProfile string
 
 // Agent defines model for Agent.
 type Agent struct {
-	Avatar                *AgentAvatar         `json:"avatar,omitempty"`
-	AvatarUrl             *string              `json:"avatarUrl,omitempty"`
-	Capabilities          []PlatformCapability `json:"capabilities"`
-	CurrentActivity       *string              `json:"currentActivity,omitempty"`
-	DraftInstructions     *InstructionVersion  `json:"draftInstructions,omitempty"`
-	Enabled               bool                 `json:"enabled"`
-	Integrations          []string             `json:"integrations"`
-	KnowledgeArtifactRefs []OpaqueRef          `json:"knowledgeArtifactRefs"`
-	Name                  string               `json:"name"`
-	NextActions           []NextAction         `json:"nextActions"`
-	ProjectRef            OpaqueRef            `json:"projectRef"`
-	PublishedInstructions *InstructionVersion  `json:"publishedInstructions,omitempty"`
-	Purpose               string               `json:"purpose"`
-	Ref                   OpaqueRef            `json:"ref"`
-	RoleDefinitionName    *string              `json:"roleDefinitionName,omitempty"`
-	RoleDefinitionRef     *OpaqueRef           `json:"roleDefinitionRef,omitempty"`
-	RoleDescription       string               `json:"roleDescription"`
-	RuntimeModel          *string              `json:"runtimeModel,omitempty"`
-	RuntimeName           string               `json:"runtimeName"`
-	RuntimeProvider       *string              `json:"runtimeProvider,omitempty"`
-	RuntimeReady          bool                 `json:"runtimeReady"`
-	RuntimeRef            OpaqueRef            `json:"runtimeRef"`
-	RuntimeRevision       *string              `json:"runtimeRevision,omitempty"`
-	State                 AgentState           `json:"state"`
-	System                bool                 `json:"system"`
-	UpdatedAt             Timestamp            `json:"updatedAt"`
-	Version               int64                `json:"version"`
+	Avatar                *AgentAvatar              `json:"avatar,omitempty"`
+	AvatarUrl             *string                   `json:"avatarUrl,omitempty"`
+	Capabilities          []PlatformCapability      `json:"capabilities"`
+	CurrentActivity       *string                   `json:"currentActivity,omitempty"`
+	DraftInstructions     *InstructionVersion       `json:"draftInstructions,omitempty"`
+	Enabled               bool                      `json:"enabled"`
+	InstructionBinding    *AgentInstructionsBinding `json:"instructionBinding,omitempty"`
+	Integrations          []string                  `json:"integrations"`
+	KnowledgeArtifactRefs []OpaqueRef               `json:"knowledgeArtifactRefs"`
+	Name                  string                    `json:"name"`
+	NextActions           []NextAction              `json:"nextActions"`
+	ProjectRef            OpaqueRef                 `json:"projectRef"`
+	PublishedInstructions *InstructionVersion       `json:"publishedInstructions,omitempty"`
+	Purpose               string                    `json:"purpose"`
+	Ref                   OpaqueRef                 `json:"ref"`
+	RoleDefinitionName    *string                   `json:"roleDefinitionName,omitempty"`
+	RoleDefinitionRef     *OpaqueRef                `json:"roleDefinitionRef,omitempty"`
+	RoleDescription       string                    `json:"roleDescription"`
+	RuntimeModel          *string                   `json:"runtimeModel,omitempty"`
+	RuntimeName           string                    `json:"runtimeName"`
+	RuntimeProvider       *string                   `json:"runtimeProvider,omitempty"`
+	RuntimeReady          bool                      `json:"runtimeReady"`
+	RuntimeRef            OpaqueRef                 `json:"runtimeRef"`
+	RuntimeRevision       *string                   `json:"runtimeRevision,omitempty"`
+	State                 AgentState                `json:"state"`
+	System                bool                      `json:"system"`
+	UpdatedAt             Timestamp                 `json:"updatedAt"`
+	Version               int64                     `json:"version"`
 }
 
 // AgentState defines model for Agent.State.
@@ -6302,6 +7255,14 @@ type AgentInput struct {
 	RuntimeRef *OpaqueRef `json:"runtimeRef,omitempty"`
 }
 
+// AgentInstructionsBinding defines model for AgentInstructionsBinding.
+type AgentInstructionsBinding struct {
+	Effective   bool      `json:"effective"`
+	Ref         OpaqueRef `json:"ref"`
+	RevisionRef OpaqueRef `json:"revisionRef"`
+	Version     int64     `json:"version"`
+}
+
 // AgentPage defines model for AgentPage.
 type AgentPage struct {
 	Items         []Agent `json:"items"`
@@ -6399,6 +7360,37 @@ type ArtifactBindingInput struct {
 	AgentRef OpaqueRef `json:"agentRef"`
 	Enabled  bool      `json:"enabled"`
 }
+
+// ArtifactBindingTarget defines model for ArtifactBindingTarget.
+type ArtifactBindingTarget struct {
+	AgentRef     OpaqueRef                   `json:"agentRef"`
+	AgentVersion int64                       `json:"agentVersion"`
+	BindReason   ArtifactBindingTargetReason `json:"bindReason"`
+	Bound        bool                        `json:"bound"`
+	CanBind      bool                        `json:"canBind"`
+	CanUnbind    bool                        `json:"canUnbind"`
+	Name         string                      `json:"name"`
+	State        ArtifactBindingTargetState  `json:"state"`
+	UnbindReason ArtifactBindingTargetReason `json:"unbindReason"`
+}
+
+// ArtifactBindingTargetState defines model for ArtifactBindingTarget.State.
+type ArtifactBindingTargetState string
+
+// ArtifactBindingTargetPage defines model for ArtifactBindingTargetPage.
+type ArtifactBindingTargetPage struct {
+	ArtifactRef     OpaqueRef               `json:"artifactRef"`
+	ArtifactVersion int64                   `json:"artifactVersion"`
+	Digest          string                  `json:"digest"`
+	EvaluatedAt     Timestamp               `json:"evaluatedAt"`
+	Items           []ArtifactBindingTarget `json:"items"`
+	NextPageToken   *string                 `json:"nextPageToken,omitempty"`
+	ProjectRef      OpaqueRef               `json:"projectRef"`
+	Total           int64                   `json:"total"`
+}
+
+// ArtifactBindingTargetReason defines model for ArtifactBindingTargetReason.
+type ArtifactBindingTargetReason string
 
 // ArtifactImpact defines model for ArtifactImpact.
 type ArtifactImpact struct {
@@ -6778,6 +7770,84 @@ type ConfigOverlayVersion struct {
 	Version            int64                      `json:"version"`
 }
 
+// ConfigurationWriteBack defines model for ConfigurationWriteBack.
+type ConfigurationWriteBack struct {
+	ApprovalDigest         string                              `json:"approvalDigest"`
+	ApprovedAt             *Timestamp                          `json:"approvedAt,omitempty"`
+	BaseCommitSha          string                              `json:"baseCommitSha"`
+	BaseContentSha256      string                              `json:"baseContentSha256"`
+	BranchConfirmedAt      *Timestamp                          `json:"branchConfirmedAt,omitempty"`
+	CandidateCommitSha     *string                             `json:"candidateCommitSha,omitempty"`
+	CompletedAt            *Timestamp                          `json:"completedAt,omitempty"`
+	ConfigurationRef       OpaqueRef                           `json:"configurationRef"`
+	ConfigurationVersion   int64                               `json:"configurationVersion"`
+	ConnectionRef          OpaqueRef                           `json:"connectionRef"`
+	ConnectionVersion      int64                               `json:"connectionVersion"`
+	ContentFormat          ConfigurationWriteBackContentFormat `json:"contentFormat"`
+	CreatedAt              Timestamp                           `json:"createdAt"`
+	ExpiresAt              Timestamp                           `json:"expiresAt"`
+	FailureCode            *ConfigurationWriteBackFailureCode  `json:"failureCode,omitempty"`
+	Kind                   ConfigurationWriteBackKind          `json:"kind"`
+	NextActions            []ConfigurationWriteBackAction      `json:"nextActions"`
+	Path                   string                              `json:"path"`
+	ProposalBranch         string                              `json:"proposalBranch"`
+	ProposedContentSha256  string                              `json:"proposedContentSha256"`
+	PullRequestConfirmedAt *Timestamp                          `json:"pullRequestConfirmedAt,omitempty"`
+	PullRequestRef         *string                             `json:"pullRequestRef,omitempty"`
+	PullRequestUrl         *string                             `json:"pullRequestUrl,omitempty"`
+	Ref                    OpaqueRef                           `json:"ref"`
+	RepositoryRef          string                              `json:"repositoryRef"`
+	SourceRef              OpaqueRef                           `json:"sourceRef"`
+	SourceRefName          string                              `json:"sourceRefName"`
+	SourceVersion          int64                               `json:"sourceVersion"`
+	State                  ConfigurationWriteBackState         `json:"state"`
+	Version                int64                               `json:"version"`
+}
+
+// ConfigurationWriteBackContentFormat defines model for ConfigurationWriteBack.ContentFormat.
+type ConfigurationWriteBackContentFormat string
+
+// ConfigurationWriteBackFailureCode defines model for ConfigurationWriteBack.FailureCode.
+type ConfigurationWriteBackFailureCode string
+
+// ConfigurationWriteBackKind defines model for ConfigurationWriteBack.Kind.
+type ConfigurationWriteBackKind string
+
+// ConfigurationWriteBackState defines model for ConfigurationWriteBack.State.
+type ConfigurationWriteBackState string
+
+// ConfigurationWriteBackAction defines model for ConfigurationWriteBackAction.
+type ConfigurationWriteBackAction struct {
+	Action  ConfigurationWriteBackActionAction `json:"action"`
+	Enabled bool                               `json:"enabled"`
+	Reason  ConfigurationWriteBackActionReason `json:"reason"`
+}
+
+// ConfigurationWriteBackActionAction defines model for ConfigurationWriteBackAction.Action.
+type ConfigurationWriteBackActionAction string
+
+// ConfigurationWriteBackActionReason defines model for ConfigurationWriteBackAction.Reason.
+type ConfigurationWriteBackActionReason string
+
+// ConfigurationWriteBackDecisionInput defines model for ConfigurationWriteBackDecisionInput.
+type ConfigurationWriteBackDecisionInput struct {
+	ApprovalDigest string `json:"approvalDigest"`
+}
+
+// ConfigurationWriteBackPage defines model for ConfigurationWriteBackPage.
+type ConfigurationWriteBackPage struct {
+	Items         []ConfigurationWriteBack `json:"items"`
+	NextPageToken *string                  `json:"nextPageToken,omitempty"`
+	Total         int64                    `json:"total"`
+}
+
+// ConfigurationWriteBackView defines model for ConfigurationWriteBackView.
+type ConfigurationWriteBackView struct {
+	BaseContent     string                 `json:"baseContent"`
+	Proposal        ConfigurationWriteBack `json:"proposal"`
+	ProposedContent string                 `json:"proposedContent"`
+}
+
 // ContextProvenance defines model for ContextProvenance.
 type ContextProvenance struct {
 	ActorRef       OpaqueRef `json:"actorRef"`
@@ -7127,14 +8197,26 @@ type IncidentSeverity string
 // IncidentState defines model for Incident.State.
 type IncidentState string
 
-// InstructionCommand defines model for InstructionCommand.
+// InstructionCommand PUBLISH требует planRef и явный selectedItemRefs (пустой массив допустим); остальные действия не принимают эти поля.
 type InstructionCommand struct {
 	Action                  InstructionCommandAction `json:"action"`
+	PlanRef                 *OpaqueRef               `json:"planRef,omitempty"`
 	PublishedInstructionRef *OpaqueRef               `json:"publishedInstructionRef,omitempty"`
+	SelectedItemRefs        *[]OpaqueRef             `json:"selectedItemRefs,omitempty"`
 }
 
 // InstructionCommandAction defines model for InstructionCommand.Action.
 type InstructionCommandAction string
+
+// InstructionPublicationResult defines model for InstructionPublicationResult.
+type InstructionPublicationResult struct {
+	Agent struct {
+		ProjectRef OpaqueRef `json:"projectRef"`
+		Ref        OpaqueRef `json:"ref"`
+		Version    int64     `json:"version"`
+	} `json:"agent"`
+	Plan RevisionImpactPlan `json:"plan"`
+}
 
 // InstructionVersion defines model for InstructionVersion.
 type InstructionVersion struct {
@@ -7449,6 +8531,7 @@ type ManagedConfigurationDraftInput struct {
 	ContentFormat    ManagedConfigurationDraftInputContentFormat `json:"contentFormat"`
 	Name             string                                      `json:"name"`
 	ProjectRef       *OpaqueRef                                  `json:"projectRef,omitempty"`
+	PromptScope      *PromptTemplateScopeInput                   `json:"promptScope,omitempty"`
 }
 
 // ManagedConfigurationDraftInputContentFormat defines model for ManagedConfigurationDraftInput.ContentFormat.
@@ -7459,6 +8542,7 @@ type ManagedConfigurationDraftSaveInput struct {
 	// Content Неполный текст допустим; ограничение 256 KiB применяется к UTF-8 байтам. Пустая строка разрешена, отсутствие поля и null запрещены.
 	Content       *string                                         `json:"content"`
 	ContentFormat ManagedConfigurationDraftSaveInputContentFormat `json:"contentFormat"`
+	PromptScope   *PromptTemplateScopeInput                       `json:"promptScope,omitempty"`
 }
 
 // ManagedConfigurationDraftSaveInputContentFormat defines model for ManagedConfigurationDraftSaveInput.ContentFormat.
@@ -7535,6 +8619,7 @@ type ManagedConfigurationRevision struct {
 	CreatedAt             Timestamp                                 `json:"createdAt"`
 	Digest                string                                    `json:"digest"`
 	ParentRevisionRef     *OpaqueRef                                `json:"parentRevisionRef,omitempty"`
+	PromptScope           *PromptTemplateScope                      `json:"promptScope,omitempty"`
 	PublishedAt           *Timestamp                                `json:"publishedAt,omitempty"`
 	Ref                   OpaqueRef                                 `json:"ref"`
 	Revision              int64                                     `json:"revision"`
@@ -7814,6 +8899,12 @@ type PlatformMembershipCreateInput struct {
 // PlatformMembershipCreateInputPlatformRole defines model for PlatformMembershipCreateInput.PlatformRole.
 type PlatformMembershipCreateInputPlatformRole string
 
+// PrepareConfigurationWriteBackInput defines model for PrepareConfigurationWriteBackInput.
+type PrepareConfigurationWriteBackInput struct {
+	Content               string `json:"content"`
+	ExpectedSourceVersion int64  `json:"expectedSourceVersion"`
+}
+
 // Problem defines model for Problem.
 type Problem struct {
 	ActualVersion *int64             `json:"actualVersion,omitempty"`
@@ -7885,13 +8976,108 @@ type ProjectPage struct {
 	NextPageToken *string      `json:"nextPageToken,omitempty"`
 }
 
+// PromptContextPin defines model for PromptContextPin.
+type PromptContextPin struct {
+	AgentRef                   *OpaqueRef `json:"agentRef,omitempty"`
+	AgentVersion               *int64     `json:"agentVersion,omitempty"`
+	AttachmentManifestDigest   *string    `json:"attachmentManifestDigest,omitempty"`
+	AttachmentSetRef           *OpaqueRef `json:"attachmentSetRef,omitempty"`
+	Digest                     string     `json:"digest"`
+	EnvironmentBindingRef      *OpaqueRef `json:"environmentBindingRef,omitempty"`
+	EnvironmentBindingVersion  *int64     `json:"environmentBindingVersion,omitempty"`
+	EnvironmentDigest          *string    `json:"environmentDigest,omitempty"`
+	EnvironmentVersionRef      *OpaqueRef `json:"environmentVersionRef,omitempty"`
+	PreviousRuntimeRevisionRef *OpaqueRef `json:"previousRuntimeRevisionRef,omitempty"`
+	RuntimeConfigurationDigest *string    `json:"runtimeConfigurationDigest,omitempty"`
+	RuntimeConfigurationRef    *OpaqueRef `json:"runtimeConfigurationRef,omitempty"`
+	WorkflowRef                *OpaqueRef `json:"workflowRef,omitempty"`
+	WorkflowRevisionRef        *OpaqueRef `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey           *string    `json:"workflowStageKey,omitempty"`
+	WorkflowVersion            *int64     `json:"workflowVersion,omitempty"`
+}
+
+// PromptPreviewContext defines model for PromptPreviewContext.
+type PromptPreviewContext struct {
+	AgentRef                *OpaqueRef              `json:"agentRef,omitempty"`
+	AttachmentSetRef        *OpaqueRef              `json:"attachmentSetRef,omitempty"`
+	ExpectedAgentVersion    *int64                  `json:"expectedAgentVersion,omitempty"`
+	ExpectedWorkflowVersion *int64                  `json:"expectedWorkflowVersion,omitempty"`
+	Input                   *map[string]interface{} `json:"input,omitempty"`
+	Task                    *string                 `json:"task,omitempty"`
+	WorkflowRevisionRef     *OpaqueRef              `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey        *string                 `json:"workflowStageKey,omitempty"`
+}
+
+// PromptPreviewSection defines model for PromptPreviewSection.
+type PromptPreviewSection struct {
+	Content        string                        `json:"content"`
+	Slot           *PromptSemanticSlot           `json:"slot,omitempty"`
+	Source         PromptSectionSource           `json:"source"`
+	TemplateDigest *string                       `json:"templateDigest,omitempty"`
+	TemplateRef    *OpaqueRef                    `json:"templateRef,omitempty"`
+	UserKind       *PromptPreviewSectionUserKind `json:"userKind,omitempty"`
+}
+
+// PromptPreviewSectionUserKind defines model for PromptPreviewSection.UserKind.
+type PromptPreviewSectionUserKind string
+
+// PromptPreviewTargetKind defines model for PromptPreviewTargetKind.
+type PromptPreviewTargetKind string
+
+// PromptRuntimeChange defines model for PromptRuntimeChange.
+type PromptRuntimeChange struct {
+	Action    PromptRuntimeChangeAction    `json:"action"`
+	Component PromptRuntimeChangeComponent `json:"component"`
+	Current   []PromptRuntimeDescriptor    `json:"current"`
+	Previous  []PromptRuntimeDescriptor    `json:"previous"`
+}
+
+// PromptRuntimeChangeAction defines model for PromptRuntimeChange.Action.
+type PromptRuntimeChangeAction string
+
+// PromptRuntimeChangeComponent defines model for PromptRuntimeChange.Component.
+type PromptRuntimeChangeComponent string
+
+// PromptRuntimeDescriptor defines model for PromptRuntimeDescriptor.
+type PromptRuntimeDescriptor struct {
+	Digest  *string `json:"digest,omitempty"`
+	Ref     *string `json:"ref,omitempty"`
+	Value   *string `json:"value,omitempty"`
+	Version *int64  `json:"version,omitempty"`
+}
+
+// PromptRuntimeDiff defines model for PromptRuntimeDiff.
+type PromptRuntimeDiff struct {
+	Attempt             *int32                `json:"attempt,omitempty"`
+	Changes             []PromptRuntimeChange `json:"changes"`
+	CurrentRevisionRef  *OpaqueRef            `json:"currentRevisionRef,omitempty"`
+	Digest              string                `json:"digest"`
+	PreviousRevisionRef OpaqueRef             `json:"previousRevisionRef"`
+	SessionRef          OpaqueRef             `json:"sessionRef"`
+	TurnRef             *OpaqueRef            `json:"turnRef,omitempty"`
+}
+
+// PromptSectionSource defines model for PromptSectionSource.
+type PromptSectionSource string
+
+// PromptSemanticSlot defines model for PromptSemanticSlot.
+type PromptSemanticSlot string
+
+// PromptSlotProvenance defines model for PromptSlotProvenance.
+type PromptSlotProvenance struct {
+	Position int32               `json:"position"`
+	Slot     PromptSemanticSlot  `json:"slot"`
+	Source   PromptSectionSource `json:"source"`
+}
+
 // PromptTemplateDiagnostic defines model for PromptTemplateDiagnostic.
 type PromptTemplateDiagnostic struct {
-	Code     string                           `json:"code"`
-	Column   int32                            `json:"column"`
-	Line     int32                            `json:"line"`
-	Message  string                           `json:"message"`
-	Severity PromptTemplateDiagnosticSeverity `json:"severity"`
+	Code         string                           `json:"code"`
+	Column       int32                            `json:"column"`
+	Line         int32                            `json:"line"`
+	Message      string                           `json:"message"`
+	Severity     PromptTemplateDiagnosticSeverity `json:"severity"`
+	VariableName *string                          `json:"variableName,omitempty"`
 }
 
 // PromptTemplateDiagnosticSeverity defines model for PromptTemplateDiagnostic.Severity.
@@ -7899,32 +9085,102 @@ type PromptTemplateDiagnosticSeverity string
 
 // PromptTemplateInput defines model for PromptTemplateInput.
 type PromptTemplateInput struct {
-	Template string `json:"template"`
+	Context               *PromptPreviewContext    `json:"context,omitempty"`
+	ExpectedContextDigest *string                  `json:"expectedContextDigest,omitempty"`
+	TargetKind            *PromptPreviewTargetKind `json:"targetKind,omitempty"`
+	TargetRef             *OpaqueRef               `json:"targetRef,omitempty"`
+	Template              string                   `json:"template"`
 }
 
 // PromptTemplatePreview defines model for PromptTemplatePreview.
 type PromptTemplatePreview struct {
-	Diagnostics            []PromptTemplateDiagnostic `json:"diagnostics"`
-	FullMaterializedPrompt *string                    `json:"fullMaterializedPrompt,omitempty"`
-	SafePreview            string                     `json:"safePreview"`
+	Complete                bool                       `json:"complete"`
+	ContextPin              *PromptContextPin          `json:"contextPin,omitempty"`
+	Diagnostics             []PromptTemplateDiagnostic `json:"diagnostics"`
+	EffectiveCapabilities   []string                   `json:"effectiveCapabilities"`
+	FullMaterializedPrompt  *string                    `json:"fullMaterializedPrompt,omitempty"`
+	Locale                  string                     `json:"locale"`
+	MaterializationDigest   string                     `json:"materializationDigest"`
+	RuntimeDiff             *PromptRuntimeDiff         `json:"runtimeDiff,omitempty"`
+	SafePreview             string                     `json:"safePreview"`
+	Sections                []PromptPreviewSection     `json:"sections"`
+	ServiceTemplateDigest   string                     `json:"serviceTemplateDigest"`
+	ServiceTemplateRevision string                     `json:"serviceTemplateRevision"`
+	Slots                   []PromptSlotProvenance     `json:"slots"`
+	TemplateDigest          string                     `json:"templateDigest"`
+	TemplateRef             OpaqueRef                  `json:"templateRef"`
+	VariableSnapshotDigest  string                     `json:"variableSnapshotDigest"`
 }
 
 // PromptTemplatePreviewInput defines model for PromptTemplatePreviewInput.
 type PromptTemplatePreviewInput struct {
-	IncludeFullMaterialization *bool                                 `json:"includeFullMaterialization,omitempty"`
-	TargetKind                 *PromptTemplatePreviewInputTargetKind `json:"targetKind,omitempty"`
-	TargetRef                  *OpaqueRef                            `json:"targetRef,omitempty"`
-	Template                   string                                `json:"template"`
+	Context                    *PromptPreviewContext    `json:"context,omitempty"`
+	ExpectedContextDigest      *string                  `json:"expectedContextDigest,omitempty"`
+	IncludeFullMaterialization *bool                    `json:"includeFullMaterialization,omitempty"`
+	TargetKind                 *PromptPreviewTargetKind `json:"targetKind,omitempty"`
+	TargetRef                  *OpaqueRef               `json:"targetRef,omitempty"`
+	Template                   string                   `json:"template"`
 }
 
-// PromptTemplatePreviewInputTargetKind defines model for PromptTemplatePreviewInput.TargetKind.
-type PromptTemplatePreviewInputTargetKind string
+// PromptTemplatePublicationResult defines model for PromptTemplatePublicationResult.
+type PromptTemplatePublicationResult struct {
+	Configuration ManagedConfiguration         `json:"configuration"`
+	Plan          RevisionImpactPlan           `json:"plan"`
+	Revision      ManagedConfigurationRevision `json:"revision"`
+}
+
+// PromptTemplateScope defines model for PromptTemplateScope.
+type PromptTemplateScope struct {
+	ContextPin   PromptContextPin                `json:"contextPin"`
+	TargetKind   PromptTemplateScopeTargetKind   `json:"targetKind"`
+	TargetRef    OpaqueRef                       `json:"targetRef"`
+	TemplateKind PromptTemplateScopeTemplateKind `json:"templateKind"`
+}
+
+// PromptTemplateScopeTargetKind defines model for PromptTemplateScope.TargetKind.
+type PromptTemplateScopeTargetKind string
+
+// PromptTemplateScopeTemplateKind defines model for PromptTemplateScope.TemplateKind.
+type PromptTemplateScopeTemplateKind string
+
+// PromptTemplateScopeInput defines model for PromptTemplateScopeInput.
+type PromptTemplateScopeInput struct {
+	AgentRef              *OpaqueRef                           `json:"agentRef,omitempty"`
+	ExpectedContextDigest *string                              `json:"expectedContextDigest,omitempty"`
+	TargetKind            PromptTemplateScopeInputTargetKind   `json:"targetKind"`
+	TargetRef             OpaqueRef                            `json:"targetRef"`
+	TemplateKind          PromptTemplateScopeInputTemplateKind `json:"templateKind"`
+	WorkflowRevisionRef   *OpaqueRef                           `json:"workflowRevisionRef,omitempty"`
+	WorkflowStageKey      *string                              `json:"workflowStageKey,omitempty"`
+}
+
+// PromptTemplateScopeInputTargetKind defines model for PromptTemplateScopeInput.TargetKind.
+type PromptTemplateScopeInputTargetKind string
+
+// PromptTemplateScopeInputTemplateKind defines model for PromptTemplateScopeInput.TemplateKind.
+type PromptTemplateScopeInputTemplateKind string
 
 // PromptTemplateValidation defines model for PromptTemplateValidation.
 type PromptTemplateValidation struct {
+	ContextPin  *PromptContextPin          `json:"contextPin,omitempty"`
 	Diagnostics []PromptTemplateDiagnostic `json:"diagnostics"`
 	Valid       bool                       `json:"valid"`
 }
+
+// PromptVariableCatalogInput defines model for PromptVariableCatalogInput.
+type PromptVariableCatalogInput struct {
+	Context               *PromptPreviewContext                `json:"context,omitempty"`
+	ExpectedContextDigest *string                              `json:"expectedContextDigest,omitempty"`
+	PageSize              *int                                 `json:"pageSize,omitempty"`
+	PageToken             *string                              `json:"pageToken,omitempty"`
+	ProjectRef            *OpaqueRef                           `json:"projectRef,omitempty"`
+	Query                 *string                              `json:"query,omitempty"`
+	TargetKind            PromptVariableCatalogInputTargetKind `json:"targetKind"`
+	TargetRef             OpaqueRef                            `json:"targetRef"`
+}
+
+// PromptVariableCatalogInputTargetKind defines model for PromptVariableCatalogInput.TargetKind.
+type PromptVariableCatalogInputTargetKind string
 
 // ProviderAccount defines model for ProviderAccount.
 type ProviderAccount struct {
@@ -8080,6 +9336,70 @@ type PublicRuntimeRevisionIdentity struct {
 	Version        int64      `json:"version"`
 }
 
+// RevisionImpactItem defines model for RevisionImpactItem.
+type RevisionImpactItem struct {
+	BindingRef      OpaqueRef                      `json:"bindingRef"`
+	BindingVersion  int64                          `json:"bindingVersion"`
+	ConsumerKind    RevisionImpactItemConsumerKind `json:"consumerKind"`
+	ConsumerRef     OpaqueRef                      `json:"consumerRef"`
+	ConsumerVersion int64                          `json:"consumerVersion"`
+	Outcome         RevisionImpactItemOutcome      `json:"outcome"`
+
+	// ProjectRef Пустая строка допустима только для организационного Agent или AGENT_CONTINUATION в плане PromptTemplate; область и права проверяет owner.
+	ProjectRef            string     `json:"projectRef"`
+	Ref                   OpaqueRef  `json:"ref"`
+	ResultBindingRef      *OpaqueRef `json:"resultBindingRef,omitempty"`
+	ResultBindingVersion  *int64     `json:"resultBindingVersion,omitempty"`
+	ResultConsumerVersion *int64     `json:"resultConsumerVersion,omitempty"`
+	ResultRevisionRef     *OpaqueRef `json:"resultRevisionRef,omitempty"`
+	SourceRevisionRef     OpaqueRef  `json:"sourceRevisionRef"`
+}
+
+// RevisionImpactItemConsumerKind defines model for RevisionImpactItem.ConsumerKind.
+type RevisionImpactItemConsumerKind string
+
+// RevisionImpactItemOutcome defines model for RevisionImpactItem.Outcome.
+type RevisionImpactItemOutcome string
+
+// RevisionImpactPage defines model for RevisionImpactPage.
+type RevisionImpactPage struct {
+	Items         []RevisionImpactItem `json:"items"`
+	NextPageToken *string              `json:"nextPageToken,omitempty"`
+	Plan          RevisionImpactPlan   `json:"plan"`
+	Total         int64                `json:"total"`
+}
+
+// RevisionImpactPlan defines model for RevisionImpactPlan.
+type RevisionImpactPlan struct {
+	CreatedAt            time.Time               `json:"createdAt"`
+	Digest               string                  `json:"digest"`
+	DraftRef             OpaqueRef               `json:"draftRef"`
+	DraftVersion         int64                   `json:"draftVersion"`
+	ExpiresAt            time.Time               `json:"expiresAt"`
+	Kind                 RevisionImpactPlanKind  `json:"kind"`
+	PublishedRevisionRef *OpaqueRef              `json:"publishedRevisionRef,omitempty"`
+	Ref                  OpaqueRef               `json:"ref"`
+	SourceRef            *OpaqueRef              `json:"sourceRef,omitempty"`
+	SourceRevisionRef    *OpaqueRef              `json:"sourceRevisionRef,omitempty"`
+	SourceVersion        int64                   `json:"sourceVersion"`
+	State                RevisionImpactPlanState `json:"state"`
+	TargetDigest         string                  `json:"targetDigest"`
+	Total                int64                   `json:"total"`
+	Version              int64                   `json:"version"`
+}
+
+// RevisionImpactPlanKind defines model for RevisionImpactPlan.Kind.
+type RevisionImpactPlanKind string
+
+// RevisionImpactPlanState defines model for RevisionImpactPlan.State.
+type RevisionImpactPlanState string
+
+// RevisionImpactPublicationInput defines model for RevisionImpactPublicationInput.
+type RevisionImpactPublicationInput struct {
+	PlanRef          OpaqueRef   `json:"planRef"`
+	SelectedItemRefs []OpaqueRef `json:"selectedItemRefs"`
+}
+
 // RoleEnvironment defines model for RoleEnvironment.
 type RoleEnvironment struct {
 	Available                 bool                      `json:"available"`
@@ -8189,6 +9509,56 @@ type RoleImageGitSourceInput struct {
 // RoleImageGitSourceInputContentFormat defines model for RoleImageGitSourceInput.ContentFormat.
 type RoleImageGitSourceInputContentFormat string
 
+// RoleImageImpactItem defines model for RoleImageImpactItem.
+type RoleImageImpactItem struct {
+	Consumer                    *RuntimeEnvironmentConsumer `json:"consumer,omitempty"`
+	EnvironmentRef              OpaqueRef                   `json:"environmentRef"`
+	EnvironmentVersion          int64                       `json:"environmentVersion"`
+	Outcome                     RoleImageImpactItemOutcome  `json:"outcome"`
+	ProjectRef                  OpaqueRef                   `json:"projectRef"`
+	Ref                         OpaqueRef                   `json:"ref"`
+	ResultBindingRef            *OpaqueRef                  `json:"resultBindingRef,omitempty"`
+	ResultBindingVersion        *int64                      `json:"resultBindingVersion,omitempty"`
+	ResultEnvironmentVersionRef *OpaqueRef                  `json:"resultEnvironmentVersionRef,omitempty"`
+	SourceVersionDigest         string                      `json:"sourceVersionDigest"`
+	SourceVersionRef            OpaqueRef                   `json:"sourceVersionRef"`
+}
+
+// RoleImageImpactItemOutcome defines model for RoleImageImpactItem.Outcome.
+type RoleImageImpactItemOutcome string
+
+// RoleImageImpactPage defines model for RoleImageImpactPage.
+type RoleImageImpactPage struct {
+	Items         []RoleImageImpactItem `json:"items"`
+	NextPageToken *string               `json:"nextPageToken,omitempty"`
+	Plan          RoleImageImpactPlan   `json:"plan"`
+	Total         int64                 `json:"total"`
+}
+
+// RoleImageImpactPlan defines model for RoleImageImpactPlan.
+type RoleImageImpactPlan struct {
+	AdmissionPolicyDigest string                   `json:"admissionPolicyDigest"`
+	ArtifactDigest        string                   `json:"artifactDigest"`
+	ArtifactRef           OpaqueRef                `json:"artifactRef"`
+	BuildRef              OpaqueRef                `json:"buildRef"`
+	ConfigurationRef      OpaqueRef                `json:"configurationRef"`
+	ConfigurationVersion  int64                    `json:"configurationVersion"`
+	CreatedAt             Timestamp                `json:"createdAt"`
+	Digest                string                   `json:"digest"`
+	ExpiresAt             Timestamp                `json:"expiresAt"`
+	RecipeGeneration      int64                    `json:"recipeGeneration"`
+	RecipeRef             OpaqueRef                `json:"recipeRef"`
+	Ref                   OpaqueRef                `json:"ref"`
+	RevisionDigest        string                   `json:"revisionDigest"`
+	RevisionRef           OpaqueRef                `json:"revisionRef"`
+	State                 RoleImageImpactPlanState `json:"state"`
+	Total                 int64                    `json:"total"`
+	Version               int64                    `json:"version"`
+}
+
+// RoleImageImpactPlanState defines model for RoleImageImpactPlan.State.
+type RoleImageImpactPlanState string
+
 // RoleImageManagedLineage Авторитетное происхождение рецепта; у SHIPPED baseline может отсутствовать managed revision. Отсутствие lineage не назначает UI право изменения.
 type RoleImageManagedLineage struct {
 	ConfigurationRef *OpaqueRef                       `json:"configurationRef,omitempty"`
@@ -8226,6 +9596,20 @@ type RoleImagePromotionReceipt struct {
 
 // RoleImagePromotionReceiptState defines model for RoleImagePromotionReceipt.State.
 type RoleImagePromotionReceiptState string
+
+// RoleImageRebindInput defines model for RoleImageRebindInput.
+type RoleImageRebindInput struct {
+	ImpactDigest     string      `json:"impactDigest"`
+	PlanRef          OpaqueRef   `json:"planRef"`
+	SelectedItemRefs []OpaqueRef `json:"selectedItemRefs"`
+}
+
+// RoleImageRebindResult defines model for RoleImageRebindResult.
+type RoleImageRebindResult struct {
+	Configuration ManagedConfiguration         `json:"configuration"`
+	Plan          RoleImageImpactPlan          `json:"plan"`
+	Revision      ManagedConfigurationRevision `json:"revision"`
+}
 
 // RoleImageRecipe defines model for RoleImageRecipe.
 type RoleImageRecipe struct {
@@ -8361,6 +9745,26 @@ type RunState string
 
 // RunTitleSource defines model for Run.TitleSource.
 type RunTitleSource string
+
+// RunAttachmentEligibility defines model for RunAttachmentEligibility.
+type RunAttachmentEligibility struct {
+	Digest             string                             `json:"digest"`
+	Eligible           bool                               `json:"eligible"`
+	EvaluatedAt        Timestamp                          `json:"evaluatedAt"`
+	ProjectRef         OpaqueRef                          `json:"projectRef"`
+	Reason             RunAttachmentEligibilityReason     `json:"reason"`
+	RunRef             *OpaqueRef                         `json:"runRef,omitempty"`
+	RunVersion         int64                              `json:"runVersion"`
+	TargetRef          OpaqueRef                          `json:"targetRef"`
+	TargetType         RunAttachmentEligibilityTargetType `json:"targetType"`
+	WorkflowVersionRef *OpaqueRef                         `json:"workflowVersionRef,omitempty"`
+}
+
+// RunAttachmentEligibilityReason defines model for RunAttachmentEligibility.Reason.
+type RunAttachmentEligibilityReason string
+
+// RunAttachmentEligibilityTargetType defines model for RunAttachmentEligibility.TargetType.
+type RunAttachmentEligibilityTargetType string
 
 // RunCommand defines model for RunCommand.
 type RunCommand struct {
@@ -8675,6 +10079,13 @@ type RuntimeEnvironmentPolicyInput struct {
 	NetworkDestinations []RuntimeNetworkDestination `json:"networkDestinations"`
 	Resources           RuntimeResourcePolicy       `json:"resources"`
 	Volumes             []RuntimeVolumeInput        `json:"volumes"`
+}
+
+// RuntimeEnvironmentPublicationResult defines model for RuntimeEnvironmentPublicationResult.
+type RuntimeEnvironmentPublicationResult struct {
+	Draft       RuntimeEnvironmentDraft `json:"draft"`
+	Environment RuntimeEnvironmentSet   `json:"environment"`
+	Plan        RevisionImpactPlan      `json:"plan"`
 }
 
 // RuntimeEnvironmentReadiness defines model for RuntimeEnvironmentReadiness.
@@ -9617,6 +11028,7 @@ type TemplateVariableFieldValueType string
 
 // TemplateVariablePage defines model for TemplateVariablePage.
 type TemplateVariablePage struct {
+	ContextPin    *PromptContextPin  `json:"contextPin,omitempty"`
 	Items         []TemplateVariable `json:"items"`
 	NextPageToken *string            `json:"nextPageToken,omitempty"`
 	Total         int64              `json:"total"`
@@ -9651,24 +11063,48 @@ type UserSummary struct {
 	Ref         OpaqueRef `json:"ref"`
 }
 
+// VFSKind defines model for VFSKind.
+type VFSKind string
+
 // VFSNode defines model for VFSNode.
 type VFSNode struct {
-	Digest     string      `json:"digest"`
-	Directory  bool        `json:"directory"`
-	EntityRef  string      `json:"entityRef"`
-	Kind       VFSNodeKind `json:"kind"`
-	ModifiedAt *Timestamp  `json:"modifiedAt,omitempty"`
-	Name       string      `json:"name"`
-	ParentPath string      `json:"parentPath"`
-	Path       string      `json:"path"`
-	ProjectRef string      `json:"projectRef"`
-	Ref        string      `json:"ref"`
-	RunRef     string      `json:"runRef"`
-	SizeBytes  int64       `json:"sizeBytes"`
+	Digest          string                 `json:"digest"`
+	Directory       bool                   `json:"directory"`
+	EntityRef       string                 `json:"entityRef"`
+	Kind            VFSKind                `json:"kind"`
+	LifecycleState  VFSNodeLifecycleState  `json:"lifecycleState"`
+	ModifiedAt      *Timestamp             `json:"modifiedAt,omitempty"`
+	Name            string                 `json:"name"`
+	NextActions     []VFSNodeNextActions   `json:"nextActions"`
+	ParentPath      string                 `json:"parentPath"`
+	Path            string                 `json:"path"`
+	ProjectRef      string                 `json:"projectRef"`
+	Ref             string                 `json:"ref"`
+	ResourceKind    VFSNodeResourceKind    `json:"resourceKind"`
+	Revision        int64                  `json:"revision"`
+	RevisionRef     string                 `json:"revisionRef"`
+	RunRef          string                 `json:"runRef"`
+	ScanState       VFSNodeScanState       `json:"scanState"`
+	Selectable      bool                   `json:"selectable"`
+	SelectionReason VFSNodeSelectionReason `json:"selectionReason"`
+	SizeBytes       int64                  `json:"sizeBytes"`
+	Version         int64                  `json:"version"`
 }
 
-// VFSNodeKind defines model for VFSNode.Kind.
-type VFSNodeKind string
+// VFSNodeLifecycleState defines model for VFSNode.LifecycleState.
+type VFSNodeLifecycleState string
+
+// VFSNodeNextActions defines model for VFSNode.NextActions.
+type VFSNodeNextActions string
+
+// VFSNodeResourceKind defines model for VFSNode.ResourceKind.
+type VFSNodeResourceKind string
+
+// VFSNodeScanState defines model for VFSNode.ScanState.
+type VFSNodeScanState string
+
+// VFSNodeSelectionReason defines model for VFSNode.SelectionReason.
+type VFSNodeSelectionReason string
 
 // VFSNodePage defines model for VFSNodePage.
 type VFSNodePage struct {
@@ -9810,6 +11246,9 @@ type ArtifactScanStateQuery string
 // ArtifactSourceKindQuery defines model for ArtifactSourceKindQuery.
 type ArtifactSourceKindQuery string
 
+// ArtifactSourceKindsQuery defines model for ArtifactSourceKindsQuery.
+type ArtifactSourceKindsQuery = []string
+
 // ArtifactTypeQuery defines model for ArtifactTypeQuery.
 type ArtifactTypeQuery string
 
@@ -9936,11 +11375,20 @@ type TemplateAgentRef = OpaqueRef
 // TemplateRuntimeRevisionRef defines model for TemplateRuntimeRevisionRef.
 type TemplateRuntimeRevisionRef = OpaqueRef
 
+// VFSKinds defines model for VFSKinds.
+type VFSKinds = []VFSKind
+
+// VFSLifecycleState defines model for VFSLifecycleState.
+type VFSLifecycleState string
+
 // VFSPageToken defines model for VFSPageToken.
 type VFSPageToken = string
 
 // WorkflowRef defines model for WorkflowRef.
 type WorkflowRef = OpaqueRef
+
+// WriteBackProposalRef defines model for WriteBackProposalRef.
+type WriteBackProposalRef = OpaqueRef
 
 // oidcBearerContextKey is the context key for oidcBearer security scheme
 type oidcBearerContextKey string
@@ -10147,6 +11595,11 @@ type CommandAgentInstructionsParams struct {
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
+// CommandAgentInstructions200JSONResponseBody defines parameters for CommandAgentInstructions.
+type CommandAgentInstructions200JSONResponseBody struct {
+	union json.RawMessage
+}
+
 // CreateInstructionDraftJSONBody defines parameters for CreateInstructionDraft.
 type CreateInstructionDraftJSONBody struct {
 	Content string `json:"content"`
@@ -10163,6 +11616,13 @@ type CreateInstructionDraftParams struct {
 type ListAgentInstructionVersionsParams struct {
 	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
+// PrepareInstructionsImpactParams defines parameters for PrepareInstructionsImpact.
+type PrepareInstructionsImpactParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
 // UnbindAgentMemoryRecordParams defines parameters for UnbindAgentMemoryRecord.
@@ -10219,9 +11679,12 @@ type ListOrganizationArtifactsParams struct {
 	Type           *ListOrganizationArtifactsParamsType           `form:"type,omitempty" json:"type,omitempty"`
 	ScanState      *ListOrganizationArtifactsParamsScanState      `form:"scanState,omitempty" json:"scanState,omitempty"`
 	SourceKind     *ListOrganizationArtifactsParamsSourceKind     `form:"sourceKind,omitempty" json:"sourceKind,omitempty"`
-	Query          *Query                                         `form:"query,omitempty" json:"query,omitempty"`
-	PageSize       *PageSize                                      `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken      *PageToken                                     `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+
+	// SourceKinds Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+	SourceKinds *ArtifactSourceKindsQuery `form:"sourceKinds,omitempty" json:"sourceKinds,omitempty"`
+	Query       *Query                    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize    *PageSize                 `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken   *PageToken                `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListOrganizationArtifactsParamsLifecycleState defines parameters for ListOrganizationArtifacts.
@@ -10235,6 +11698,9 @@ type ListOrganizationArtifactsParamsScanState string
 
 // ListOrganizationArtifactsParamsSourceKind defines parameters for ListOrganizationArtifacts.
 type ListOrganizationArtifactsParamsSourceKind string
+
+// ListOrganizationArtifactsParamsSourceKinds defines parameters for ListOrganizationArtifacts.
+type ListOrganizationArtifactsParamsSourceKinds string
 
 // UploadOrganizationArtifactParams defines parameters for UploadOrganizationArtifact.
 type UploadOrganizationArtifactParams struct {
@@ -10250,6 +11716,13 @@ type DeleteArtifactParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// ListArtifactBindingTargetsParams defines parameters for ListArtifactBindingTargets.
+type ListArtifactBindingTargetsParams struct {
+	Query     *string       `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize     `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *VFSPageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ChangeArtifactBindingParams defines parameters for ChangeArtifactBinding.
@@ -10608,6 +12081,13 @@ type RefreshIntegrationDefinitionGitSourceParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PrepareIntegrationDefinitionGitWriteBackParams defines parameters for PrepareIntegrationDefinitionGitWriteBack.
+type PrepareIntegrationDefinitionGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // RebindIntegrationDefinitionConsumersParams defines parameters for RebindIntegrationDefinitionConsumers.
 type RebindIntegrationDefinitionConsumersParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -10658,6 +12138,27 @@ type RevokeInteractionIdentityParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// ApproveManagedConfigurationGitWriteBackParams defines parameters for ApproveManagedConfigurationGitWriteBack.
+type ApproveManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// CancelManagedConfigurationGitWriteBackParams defines parameters for CancelManagedConfigurationGitWriteBack.
+type CancelManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// RejectManagedConfigurationGitWriteBackParams defines parameters for RejectManagedConfigurationGitWriteBack.
+type RejectManagedConfigurationGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // ListManagedConfigurationsParams defines parameters for ListManagedConfigurations.
 type ListManagedConfigurationsParams struct {
 	ProjectRef *ProjectRefQuery                     `form:"projectRef,omitempty" json:"projectRef,omitempty"`
@@ -10682,6 +12183,12 @@ type DetachGitManagedConfigurationParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// ListManagedConfigurationGitWriteBacksParams defines parameters for ListManagedConfigurationGitWriteBacks.
+type ListManagedConfigurationGitWriteBacksParams struct {
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListManagedConfigurationHistoryParams defines parameters for ListManagedConfigurationHistory.
@@ -10849,9 +12356,12 @@ type ListArtifactsParams struct {
 	Type           *ListArtifactsParamsType           `form:"type,omitempty" json:"type,omitempty"`
 	ScanState      *ListArtifactsParamsScanState      `form:"scanState,omitempty" json:"scanState,omitempty"`
 	SourceKind     *ListArtifactsParamsSourceKind     `form:"sourceKind,omitempty" json:"sourceKind,omitempty"`
-	Query          *Query                             `form:"query,omitempty" json:"query,omitempty"`
-	PageSize       *PageSize                          `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken      *PageToken                         `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+
+	// SourceKinds Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
+	SourceKinds *ArtifactSourceKindsQuery `form:"sourceKinds,omitempty" json:"sourceKinds,omitempty"`
+	Query       *Query                    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize    *PageSize                 `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken   *PageToken                `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListArtifactsParamsLifecycleState defines parameters for ListArtifacts.
@@ -10865,6 +12375,9 @@ type ListArtifactsParamsScanState string
 
 // ListArtifactsParamsSourceKind defines parameters for ListArtifacts.
 type ListArtifactsParamsSourceKind string
+
+// ListArtifactsParamsSourceKinds defines parameters for ListArtifacts.
+type ListArtifactsParamsSourceKinds string
 
 // UploadArtifactParams defines parameters for UploadArtifact.
 type UploadArtifactParams struct {
@@ -10966,6 +12479,16 @@ type ListRoleImageRecipeRevisionsParams struct {
 	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// GetRunAttachmentEligibilityParams defines parameters for GetRunAttachmentEligibility.
+type GetRunAttachmentEligibilityParams struct {
+	TargetType GetRunAttachmentEligibilityParamsTargetType `form:"targetType" json:"targetType"`
+	TargetRef  OpaqueRef                                   `form:"targetRef" json:"targetRef"`
+	RunRef     *OpaqueRef                                  `form:"runRef,omitempty" json:"runRef,omitempty"`
+}
+
+// GetRunAttachmentEligibilityParamsTargetType defines parameters for GetRunAttachmentEligibility.
+type GetRunAttachmentEligibilityParamsTargetType string
 
 // CreateRuntimeEnvironmentDraftParams defines parameters for CreateRuntimeEnvironmentDraft.
 type CreateRuntimeEnvironmentDraftParams struct {
@@ -11081,6 +12604,13 @@ type DiscardPromptTemplateDraftParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PreparePromptTemplateImpactParams defines parameters for PreparePromptTemplateImpact.
+type PreparePromptTemplateImpactParams struct {
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+	IfMatch        IfMatch        `json:"If-Match"`
+}
+
 // PublishPromptTemplateDraftParams defines parameters for PublishPromptTemplateDraft.
 type PublishPromptTemplateDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -11110,6 +12640,11 @@ type ListPromptTemplateVariablesParams struct {
 	PageToken          *PageToken                  `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 	AgentRef           *TemplateAgentRef           `form:"agentRef,omitempty" json:"agentRef,omitempty"`
 	RuntimeRevisionRef *TemplateRuntimeRevisionRef `form:"runtimeRevisionRef,omitempty" json:"runtimeRevisionRef,omitempty"`
+}
+
+// QueryPromptTemplateVariablesParams defines parameters for QueryPromptTemplateVariables.
+type QueryPromptTemplateVariablesParams struct {
+	XCSRFToken CsrfToken `json:"X-CSRF-Token"`
 }
 
 // PreviewPromptTemplateParams defines parameters for PreviewPromptTemplate.
@@ -11202,6 +12737,13 @@ type ListProviderDefinitionsParams struct {
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
+// GetRevisionImpactPlanParams defines parameters for GetRevisionImpactPlan.
+type GetRevisionImpactPlanParams struct {
+	Query     *string    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
 // CreateRoleImageRevisionDraftParams defines parameters for CreateRoleImageRevisionDraft.
 type CreateRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey   `json:"Idempotency-Key"`
@@ -11223,6 +12765,13 @@ type RefreshRoleImageGitSourceParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 }
 
+// PrepareRoleImageGitWriteBackParams defines parameters for PrepareRoleImageGitWriteBack.
+type PrepareRoleImageGitWriteBackParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
 // RebindRoleImageConsumersParams defines parameters for RebindRoleImageConsumers.
 type RebindRoleImageConsumersParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
@@ -11235,6 +12784,13 @@ type DiscardRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// PrepareRoleImageImpactPlanParams defines parameters for PrepareRoleImageImpactPlan.
+type PrepareRoleImageImpactPlanParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 }
 
 // PublishRoleImageRevisionDraftParams defines parameters for PublishRoleImageRevisionDraft.
@@ -11256,6 +12812,13 @@ type ValidateRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
 	IfMatch        IfMatch        `json:"If-Match"`
+}
+
+// GetRoleImageImpactPlanParams defines parameters for GetRoleImageImpactPlan.
+type GetRoleImageImpactPlanParams struct {
+	Query     *string    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
 // ListRunsParams defines parameters for ListRuns.
@@ -11314,6 +12877,13 @@ type DiscardRuntimeEnvironmentDraftParams struct {
 
 // SaveRuntimeEnvironmentDraftParams defines parameters for SaveRuntimeEnvironmentDraft.
 type SaveRuntimeEnvironmentDraftParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// PrepareEnvironmentDraftImpactParams defines parameters for PrepareEnvironmentDraftImpact.
+type PrepareEnvironmentDraftImpactParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
@@ -11720,19 +13290,31 @@ type ValidateSystemSTTConfigurationDraftParams struct {
 
 // ListVFSNodesParams defines parameters for ListVFSNodes.
 type ListVFSNodesParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Path       *string          `form:"path,omitempty" json:"path,omitempty"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *VFSPageToken    `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	ProjectRef     *ProjectRefQuery                  `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Path           *string                           `form:"path,omitempty" json:"path,omitempty"`
+	Query          *string                           `form:"query,omitempty" json:"query,omitempty"`
+	LifecycleState *ListVFSNodesParamsLifecycleState `form:"lifecycleState,omitempty" json:"lifecycleState,omitempty"`
+	Kinds          *VFSKinds                         `form:"kinds,omitempty" json:"kinds,omitempty"`
+	PageSize       *PageSize                         `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken      *VFSPageToken                     `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// ListVFSNodesParamsLifecycleState defines parameters for ListVFSNodes.
+type ListVFSNodesParamsLifecycleState string
 
 // SearchVFSParams defines parameters for SearchVFS.
 type SearchVFSParams struct {
-	ProjectRef *ProjectRefQuery `form:"projectRef,omitempty" json:"projectRef,omitempty"`
-	Query      string           `form:"query" json:"query"`
-	PageSize   *PageSize        `form:"pageSize,omitempty" json:"pageSize,omitempty"`
-	PageToken  *VFSPageToken    `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+	ProjectRef     *ProjectRefQuery               `form:"projectRef,omitempty" json:"projectRef,omitempty"`
+	Query          string                         `form:"query" json:"query"`
+	Path           *string                        `form:"path,omitempty" json:"path,omitempty"`
+	LifecycleState *SearchVFSParamsLifecycleState `form:"lifecycleState,omitempty" json:"lifecycleState,omitempty"`
+	Kinds          *VFSKinds                      `form:"kinds,omitempty" json:"kinds,omitempty"`
+	PageSize       *PageSize                      `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken      *VFSPageToken                  `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
+
+// SearchVFSParamsLifecycleState defines parameters for SearchVFS.
+type SearchVFSParamsLifecycleState string
 
 // ListOrganizationWorkflowsParams defines parameters for ListOrganizationWorkflows.
 type ListOrganizationWorkflowsParams struct {
@@ -11897,11 +13479,20 @@ type CreateIntegrationDefinitionDraftJSONRequestBody = ManagedConfigurationDraft
 // ConfigureIntegrationDefinitionGitSourceJSONRequestBody defines body for ConfigureIntegrationDefinitionGitSource for application/json ContentType.
 type ConfigureIntegrationDefinitionGitSourceJSONRequestBody = IntegrationDefinitionGitSourceInput
 
+// PrepareIntegrationDefinitionGitWriteBackJSONRequestBody defines body for PrepareIntegrationDefinitionGitWriteBack for application/json ContentType.
+type PrepareIntegrationDefinitionGitWriteBackJSONRequestBody = PrepareConfigurationWriteBackInput
+
 // RebindIntegrationDefinitionConsumersJSONRequestBody defines body for RebindIntegrationDefinitionConsumers for application/json ContentType.
 type RebindIntegrationDefinitionConsumersJSONRequestBody = ManagedConfigurationRebindInput
 
 // SaveIntegrationDefinitionDraftJSONRequestBody defines body for SaveIntegrationDefinitionDraft for application/json ContentType.
 type SaveIntegrationDefinitionDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
+
+// ApproveManagedConfigurationGitWriteBackJSONRequestBody defines body for ApproveManagedConfigurationGitWriteBack for application/json ContentType.
+type ApproveManagedConfigurationGitWriteBackJSONRequestBody = ConfigurationWriteBackDecisionInput
+
+// RejectManagedConfigurationGitWriteBackJSONRequestBody defines body for RejectManagedConfigurationGitWriteBack for application/json ContentType.
+type RejectManagedConfigurationGitWriteBackJSONRequestBody = ConfigurationWriteBackDecisionInput
 
 // CopyGitManagedConfigurationJSONRequestBody defines body for CopyGitManagedConfiguration for application/json ContentType.
 type CopyGitManagedConfigurationJSONRequestBody = ManagedConfigurationCopyInput
@@ -11975,8 +13566,14 @@ type CreatePromptTemplateDraftJSONRequestBody = ManagedConfigurationDraftInput
 // RebindPromptTemplateConsumersJSONRequestBody defines body for RebindPromptTemplateConsumers for application/json ContentType.
 type RebindPromptTemplateConsumersJSONRequestBody = ManagedConfigurationRebindInput
 
+// PublishPromptTemplateDraftJSONRequestBody defines body for PublishPromptTemplateDraft for application/json ContentType.
+type PublishPromptTemplateDraftJSONRequestBody = RevisionImpactPublicationInput
+
 // SavePromptTemplateDraftJSONRequestBody defines body for SavePromptTemplateDraft for application/json ContentType.
 type SavePromptTemplateDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
+
+// QueryPromptTemplateVariablesJSONRequestBody defines body for QueryPromptTemplateVariables for application/json ContentType.
+type QueryPromptTemplateVariablesJSONRequestBody = PromptVariableCatalogInput
 
 // PreviewPromptTemplateJSONRequestBody defines body for PreviewPromptTemplate for application/json ContentType.
 type PreviewPromptTemplateJSONRequestBody = PromptTemplatePreviewInput
@@ -11999,8 +13596,11 @@ type CreateRoleImageRevisionDraftJSONRequestBody = ManagedConfigurationDraftInpu
 // ConfigureRoleImageGitSourceJSONRequestBody defines body for ConfigureRoleImageGitSource for application/json ContentType.
 type ConfigureRoleImageGitSourceJSONRequestBody = RoleImageGitSourceInput
 
+// PrepareRoleImageGitWriteBackJSONRequestBody defines body for PrepareRoleImageGitWriteBack for application/json ContentType.
+type PrepareRoleImageGitWriteBackJSONRequestBody = PrepareConfigurationWriteBackInput
+
 // RebindRoleImageConsumersJSONRequestBody defines body for RebindRoleImageConsumers for application/json ContentType.
-type RebindRoleImageConsumersJSONRequestBody = ManagedConfigurationRebindInput
+type RebindRoleImageConsumersJSONRequestBody = RoleImageRebindInput
 
 // SaveRoleImageRevisionDraftJSONRequestBody defines body for SaveRoleImageRevisionDraft for application/json ContentType.
 type SaveRoleImageRevisionDraftJSONRequestBody = ManagedConfigurationDraftSaveInput
@@ -12013,6 +13613,9 @@ type CommandRunJSONRequestBody = RunCommand
 
 // SaveRuntimeEnvironmentDraftJSONRequestBody defines body for SaveRuntimeEnvironmentDraft for application/json ContentType.
 type SaveRuntimeEnvironmentDraftJSONRequestBody = RuntimeEnvironmentDraftSpecification
+
+// PublishRuntimeEnvironmentDraftJSONRequestBody defines body for PublishRuntimeEnvironmentDraft for application/json ContentType.
+type PublishRuntimeEnvironmentDraftJSONRequestBody = RevisionImpactPublicationInput
 
 // SetRuntimeEnvironmentEnabledJSONRequestBody defines body for SetRuntimeEnvironmentEnabled for application/json ContentType.
 type SetRuntimeEnvironmentEnabledJSONRequestBody = EnabledInput
@@ -12094,6 +13697,68 @@ type UpdateWorkflowDraftJSONRequestBody = WorkflowInput
 
 // CommandWorkflowJSONRequestBody defines body for CommandWorkflow for application/json ContentType.
 type CommandWorkflowJSONRequestBody = WorkflowCommand
+
+// AsAgent returns the union data inside the CommandAgentInstructions200JSONResponseBody as a Agent
+func (t CommandAgentInstructions200JSONResponseBody) AsAgent() (Agent, error) {
+	var body Agent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromAgent overwrites any union data inside the CommandAgentInstructions200JSONResponseBody as the provided Agent
+func (t *CommandAgentInstructions200JSONResponseBody) FromAgent(v Agent) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeAgent performs a merge with any union data inside the CommandAgentInstructions200JSONResponseBody, using the provided Agent
+func (t *CommandAgentInstructions200JSONResponseBody) MergeAgent(v Agent) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsInstructionPublicationResult returns the union data inside the CommandAgentInstructions200JSONResponseBody as a InstructionPublicationResult
+func (t CommandAgentInstructions200JSONResponseBody) AsInstructionPublicationResult() (InstructionPublicationResult, error) {
+	var body InstructionPublicationResult
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromInstructionPublicationResult overwrites any union data inside the CommandAgentInstructions200JSONResponseBody as the provided InstructionPublicationResult
+func (t *CommandAgentInstructions200JSONResponseBody) FromInstructionPublicationResult(v InstructionPublicationResult) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeInstructionPublicationResult performs a merge with any union data inside the CommandAgentInstructions200JSONResponseBody, using the provided InstructionPublicationResult
+func (t *CommandAgentInstructions200JSONResponseBody) MergeInstructionPublicationResult(v InstructionPublicationResult) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t CommandAgentInstructions200JSONResponseBody) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *CommandAgentInstructions200JSONResponseBody) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -12212,6 +13877,9 @@ type ServerInterface interface {
 	// (GET /api/v1/agents/{agentRef}/instruction-versions)
 	ListAgentInstructionVersions(w http.ResponseWriter, r *http.Request, agentRef AgentRef, params ListAgentInstructionVersionsParams)
 
+	// (POST /api/v1/agents/{agentRef}/instructions/impact-plans)
+	PrepareInstructionsImpact(w http.ResponseWriter, r *http.Request, agentRef AgentRef, params PrepareInstructionsImpactParams)
+
 	// (DELETE /api/v1/agents/{agentRef}/memory-records/{recordRef})
 	UnbindAgentMemoryRecord(w http.ResponseWriter, r *http.Request, agentRef AgentRef, recordRef MemoryRecordRef, params UnbindAgentMemoryRecordParams)
 
@@ -12247,6 +13915,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/artifacts/{artifactRef})
 	GetArtifact(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef)
+
+	// (GET /api/v1/artifacts/{artifactRef}/binding-targets)
+	ListArtifactBindingTargets(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef, params ListArtifactBindingTargetsParams)
 
 	// (POST /api/v1/artifacts/{artifactRef}/bindings)
 	ChangeArtifactBinding(w http.ResponseWriter, r *http.Request, artifactRef ArtifactRef, params ChangeArtifactBindingParams)
@@ -12392,6 +14063,9 @@ type ServerInterface interface {
 	// (POST /api/v1/integration-definition-configurations/{configurationRef}/git-source/refresh)
 	RefreshIntegrationDefinitionGitSource(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params RefreshIntegrationDefinitionGitSourceParams)
 
+	// (POST /api/v1/integration-definition-configurations/{configurationRef}/git-write-backs)
+	PrepareIntegrationDefinitionGitWriteBack(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params PrepareIntegrationDefinitionGitWriteBackParams)
+
 	// (POST /api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings)
 	RebindIntegrationDefinitionConsumers(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params RebindIntegrationDefinitionConsumersParams)
 
@@ -12416,6 +14090,18 @@ type ServerInterface interface {
 	// (DELETE /api/v1/interaction-identities/{identityRef})
 	RevokeInteractionIdentity(w http.ResponseWriter, r *http.Request, identityRef InteractionIdentityRef, params RevokeInteractionIdentityParams)
 
+	// (GET /api/v1/managed-configuration-git-write-backs/{proposalRef})
+	GetManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/approve)
+	ApproveManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params ApproveManagedConfigurationGitWriteBackParams)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel)
+	CancelManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params CancelManagedConfigurationGitWriteBackParams)
+
+	// (POST /api/v1/managed-configuration-git-write-backs/{proposalRef}/reject)
+	RejectManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request, proposalRef WriteBackProposalRef, params RejectManagedConfigurationGitWriteBackParams)
+
 	// (GET /api/v1/managed-configurations)
 	ListManagedConfigurations(w http.ResponseWriter, r *http.Request, params ListManagedConfigurationsParams)
 
@@ -12424,6 +14110,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/managed-configurations/{configurationRef}/detachment)
 	DetachGitManagedConfiguration(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params DetachGitManagedConfigurationParams)
+
+	// (GET /api/v1/managed-configurations/{configurationRef}/git-write-backs)
+	ListManagedConfigurationGitWriteBacks(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params ListManagedConfigurationGitWriteBacksParams)
 
 	// (GET /api/v1/managed-configurations/{configurationRef}/revisions)
 	ListManagedConfigurationHistory(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params ListManagedConfigurationHistoryParams)
@@ -12545,6 +14234,9 @@ type ServerInterface interface {
 	// (GET /api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/revisions)
 	ListRoleImageRecipeRevisions(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, recipeRef RecipeRef, params ListRoleImageRecipeRevisionsParams)
 
+	// (GET /api/v1/projects/{projectRef}/run-attachment-eligibility)
+	GetRunAttachmentEligibility(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, params GetRunAttachmentEligibilityParams)
+
 	// (POST /api/v1/projects/{projectRef}/runtime-environment-drafts)
 	CreateRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, projectRef ProjectRef, params CreateRuntimeEnvironmentDraftParams)
 
@@ -12593,6 +14285,9 @@ type ServerInterface interface {
 	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/discard)
 	DiscardPromptTemplateDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params DiscardPromptTemplateDraftParams)
 
+	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans)
+	PreparePromptTemplateImpact(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PreparePromptTemplateImpactParams)
+
 	// (POST /api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/publication)
 	PublishPromptTemplateDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PublishPromptTemplateDraftParams)
 
@@ -12604,6 +14299,9 @@ type ServerInterface interface {
 
 	// (GET /api/v1/prompt-templates/catalog)
 	ListPromptTemplateVariables(w http.ResponseWriter, r *http.Request, params ListPromptTemplateVariablesParams)
+
+	// (POST /api/v1/prompt-templates/catalog/query)
+	QueryPromptTemplateVariables(w http.ResponseWriter, r *http.Request, params QueryPromptTemplateVariablesParams)
 
 	// (POST /api/v1/prompt-templates/preview)
 	PreviewPromptTemplate(w http.ResponseWriter, r *http.Request, params PreviewPromptTemplateParams)
@@ -12647,6 +14345,9 @@ type ServerInterface interface {
 	// (GET /api/v1/provider-definitions)
 	ListProviderDefinitions(w http.ResponseWriter, r *http.Request, params ListProviderDefinitionsParams)
 
+	// (GET /api/v1/revision-impact-plans/{planRef})
+	GetRevisionImpactPlan(w http.ResponseWriter, r *http.Request, planRef OpaqueRef, params GetRevisionImpactPlanParams)
+
 	// (GET /api/v1/role-environments)
 	ListRoleEnvironments(w http.ResponseWriter, r *http.Request)
 
@@ -12659,11 +14360,17 @@ type ServerInterface interface {
 	// (POST /api/v1/role-image-configurations/{configurationRef}/git-source/refresh)
 	RefreshRoleImageGitSource(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params RefreshRoleImageGitSourceParams)
 
+	// (POST /api/v1/role-image-configurations/{configurationRef}/git-write-backs)
+	PrepareRoleImageGitWriteBack(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, params PrepareRoleImageGitWriteBackParams)
+
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings)
 	RebindRoleImageConsumers(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params RebindRoleImageConsumersParams)
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/discard)
 	DiscardRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params DiscardRoleImageRevisionDraftParams)
+
+	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans)
+	PrepareRoleImageImpactPlan(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PrepareRoleImageImpactPlanParams)
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/publication)
 	PublishRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params PublishRoleImageRevisionDraftParams)
@@ -12673,6 +14380,9 @@ type ServerInterface interface {
 
 	// (POST /api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/validation)
 	ValidateRoleImageRevisionDraft(w http.ResponseWriter, r *http.Request, configurationRef ConfigurationRef, revisionRef ConfigurationRevisionRef, params ValidateRoleImageRevisionDraftParams)
+
+	// (GET /api/v1/role-image-impact-plans/{planRef})
+	GetRoleImageImpactPlan(w http.ResponseWriter, r *http.Request, planRef OpaqueRef, params GetRoleImageImpactPlanParams)
 
 	// (GET /api/v1/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, params ListRunsParams)
@@ -12703,6 +14413,9 @@ type ServerInterface interface {
 
 	// (PUT /api/v1/runtime-environment-drafts/{draftRef})
 	SaveRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params SaveRuntimeEnvironmentDraftParams)
+
+	// (POST /api/v1/runtime-environment-drafts/{draftRef}/impact-plans)
+	PrepareEnvironmentDraftImpact(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params PrepareEnvironmentDraftImpactParams)
 
 	// (POST /api/v1/runtime-environment-drafts/{draftRef}/publication)
 	PublishRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params PublishRuntimeEnvironmentDraftParams)
@@ -15866,6 +17579,112 @@ func (siw *ServerInterfaceWrapper) ListAgentInstructionVersions(w http.ResponseW
 	handler.ServeHTTP(w, r)
 }
 
+// PrepareInstructionsImpact operation middleware
+func (siw *ServerInterfaceWrapper) PrepareInstructionsImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "agentRef" -------------
+	var agentRef AgentRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "agentRef", r.PathValue("agentRef"), &agentRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "agentRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareInstructionsImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareInstructionsImpact(w, r, agentRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // UnbindAgentMemoryRecord operation middleware
 func (siw *ServerInterfaceWrapper) UnbindAgentMemoryRecord(w http.ResponseWriter, r *http.Request) {
 
@@ -16698,6 +18517,19 @@ func (siw *ServerInterfaceWrapper) ListOrganizationArtifacts(w http.ResponseWrit
 		return
 	}
 
+	// ------------- Optional query parameter "sourceKinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sourceKinds", r.URL.Query(), &params.SourceKinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKinds", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "query" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -16997,6 +18829,80 @@ func (siw *ServerInterfaceWrapper) GetArtifact(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetArtifact(w, r, artifactRef)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListArtifactBindingTargets operation middleware
+func (siw *ServerInterfaceWrapper) ListArtifactBindingTargets(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "artifactRef" -------------
+	var artifactRef ArtifactRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "artifactRef", r.PathValue("artifactRef"), &artifactRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "artifactRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListArtifactBindingTargetsParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListArtifactBindingTargets(w, r, artifactRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -21363,6 +23269,112 @@ func (siw *ServerInterfaceWrapper) RefreshIntegrationDefinitionGitSource(w http.
 	handler.ServeHTTP(w, r)
 }
 
+// PrepareIntegrationDefinitionGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) PrepareIntegrationDefinitionGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareIntegrationDefinitionGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareIntegrationDefinitionGitWriteBack(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RebindIntegrationDefinitionConsumers operation middleware
 func (siw *ServerInterfaceWrapper) RebindIntegrationDefinitionConsumers(w http.ResponseWriter, r *http.Request) {
 
@@ -22154,6 +24166,356 @@ func (siw *ServerInterfaceWrapper) RevokeInteractionIdentity(w http.ResponseWrit
 	handler.ServeHTTP(w, r)
 }
 
+// GetManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) GetManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetManagedConfigurationGitWriteBack(w, r, proposalRef)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApproveManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) ApproveManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ApproveManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApproveManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) CancelManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CancelManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RejectManagedConfigurationGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) RejectManagedConfigurationGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "proposalRef" -------------
+	var proposalRef WriteBackProposalRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "proposalRef", r.PathValue("proposalRef"), &proposalRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "proposalRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RejectManagedConfigurationGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RejectManagedConfigurationGitWriteBack(w, r, proposalRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListManagedConfigurations operation middleware
 func (siw *ServerInterfaceWrapper) ListManagedConfigurations(w http.ResponseWriter, r *http.Request) {
 
@@ -22448,6 +24810,67 @@ func (siw *ServerInterfaceWrapper) DetachGitManagedConfiguration(w http.Response
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DetachGitManagedConfiguration(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListManagedConfigurationGitWriteBacks operation middleware
+func (siw *ServerInterfaceWrapper) ListManagedConfigurationGitWriteBacks(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListManagedConfigurationGitWriteBacksParams
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListManagedConfigurationGitWriteBacks(w, r, configurationRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -24453,6 +26876,19 @@ func (siw *ServerInterfaceWrapper) ListArtifacts(w http.ResponseWriter, r *http.
 		return
 	}
 
+	// ------------- Optional query parameter "sourceKinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sourceKinds", r.URL.Query(), &params.SourceKinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sourceKinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sourceKinds", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "query" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
@@ -25888,6 +28324,80 @@ func (siw *ServerInterfaceWrapper) ListRoleImageRecipeRevisions(w http.ResponseW
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunAttachmentEligibility operation middleware
+func (siw *ServerInterfaceWrapper) GetRunAttachmentEligibility(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "projectRef" -------------
+	var projectRef ProjectRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "projectRef", r.PathValue("projectRef"), &projectRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "projectRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunAttachmentEligibilityParams
+
+	// ------------- Required query parameter "targetType" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "targetType", r.URL.Query(), &params.TargetType, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetType"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetType", Err: err})
+		}
+		return
+	}
+
+	// ------------- Required query parameter "targetRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, true, "targetRef", r.URL.Query(), &params.TargetRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "targetRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "targetRef", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "runRef" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "runRef", r.URL.Query(), &params.RunRef, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "runRef"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runRef", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunAttachmentEligibility(w, r, projectRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateRuntimeEnvironmentDraft operation middleware
 func (siw *ServerInterfaceWrapper) CreateRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request) {
 
@@ -27290,6 +29800,121 @@ func (siw *ServerInterfaceWrapper) DiscardPromptTemplateDraft(w http.ResponseWri
 	handler.ServeHTTP(w, r)
 }
 
+// PreparePromptTemplateImpact operation middleware
+func (siw *ServerInterfaceWrapper) PreparePromptTemplateImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "revisionRef" -------------
+	var revisionRef ConfigurationRevisionRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "revisionRef", r.PathValue("revisionRef"), &revisionRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "revisionRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PreparePromptTemplateImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PreparePromptTemplateImpact(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PublishPromptTemplateDraft operation middleware
 func (siw *ServerInterfaceWrapper) PublishPromptTemplateDraft(w http.ResponseWriter, r *http.Request) {
 
@@ -27730,6 +30355,57 @@ func (siw *ServerInterfaceWrapper) ListPromptTemplateVariables(w http.ResponseWr
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListPromptTemplateVariables(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// QueryPromptTemplateVariables operation middleware
+func (siw *ServerInterfaceWrapper) QueryPromptTemplateVariables(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params QueryPromptTemplateVariablesParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.QueryPromptTemplateVariables(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -28938,6 +31614,80 @@ func (siw *ServerInterfaceWrapper) ListProviderDefinitions(w http.ResponseWriter
 	handler.ServeHTTP(w, r)
 }
 
+// GetRevisionImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) GetRevisionImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "planRef" -------------
+	var planRef OpaqueRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "planRef", r.PathValue("planRef"), &planRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "planRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRevisionImpactPlanParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRevisionImpactPlan(w, r, planRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRoleEnvironments operation middleware
 func (siw *ServerInterfaceWrapper) ListRoleEnvironments(w http.ResponseWriter, r *http.Request) {
 
@@ -29263,6 +32013,112 @@ func (siw *ServerInterfaceWrapper) RefreshRoleImageGitSource(w http.ResponseWrit
 	handler.ServeHTTP(w, r)
 }
 
+// PrepareRoleImageGitWriteBack operation middleware
+func (siw *ServerInterfaceWrapper) PrepareRoleImageGitWriteBack(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareRoleImageGitWriteBackParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareRoleImageGitWriteBack(w, r, configurationRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RebindRoleImageConsumers operation middleware
 func (siw *ServerInterfaceWrapper) RebindRoleImageConsumers(w http.ResponseWriter, r *http.Request) {
 
@@ -29484,6 +32340,121 @@ func (siw *ServerInterfaceWrapper) DiscardRoleImageRevisionDraft(w http.Response
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DiscardRoleImageRevisionDraft(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PrepareRoleImageImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) PrepareRoleImageImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configurationRef" -------------
+	var configurationRef ConfigurationRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configurationRef", r.PathValue("configurationRef"), &configurationRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configurationRef", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "revisionRef" -------------
+	var revisionRef ConfigurationRevisionRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "revisionRef", r.PathValue("revisionRef"), &revisionRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "revisionRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareRoleImageImpactPlanParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareRoleImageImpactPlan(w, r, configurationRef, revisionRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -29829,6 +32800,80 @@ func (siw *ServerInterfaceWrapper) ValidateRoleImageRevisionDraft(w http.Respons
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ValidateRoleImageRevisionDraft(w, r, configurationRef, revisionRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRoleImageImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) GetRoleImageImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "planRef" -------------
+	var planRef OpaqueRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "planRef", r.PathValue("planRef"), &planRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "planRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRoleImageImpactPlanParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRoleImageImpactPlan(w, r, planRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -30556,6 +33601,112 @@ func (siw *ServerInterfaceWrapper) SaveRuntimeEnvironmentDraft(w http.ResponseWr
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SaveRuntimeEnvironmentDraft(w, r, draftRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PrepareEnvironmentDraftImpact operation middleware
+func (siw *ServerInterfaceWrapper) PrepareEnvironmentDraftImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "draftRef" -------------
+	var draftRef RuntimeEnvironmentDraftRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "draftRef", r.PathValue("draftRef"), &draftRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "draftRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareEnvironmentDraftImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareEnvironmentDraftImpact(w, r, draftRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -36116,6 +39267,45 @@ func (siw *ServerInterfaceWrapper) ListVFSNodes(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lifecycleState" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lifecycleState", r.URL.Query(), &params.LifecycleState, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lifecycleState"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lifecycleState", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "kinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kinds", r.URL.Query(), &params.Kinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kinds", Err: err})
+		}
+		return
+	}
+
 	// ------------- Optional query parameter "pageSize" -------------
 
 	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
@@ -36190,6 +39380,45 @@ func (siw *ServerInterfaceWrapper) SearchVFS(w http.ResponseWriter, r *http.Requ
 			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
 		} else {
 			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "path" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "path", r.URL.Query(), &params.Path, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "path"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "path", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "lifecycleState" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "lifecycleState", r.URL.Query(), &params.LifecycleState, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "lifecycleState"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "lifecycleState", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "kinds" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "kinds", r.URL.Query(), &params.Kinds, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kinds"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kinds", Err: err})
 		}
 		return
 	}
@@ -36711,6 +39940,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-commands", wrapper.CommandAgentInstructions)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-drafts", wrapper.CreateInstructionDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instruction-versions", wrapper.ListAgentInstructionVersions)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/agents/{agentRef}/instructions/impact-plans", wrapper.PrepareInstructionsImpact)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/agents/{agentRef}/memory-records/{recordRef}", wrapper.UnbindAgentMemoryRecord)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/agents/{agentRef}/memory-records/{recordRef}", wrapper.BindAgentMemoryRecord)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agents/{agentRef}/runtime-configuration", wrapper.GetAgentRuntimeConfiguration)
@@ -36723,6 +39953,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/artifacts", wrapper.UploadOrganizationArtifact)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}", wrapper.DeleteArtifact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}", wrapper.GetArtifact)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/binding-targets", wrapper.ListArtifactBindingTargets)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/bindings", wrapper.ChangeArtifactBinding)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/content", wrapper.DownloadArtifact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/artifacts/{artifactRef}/impact", wrapper.GetArtifactImpact)
@@ -36771,6 +40002,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/drafts", wrapper.CreateIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-source", wrapper.ConfigureIntegrationDefinitionGitSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-source/refresh", wrapper.RefreshIntegrationDefinitionGitSource)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/git-write-backs", wrapper.PrepareIntegrationDefinitionGitWriteBack)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindIntegrationDefinitionConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardIntegrationDefinitionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/integration-definition-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishIntegrationDefinitionDraft)
@@ -36779,9 +40011,14 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-definitions", wrapper.ListIntegrationDefinitions)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/integration-invocations/{invocationRef}/email-effect-receipt", wrapper.GetEmailEffectReceipt)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/interaction-identities/{identityRef}", wrapper.RevokeInteractionIdentity)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}", wrapper.GetManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/approve", wrapper.ApproveManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel", wrapper.CancelManagedConfigurationGitWriteBack)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configuration-git-write-backs/{proposalRef}/reject", wrapper.RejectManagedConfigurationGitWriteBack)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations", wrapper.ListManagedConfigurations)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/copies", wrapper.CopyGitManagedConfiguration)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/detachment", wrapper.DetachGitManagedConfiguration)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/git-write-backs", wrapper.ListManagedConfigurationGitWriteBacks)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/revisions", wrapper.ListManagedConfigurationHistory)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/managed-configurations/{configurationRef}/revisions/{revisionRef}/impact", wrapper.GetManagedConfigurationImpact)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/memory-records", wrapper.ListMemoryRecords)
@@ -36822,6 +40059,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/commands", wrapper.CommandRoleImageRecipe)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/promotions", wrapper.PromoteRoleImage)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/role-image-recipes/{recipeRef}/revisions", wrapper.ListRoleImageRecipeRevisions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/run-attachment-eligibility", wrapper.GetRunAttachmentEligibility)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environment-drafts", wrapper.CreateRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environments", wrapper.ListRuntimeEnvironmentSets)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/projects/{projectRef}/runtime-environments", wrapper.CreateRuntimeEnvironmentSet)
@@ -36838,10 +40076,12 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/drafts", wrapper.CreatePromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindPromptTemplateConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardPromptTemplateDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans", wrapper.PreparePromptTemplateImpact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishPromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SavePromptTemplateDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidatePromptTemplateDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/prompt-templates/catalog", wrapper.ListPromptTemplateVariables)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/catalog/query", wrapper.QueryPromptTemplateVariables)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/preview", wrapper.PreviewPromptTemplate)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/prompt-templates/validation", wrapper.ValidatePromptTemplate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/provider-accounts", wrapper.ListProviderAccounts)
@@ -36856,15 +40096,19 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/provider-accounts/{providerAccountRef}/enabled", wrapper.SetProviderAccountEnabled)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/provider-accounts/{providerAccountRef}/revocation", wrapper.RevokeProviderAccount)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/provider-definitions", wrapper.ListProviderDefinitions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/revision-impact-plans/{planRef}", wrapper.GetRevisionImpactPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/role-environments", wrapper.ListRoleEnvironments)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/drafts", wrapper.CreateRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source", wrapper.ConfigureRoleImageGitSource)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source/refresh", wrapper.RefreshRoleImageGitSource)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-write-backs", wrapper.PrepareRoleImageGitWriteBack)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/consumer-bindings", wrapper.RebindRoleImageConsumers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/discard", wrapper.DiscardRoleImageRevisionDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans", wrapper.PrepareRoleImageImpactPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/publication", wrapper.PublishRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/saves", wrapper.SaveRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/validation", wrapper.ValidateRoleImageRevisionDraft)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/role-image-impact-plans/{planRef}", wrapper.GetRoleImageImpactPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs", wrapper.ListRuns)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs", wrapper.CreateRun)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs/{runRef}", wrapper.GetRun)
@@ -36875,6 +40119,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.DiscardRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.GetRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.SaveRuntimeEnvironmentDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/impact-plans", wrapper.PrepareEnvironmentDraftImpact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/publication", wrapper.PublishRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/validation", wrapper.ValidateRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runtime-environments", wrapper.ListOrganizationRuntimeEnvironmentSets)

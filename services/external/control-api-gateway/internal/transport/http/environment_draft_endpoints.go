@@ -95,20 +95,48 @@ func (server *Server) ValidateRuntimeEnvironmentDraft(w http.ResponseWriter, r *
 }
 
 func (server *Server) PublishRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, ref generated.RuntimeEnvironmentDraftRef, p generated.PublishRuntimeEnvironmentDraftParams) {
+	body, ok := decodeJSON[generated.RevisionImpactPublicationInput](w, r)
+	if !ok {
+		return
+	}
+	if !fileTargetRef(ref) || !fileTargetRef(body.PlanRef) || body.SelectedItemRefs == nil || len(body.SelectedItemRefs) > 1000 {
+		writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+		return
+	}
+	seen := map[string]bool{}
+	for _, item := range body.SelectedItemRefs {
+		if !fileTargetRef(item) || seen[item] {
+			writeLocalProblem(w, http.StatusBadRequest, "INVALID_REQUEST", false)
+			return
+		}
+		seen[item] = true
+	}
 	mutation, ok := requireMutation(w, p.IdempotencyKey, p.IfMatch)
 	if !ok {
 		return
 	}
-	response, err := server.control.Command.PublishRuntimeEnvironmentDraft(r.Context(), &controlplanev1.PublishRuntimeEnvironmentDraftRequest{Mutation: mutation, DraftRef: ref})
+	response, err := server.control.Command.PublishRuntimeEnvironmentDraft(r.Context(), &controlplanev1.PublishRuntimeEnvironmentDraftRequest{Mutation: mutation, DraftRef: ref, PlanRef: body.PlanRef, SelectedItemRefs: body.SelectedItemRefs})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
 	}
-	if response.GetEnvironment().GetRef() == "" || response.GetEnvironment().GetVersion() < 1 || response.GetEnvironment().GetRef() != response.GetDraft().GetPublishedEnvironmentRef() || response.GetDraft().GetState() != "PUBLISHED" {
+	plan, valid := revisionImpactPlanView(response.GetPlan())
+	environment := response.GetEnvironment()
+	draft := response.GetDraft()
+	if !valid || plan.Ref != body.PlanRef || plan.DraftRef != ref || plan.DraftVersion != mutation.GetExpectedVersion() || draft.GetVersion() != plan.DraftVersion+1 || plan.State != "APPLIED" || plan.Version != 2 ||
+		int64(len(body.SelectedItemRefs)) > plan.Total || plan.SourceRef != nil && *plan.SourceRef != environment.GetRef() ||
+		!fileTargetRef(environment.GetRef()) || !validManagedVersion(environment.GetVersion()) || environment.GetRef() != draft.GetPublishedEnvironmentRef() || draft.GetState() != "PUBLISHED" ||
+		!validManagedVersion(environment.GetCurrentVersion().GetVersion()) || !validManagedVersion(environment.GetCurrentVersion().GetRevision()) ||
+		stringValue(plan.PublishedRevisionRef) != environment.GetCurrentVersion().GetRef() || plan.TargetDigest != draft.GetValidationDigest() || plan.TargetDigest != environment.GetCurrentVersion().GetDigest() || environment.GetProjectRef() != draft.GetProjectRef() {
 		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
 		return
 	}
-	writeEnvironmentDraft(w, http.StatusOK, response.GetDraft(), ref, "")
+	value, err := messageMap(environment)
+	if err != nil {
+		writeLocalProblem(w, http.StatusBadGateway, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	writeEnvironmentDraftResult(w, http.StatusOK, draft, ref, "", map[string]any{"environment": value, "plan": plan})
 }
 
 func (server *Server) DiscardRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, ref generated.RuntimeEnvironmentDraftRef, p generated.DiscardRuntimeEnvironmentDraftParams) {
@@ -143,6 +171,10 @@ func environmentDraftSpecificationInput(w http.ResponseWriter, input generated.R
 }
 
 func writeEnvironmentDraft(w http.ResponseWriter, statusCode int, input *controlplanev1.RuntimeEnvironmentDraft, ref, project string) {
+	writeEnvironmentDraftResult(w, statusCode, input, ref, project, nil)
+}
+
+func writeEnvironmentDraftResult(w http.ResponseWriter, statusCode int, input *controlplanev1.RuntimeEnvironmentDraft, ref, project string, envelope map[string]any) {
 	if input == nil || input.GetSpecification() == nil || input.GetRef() == "" || input.GetProjectRef() == "" ||
 		ref != "" && input.GetRef() != ref || project != "" && input.GetProjectRef() != project ||
 		input.GetVersion() < 1 || input.GetVersion() > maximumSafeJSONInteger || input.GetExpectedEnvironmentVersion() < 0 ||
@@ -228,6 +260,11 @@ func writeEnvironmentDraft(w http.ResponseWriter, statusCode int, input *control
 		result.PublishedEnvironmentRef = &value
 	}
 	w.Header().Set("ETag", "\""+strconv.FormatInt(input.GetVersion(), 10)+"\"")
+	if envelope != nil {
+		envelope["draft"] = result
+		writeJSON(w, statusCode, envelope)
+		return
+	}
 	writeJSON(w, statusCode, result)
 }
 

@@ -27,21 +27,39 @@ func (server *Server) listTemplateVariables(w http.ResponseWriter, r *http.Reque
 		writeRPCProblem(w, err)
 		return
 	}
+	server.writeTemplateVariablePage(w, response, paging.GetPageSize())
+}
+
+func (server *Server) writeTemplateVariablePage(w http.ResponseWriter, response *cp.ListTemplateVariablesResponse, size int32) {
 	next := response.GetPage().GetNextPageToken()
-	if response == nil || response.GetTotal() < int64(len(response.GetVariables())) || response.GetTotal() > maximumSafeJSONInteger || len(response.GetVariables()) > int(paging.GetPageSize()) || len(next) > 512 || !utf8.ValidString(next) {
+	if response == nil || response.GetTotal() < int64(len(response.GetVariables())) || response.GetTotal() > maximumSafeJSONInteger || len(response.GetVariables()) > int(size) || len(next) > 512 || !utf8.ValidString(next) {
 		writeLocalProblem(w, http.StatusBadGateway, "INTERNAL", false)
 		return
 	}
 	result := generated.TemplateVariablePage{Items: make([]generated.TemplateVariable, 0, len(response.GetVariables())), Total: response.GetTotal(), NextPageToken: optionalManagedString(next)}
+	seen := map[string]bool{}
 	for _, variable := range response.GetVariables() {
 		item, ok := templateVariableView(variable)
-		if !ok {
+		if !ok || seen[item.Name] {
 			writeLocalProblem(w, http.StatusBadGateway, "INTERNAL", false)
 			return
 		}
+		seen[item.Name] = true
 		result.Items = append(result.Items, item)
 	}
-	writeJSON(w, http.StatusOK, result)
+	pin, ok := promptContextPinView(response.GetContextPin())
+	if !ok {
+		writeLocalProblem(w, 502, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	output := map[string]any{"items": result.Items, "total": result.Total}
+	if result.NextPageToken != nil {
+		output["nextPageToken"] = *result.NextPageToken
+	}
+	if pin != nil {
+		output["contextPin"] = pin
+	}
+	writeJSON(w, http.StatusOK, output)
 }
 
 func templateVariableView(v *cp.TemplateVariable) (generated.TemplateVariable, bool) {
@@ -86,12 +104,16 @@ func templateVariableType(value string) string {
 		return "OPAQUE_REF"
 	case "integer":
 		return "INTEGER"
+	case "object":
+		return "OBJECT"
 	case "collection":
 		return "COLLECTION"
 	case "file_descriptor":
 		return "FILE_DESCRIPTOR"
 	case "tool_descriptor":
 		return "TOOL_DESCRIPTOR"
+	case "integration_descriptor":
+		return "INTEGRATION_DESCRIPTOR"
 	default:
 		return ""
 	}

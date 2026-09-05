@@ -209,6 +209,7 @@ func TestVFSIncludesAutomationEnvironmentAndAvatarKinds(t *testing.T) {
 		writeVFSPage(recorder, []*controlplanev1.VFSNode{{
 			Ref: "node_fixture01", Path: "/projects/prj_fixture01/node_fixture01", ParentPath: "/projects/prj_fixture01",
 			Name: "TYPE_Источник", Kind: kind, Directory: kind != controlplanev1.VFSNodeKind_VFS_NODE_KIND_AVATAR,
+			LifecycleState: "ACTIVE", SelectionReason: "DIRECTORY",
 		}}, 1, "")
 		var page generated.VFSNodePage
 		if recorder.Code != http.StatusOK || json.Unmarshal(recorder.Body.Bytes(), &page) != nil || len(page.Items) != 1 ||
@@ -222,6 +223,7 @@ func TestVFSRoutesPreserveTypedSourceAndPagination(t *testing.T) {
 	t.Parallel()
 	node := &controlplanev1.VFSNode{Ref: "art_fixture01", Path: "/projects/prj_fixture01/results/art_fixture01",
 		ParentPath: "/projects/prj_fixture01/results", Name: "TYPE_отчет.txt", Kind: controlplanev1.VFSNodeKind_VFS_NODE_KIND_RESULT,
+		Version: 2, Revision: 1, RevisionRef: "arv_fixture01", LifecycleState: "ACTIVE", ScanState: "CLEAN", ResourceKind: "ARTIFACT", Selectable: true, SelectionReason: "AVAILABLE", NextActions: []string{"DOWNLOAD", "DELETE"},
 		ProjectRef: "prj_fixture01", EntityRef: "art_fixture01", RunRef: "run_fixture01", SizeBytes: 12, Digest: "sha256:" + strings.Repeat("a", 64)}
 	next := &controlplanev1.PageInfo{NextPageToken: "vfs-next"}
 	for _, tc := range []struct {

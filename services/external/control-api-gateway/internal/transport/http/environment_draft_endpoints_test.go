@@ -56,7 +56,10 @@ func (client *environmentDraftRecorder) Invoke(_ context.Context, method string,
 	if strings.HasSuffix(method, "/PublishRuntimeEnvironmentDraft") {
 		draft.State, draft.PublishedEnvironmentRef = "PUBLISHED", "renv_fixture01"
 		draft.ValidationDigest = strings.Repeat("a", 64)
-		target.Set(target.Descriptor().Fields().ByName("environment"), protoreflect.ValueOfMessage((&controlplanev1.RuntimeEnvironmentSet{Ref: draft.PublishedEnvironmentRef, Version: 2}).ProtoReflect()))
+		plan := revisionImpactFixture()
+		plan.Version, plan.State, plan.PublishedRevisionRef = 2, controlplanev1.RevisionImpactState_REVISION_IMPACT_STATE_APPLIED, "renvv_published01"
+		target.Set(target.Descriptor().Fields().ByName("plan"), protoreflect.ValueOfMessage(plan.ProtoReflect()))
+		target.Set(target.Descriptor().Fields().ByName("environment"), protoreflect.ValueOfMessage((&controlplanev1.RuntimeEnvironmentSet{Ref: draft.PublishedEnvironmentRef, ProjectRef: draft.ProjectRef, Version: 2, CurrentVersion: &controlplanev1.RuntimeEnvironmentVersion{Ref: plan.PublishedRevisionRef, Version: 1, Revision: 1, Digest: plan.TargetDigest}}).ProtoReflect()))
 	}
 	if client.mutate != nil {
 		client.mutate(draft)
@@ -162,7 +165,7 @@ func TestEnvironmentDraftRoutesKeepSeparateTypedLifecycle(t *testing.T) {
 		{http.MethodGet, "/api/v1/runtime-environment-drafts/renvd_fixture01", "", "GetRuntimeEnvironmentDraft", http.StatusOK},
 		{http.MethodPut, "/api/v1/runtime-environment-drafts/renvd_fixture01", draftSpecBody, "SaveRuntimeEnvironmentDraft", http.StatusOK},
 		{http.MethodPost, "/api/v1/runtime-environment-drafts/renvd_fixture01/validation", "", "ValidateRuntimeEnvironmentDraft", http.StatusOK},
-		{http.MethodPost, "/api/v1/runtime-environment-drafts/renvd_fixture01/publication", "", "PublishRuntimeEnvironmentDraft", http.StatusOK},
+		{http.MethodPost, "/api/v1/runtime-environment-drafts/renvd_fixture01/publication", revisionImpactPublishBody, "PublishRuntimeEnvironmentDraft", http.StatusOK},
 		{http.MethodDelete, "/api/v1/runtime-environment-drafts/renvd_fixture01", "", "DiscardRuntimeEnvironmentDraft", http.StatusOK},
 	} {
 		t.Run(test.rpc, func(t *testing.T) {
@@ -186,6 +189,9 @@ func TestEnvironmentDraftRoutesKeepSeparateTypedLifecycle(t *testing.T) {
 			if create, ok := client.request.(*controlplanev1.CreateRuntimeEnvironmentDraftRequest); ok && create.GetProjectRef() != "prj_fixture01" {
 				t.Fatal("draft project changed")
 			}
+			if publish, ok := client.request.(*controlplanev1.PublishRuntimeEnvironmentDraftRequest); ok && (publish.GetPlanRef() != "rip_fixture01" || len(publish.GetSelectedItemRefs()) != 0) {
+				t.Fatal("publication changed the selected immutable plan")
+			}
 			if spec, ok := client.request.(interface {
 				GetSpecification() *controlplanev1.RuntimeEnvironmentDraftSpecification
 			}); ok &&
@@ -193,7 +199,17 @@ func TestEnvironmentDraftRoutesKeepSeparateTypedLifecycle(t *testing.T) {
 				t.Fatal("draft specification changed before RPC")
 			}
 			var result generated.RuntimeEnvironmentDraft
-			if json.Unmarshal(response.Body.Bytes(), &result) != nil || result.Version != 4 || result.Specification.Name != "TYPE_Черновик" ||
+			raw := response.Body.Bytes()
+			if test.rpc == "PublishRuntimeEnvironmentDraft" {
+				var envelope struct {
+					Draft json.RawMessage `json:"draft"`
+				}
+				if json.Unmarshal(raw, &envelope) != nil {
+					t.Fatal("invalid publication envelope")
+				}
+				raw = envelope.Draft
+			}
+			if json.Unmarshal(raw, &result) != nil || result.Version != 4 || result.Specification.Name != "TYPE_Черновик" ||
 				result.Specification.Description != "i18n:исходный текст" || result.Specification.Values[0].Value != "TYPE_не преобразовывать" ||
 				result.Specification.Tools == nil || result.Specification.SecretBindings == nil || result.Diagnostics == nil ||
 				response.Header().Get("ETag") != `"4"` || response.Header().Get("Cache-Control") != "no-store" {
@@ -227,7 +243,7 @@ func TestEnvironmentDraftRejectsForeignReceipt(t *testing.T) {
 		{"GET", "/api/v1/runtime-environment-drafts/renvd_fixture01", ""},
 		{"PUT", "/api/v1/runtime-environment-drafts/renvd_fixture01", draftSpecBody},
 		{"POST", "/api/v1/runtime-environment-drafts/renvd_fixture01/validation", ""},
-		{"POST", "/api/v1/runtime-environment-drafts/renvd_fixture01/publication", ""},
+		{"POST", "/api/v1/runtime-environment-drafts/renvd_fixture01/publication", revisionImpactPublishBody},
 		{"DELETE", "/api/v1/runtime-environment-drafts/renvd_fixture01", ""},
 	} {
 		client := &environmentDraftRecorder{mutate: func(d *controlplanev1.RuntimeEnvironmentDraft) { d.Ref = "renvd_other01" }}

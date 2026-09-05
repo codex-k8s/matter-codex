@@ -380,10 +380,21 @@ func normalizeProtoJSONShape(value map[string]any, descriptor protoreflect.Messa
 		}
 		value[field.JSONName()] = normalized
 	}
+	if descriptor.FullName() == "controlplane.v1.AgentInstructionsBinding" {
+		ref, refOK := value["ref"].(string)
+		revision, revisionOK := value["revisionRef"].(string)
+		version, versionOK := value["version"].(float64)
+		if !refOK || !revisionOK || !versionOK || !fileTargetRef(ref) || !fileTargetRef(revision) || version < 1 || version > float64(maximumSafeJSONInteger) || version != float64(int64(version)) {
+			return errors.New("agent instructions binding shape is invalid")
+		}
+	}
 	return normalizeIntegrationShape(value, descriptor)
 }
 
 func requiredProtoScalarDefault(descriptor protoreflect.MessageDescriptor, field protoreflect.FieldDescriptor) (any, bool) {
+	if descriptor.FullName() == "controlplane.v1.AgentInstructionsBinding" && field.Kind() == protoreflect.BoolKind && field.JSONName() == "effective" {
+		return false, true
+	}
 	// Некоторым proto3 zero values соответствует обязательное поле OpenAPI.
 	// Список явный: другие пустые scalar могут означать отсутствующую ссылку.
 	if field.JSONName() == "total" && field.Kind() == protoreflect.Int64Kind {

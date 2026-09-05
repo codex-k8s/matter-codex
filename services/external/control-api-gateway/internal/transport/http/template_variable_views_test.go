@@ -18,8 +18,8 @@ func variableFixture() *cp.TemplateVariable {
 func TestTemplateVariablesProducerVocabulary(t *testing.T) {
 	for _, path := range []string{"/api/v1/projects/prj_fixture01/template-variables", "/api/v1/prompt-templates/catalog"} {
 		for _, source := range []string{"AGENT", "AUTOMATION", "RUNTIME", "GATE", "INPUT", "RUN", "ORGANIZATION", "PROJECT", "SESSION", "USER", "WORKFLOW"} {
-			for _, kind := range []struct{ producer, public string }{{"string", "STRING"}, {"reference", "OPAQUE_REF"}, {"integer", "INTEGER"}, {"collection", "COLLECTION"}} {
-				for _, descriptor := range []struct{ producer, public string }{{"file_descriptor", "FILE_DESCRIPTOR"}, {"tool_descriptor", "TOOL_DESCRIPTOR"}} {
+			for _, kind := range []struct{ producer, public string }{{"string", "STRING"}, {"reference", "OPAQUE_REF"}, {"integer", "INTEGER"}, {"object", "OBJECT"}, {"collection", "COLLECTION"}} {
+				for _, descriptor := range []struct{ producer, public string }{{"file_descriptor", "FILE_DESCRIPTOR"}, {"tool_descriptor", "TOOL_DESCRIPTOR"}, {"integration_descriptor", "INTEGRATION_DESCRIPTOR"}} {
 					v := variableFixture()
 					v.ValueType, v.Source = kind.producer, source
 					if kind.producer == "collection" {

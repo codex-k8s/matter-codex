@@ -20,6 +20,15 @@ GET Runs и существующий GET /artifacts (`listOrganizationArtifacts`
 одним запросом в ListArtifacts. Отрицательный/неточный JSON integer count,
 count меньше страницы и oversized cursor закрываются 502.
 
+CP `c1a7fb8cdb02214f4b0187bd879a60b91c6a43a7` добавляет `source_kinds`:
+оба HTTP каталога принимают `sourceKinds[]` (повторяемый query-параметр),
+не более пяти уникальных значений закрытого реестра. Непустая группа
+несовместима с одиночным `sourceKind`; пустая группа не ограничивает выборку.
+Gateway передаёт группу, буквальный query и cursor одним RPC без обхода
+проектов или источников. Owner применяет одинаковые eligibility и фильтры
+к странице, total и cursor; чтение не создаёт событий. Права происходят
+из проверенного session/signed context, а не из query-параметров.
+
 GET /agents/{agentRef}/config-overlay/revisions[/{revisionRef}] →
 ListConfigOverlayRevisions/GetConfigOverlayRevision использует signed actor,
 agent_ref resource binding и exact unary digest. CP проверяет agent.view,

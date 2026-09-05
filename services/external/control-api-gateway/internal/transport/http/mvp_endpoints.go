@@ -346,12 +346,22 @@ func (server *Server) ValidatePromptTemplate(w http.ResponseWriter, r *http.Requ
 	if !ok {
 		return
 	}
-	response, err := server.control.Query.ValidatePromptTemplate(r.Context(), &controlplanev1.ValidatePromptTemplateRequest{Template: body.Template})
+	context, valid := promptContextInput(body.Context)
+	if !valid || !promptText(body.Template, 256<<10) || !validPromptSelection(promptOptional(body.TargetKind), stringValue(body.TargetRef), stringValue(body.ExpectedContextDigest), context) {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
+	response, err := server.control.Query.ValidatePromptTemplate(r.Context(), &controlplanev1.ValidatePromptTemplateRequest{Template: body.Template, TargetKind: promptOptional(body.TargetKind), TargetRef: stringValue(body.TargetRef), Context: context, ExpectedContextDigest: stringValue(body.ExpectedContextDigest)})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
 	}
-	writeMessage(w, http.StatusOK, response, "", "")
+	result, valid := promptValidationView(response)
+	if !valid || !validPromptContextReadback(promptOptional(body.TargetKind), stringValue(body.TargetRef), stringValue(body.ExpectedContextDigest), response.GetContextPin()) || !validPromptSelectedPin(context, response.GetContextPin()) {
+		writeLocalProblem(w, 502, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (server *Server) PreviewPromptTemplate(w http.ResponseWriter, r *http.Request, _ generated.PreviewPromptTemplateParams) {
@@ -359,15 +369,25 @@ func (server *Server) PreviewPromptTemplate(w http.ResponseWriter, r *http.Reque
 	if !ok {
 		return
 	}
+	context, valid := promptContextInput(body.Context)
+	if !valid || !promptText(body.Template, 256<<10) || !validPromptSelection(promptOptional(body.TargetKind), stringValue(body.TargetRef), stringValue(body.ExpectedContextDigest), context) {
+		writeLocalProblem(w, 400, "INVALID_REQUEST", false)
+		return
+	}
 	response, err := server.control.Query.PreviewPromptTemplate(r.Context(), &controlplanev1.PreviewPromptTemplateRequest{
-		Template: body.Template, TargetKind: stringValue(body.TargetKind), TargetRef: stringValue(body.TargetRef),
+		Template: body.Template, TargetKind: promptOptional(body.TargetKind), TargetRef: stringValue(body.TargetRef), Context: context, ExpectedContextDigest: stringValue(body.ExpectedContextDigest),
 		IncludeFullMaterialization: body.IncludeFullMaterialization != nil && *body.IncludeFullMaterialization,
 	})
 	if err != nil {
 		writeRPCProblem(w, err)
 		return
 	}
-	writeMessage(w, http.StatusOK, response, "", "")
+	result, valid := promptPreviewView(response, body.IncludeFullMaterialization != nil && *body.IncludeFullMaterialization)
+	if !valid || !validPromptContextReadback(promptOptional(body.TargetKind), stringValue(body.TargetRef), stringValue(body.ExpectedContextDigest), response.GetContextPin()) || !validPromptSelectedPin(context, response.GetContextPin()) || response.GetRuntimeDiff() != nil && promptOptional(body.TargetKind) == "SESSION_CONTINUATION" && response.GetRuntimeDiff().GetSessionRef() != stringValue(body.TargetRef) {
+		writeLocalProblem(w, 502, "INVALID_UPSTREAM_RESPONSE", false)
+		return
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (server *Server) DeleteRuntimeEnvironment(w http.ResponseWriter, r *http.Request, ref generated.RuntimeEnvironmentRef, p generated.DeleteRuntimeEnvironmentParams) {
