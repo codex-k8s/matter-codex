@@ -3571,6 +3571,8 @@ const (
 	PlatformCommandService_RebindRoleImageConsumers_FullMethodName                 = "/controlplane.v1.PlatformCommandService/RebindRoleImageConsumers"
 	PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName               = "/controlplane.v1.PlatformCommandService/PrepareRoleImageImpactPlan"
 	PlatformCommandService_PrepareEnvironmentDraftImpact_FullMethodName            = "/controlplane.v1.PlatformCommandService/PrepareEnvironmentDraftImpact"
+	PlatformCommandService_PrepareInstructionsImpact_FullMethodName                = "/controlplane.v1.PlatformCommandService/PrepareInstructionsImpact"
+	PlatformCommandService_PreparePromptTemplateImpact_FullMethodName              = "/controlplane.v1.PlatformCommandService/PreparePromptTemplateImpact"
 	PlatformCommandService_CreateIntegrationDefinitionDraft_FullMethodName         = "/controlplane.v1.PlatformCommandService/CreateIntegrationDefinitionDraft"
 	PlatformCommandService_ValidateIntegrationDefinitionDraft_FullMethodName       = "/controlplane.v1.PlatformCommandService/ValidateIntegrationDefinitionDraft"
 	PlatformCommandService_PublishIntegrationDefinitionDraft_FullMethodName        = "/controlplane.v1.PlatformCommandService/PublishIntegrationDefinitionDraft"
@@ -3741,6 +3743,8 @@ type PlatformCommandServiceClient interface {
 	RebindRoleImageConsumers(ctx context.Context, in *RebindRoleImageConsumersRequest, opts ...grpc.CallOption) (*RebindRoleImageConsumersResponse, error)
 	PrepareRoleImageImpactPlan(ctx context.Context, in *PrepareRoleImageImpactPlanRequest, opts ...grpc.CallOption) (*PrepareRoleImageImpactPlanResponse, error)
 	PrepareEnvironmentDraftImpact(ctx context.Context, in *PrepareEnvironmentDraftImpactRequest, opts ...grpc.CallOption) (*PrepareEnvironmentDraftImpactResponse, error)
+	PrepareInstructionsImpact(ctx context.Context, in *PrepareInstructionsImpactRequest, opts ...grpc.CallOption) (*PrepareInstructionsImpactResponse, error)
+	PreparePromptTemplateImpact(ctx context.Context, in *PreparePromptTemplateImpactRequest, opts ...grpc.CallOption) (*PreparePromptTemplateImpactResponse, error)
 	CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(ctx context.Context, in *ValidateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(ctx context.Context, in *PublishIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5188,6 +5192,26 @@ func (c *platformCommandServiceClient) PrepareEnvironmentDraftImpact(ctx context
 	return out, nil
 }
 
+func (c *platformCommandServiceClient) PrepareInstructionsImpact(ctx context.Context, in *PrepareInstructionsImpactRequest, opts ...grpc.CallOption) (*PrepareInstructionsImpactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PrepareInstructionsImpactResponse)
+	err := c.cc.Invoke(ctx, PlatformCommandService_PrepareInstructionsImpact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *platformCommandServiceClient) PreparePromptTemplateImpact(ctx context.Context, in *PreparePromptTemplateImpactRequest, opts ...grpc.CallOption) (*PreparePromptTemplateImpactResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PreparePromptTemplateImpactResponse)
+	err := c.cc.Invoke(ctx, PlatformCommandService_PreparePromptTemplateImpact_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *platformCommandServiceClient) CreateIntegrationDefinitionDraft(ctx context.Context, in *CreateIntegrationDefinitionDraftRequest, opts ...grpc.CallOption) (*CreateIntegrationDefinitionDraftResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateIntegrationDefinitionDraftResponse)
@@ -5527,6 +5551,8 @@ type PlatformCommandServiceServer interface {
 	RebindRoleImageConsumers(context.Context, *RebindRoleImageConsumersRequest) (*RebindRoleImageConsumersResponse, error)
 	PrepareRoleImageImpactPlan(context.Context, *PrepareRoleImageImpactPlanRequest) (*PrepareRoleImageImpactPlanResponse, error)
 	PrepareEnvironmentDraftImpact(context.Context, *PrepareEnvironmentDraftImpactRequest) (*PrepareEnvironmentDraftImpactResponse, error)
+	PrepareInstructionsImpact(context.Context, *PrepareInstructionsImpactRequest) (*PrepareInstructionsImpactResponse, error)
+	PreparePromptTemplateImpact(context.Context, *PreparePromptTemplateImpactRequest) (*PreparePromptTemplateImpactResponse, error)
 	CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error)
 	ValidateIntegrationDefinitionDraft(context.Context, *ValidateIntegrationDefinitionDraftRequest) (*ValidateIntegrationDefinitionDraftResponse, error)
 	PublishIntegrationDefinitionDraft(context.Context, *PublishIntegrationDefinitionDraftRequest) (*PublishIntegrationDefinitionDraftResponse, error)
@@ -5975,6 +6001,12 @@ func (UnimplementedPlatformCommandServiceServer) PrepareRoleImageImpactPlan(cont
 }
 func (UnimplementedPlatformCommandServiceServer) PrepareEnvironmentDraftImpact(context.Context, *PrepareEnvironmentDraftImpactRequest) (*PrepareEnvironmentDraftImpactResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method PrepareEnvironmentDraftImpact not implemented")
+}
+func (UnimplementedPlatformCommandServiceServer) PrepareInstructionsImpact(context.Context, *PrepareInstructionsImpactRequest) (*PrepareInstructionsImpactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PrepareInstructionsImpact not implemented")
+}
+func (UnimplementedPlatformCommandServiceServer) PreparePromptTemplateImpact(context.Context, *PreparePromptTemplateImpactRequest) (*PreparePromptTemplateImpactResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method PreparePromptTemplateImpact not implemented")
 }
 func (UnimplementedPlatformCommandServiceServer) CreateIntegrationDefinitionDraft(context.Context, *CreateIntegrationDefinitionDraftRequest) (*CreateIntegrationDefinitionDraftResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CreateIntegrationDefinitionDraft not implemented")
@@ -8535,6 +8567,42 @@ func _PlatformCommandService_PrepareEnvironmentDraftImpact_Handler(srv interface
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PlatformCommandService_PrepareInstructionsImpact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PrepareInstructionsImpactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformCommandServiceServer).PrepareInstructionsImpact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformCommandService_PrepareInstructionsImpact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformCommandServiceServer).PrepareInstructionsImpact(ctx, req.(*PrepareInstructionsImpactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PlatformCommandService_PreparePromptTemplateImpact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PreparePromptTemplateImpactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PlatformCommandServiceServer).PreparePromptTemplateImpact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PlatformCommandService_PreparePromptTemplateImpact_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PlatformCommandServiceServer).PreparePromptTemplateImpact(ctx, req.(*PreparePromptTemplateImpactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PlatformCommandService_CreateIntegrationDefinitionDraft_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateIntegrationDefinitionDraftRequest)
 	if err := dec(in); err != nil {
@@ -9427,6 +9495,14 @@ var PlatformCommandService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PrepareEnvironmentDraftImpact",
 			Handler:    _PlatformCommandService_PrepareEnvironmentDraftImpact_Handler,
+		},
+		{
+			MethodName: "PrepareInstructionsImpact",
+			Handler:    _PlatformCommandService_PrepareInstructionsImpact_Handler,
+		},
+		{
+			MethodName: "PreparePromptTemplateImpact",
+			Handler:    _PlatformCommandService_PreparePromptTemplateImpact_Handler,
 		},
 		{
 			MethodName: "CreateIntegrationDefinitionDraft",

@@ -68,8 +68,17 @@ func (server *Server) ValidatePromptTemplateDraft(ctx context.Context, request *
 	return &controlplanev1.ValidatePromptTemplateDraftResponse{Configuration: configuration, Revision: revision}, err
 }
 func (server *Server) PublishPromptTemplateDraft(ctx context.Context, request *controlplanev1.PublishPromptTemplateDraftRequest) (*controlplanev1.PublishPromptTemplateDraftResponse, error) {
-	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_PublishPromptTemplateDraft_FullMethodName, command.PublishPromptTemplateDraft, request.GetMutation(), managedRevisionInput(request))
-	return &controlplanev1.PublishPromptTemplateDraftResponse{Configuration: configuration, Revision: revision}, err
+	payload := managedRevisionInput(request)
+	payload.PlanRef = request.GetPlanRef()
+	payload.SelectedItemRefs = append([]string(nil), request.GetSelectedItemRefs()...)
+	result, err := execute(ctx, server.service, controlplanev1.PlatformCommandService_PublishPromptTemplateDraft_FullMethodName, command.PublishPromptTemplateDraft, request.GetMutation(), payload)
+	if err != nil {
+		return nil, err
+	}
+	if err := validatePublishedImpactResult(result, "PROMPT_TEMPLATE", request.GetPlanRef(), request.GetConfigurationRef()); err != nil {
+		return nil, transportError(err)
+	}
+	return &controlplanev1.PublishPromptTemplateDraftResponse{Configuration: castManagedConfiguration(result.ManagedConfiguration), Revision: castManagedRevision(result.ManagedRevision), Plan: castRevisionImpactPlan(result.RevisionImpactPlan)}, nil
 }
 func (server *Server) RebindPromptTemplateConsumers(ctx context.Context, request *controlplanev1.RebindPromptTemplateConsumersRequest) (*controlplanev1.RebindPromptTemplateConsumersResponse, error) {
 	configuration, revision, err := server.managedMutation(ctx, controlplanev1.PlatformCommandService_RebindPromptTemplateConsumers_FullMethodName, command.RebindPromptTemplate, request.GetMutation(), managedRebindInput(request))

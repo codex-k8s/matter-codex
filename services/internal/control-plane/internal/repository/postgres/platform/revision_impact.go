@@ -14,6 +14,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/errs"
+	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/command"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/entity"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/query"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/types/value"
@@ -150,6 +151,18 @@ func (r *Repository) revisionImpactItems(ctx context.Context, tx pgx.Tx, row rev
 
 func (r *Repository) revisionImpactAccess(ctx context.Context, tx pgx.Tx, s scope, row revisionImpactRow) error {
 	switch row.plan.Kind {
+	case "PROMPT_TEMPLATE":
+		permission, target, err := r.commandAccessTarget(ctx, tx, s, command.Command{Kind: command.PreparePromptTemplateImpact, Payload: command.ManagedConfigurationInput{ConfigurationRef: row.plan.SourceRef}})
+		if err != nil {
+			return err
+		}
+		return r.requireAccess(ctx, tx, s, permission, target)
+	case "AGENT_INSTRUCTIONS":
+		_, _, err := r.resolveCommandTarget(ctx, tx, s, "agent.manage", "AGENT", row.plan.SourceRef, "")
+		if err != nil {
+			return err
+		}
+		return r.requireAccess(ctx, tx, s, "agent.manage", entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "AGENT", ResourceRef: row.plan.SourceRef})
 	case "RUNTIME_ENVIRONMENT":
 		draft, err := scanEnvironmentDraft(tx.QueryRow(ctx, queryEnvironmentDraftGet, s.organizationID, row.plan.DraftRef))
 		if err != nil {
@@ -211,10 +224,7 @@ func (r *Repository) GetRevisionImpactPlan(ctx context.Context, p value.Principa
 	}
 	limit := int(boundedPage(page))
 	for _, item := range items {
-		if item.ConsumerKind != "AGENT" {
-			return result, errs.ErrUnavailable
-		}
-		if err = r.requireAccess(ctx, tx, s, "agent.manage", entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "AGENT", ResourceRef: item.ConsumerRef}); err != nil {
+		if err = r.revisionImpactItemAccess(ctx, tx, s, item); err != nil {
 			if errors.Is(err, errs.ErrNotFound) || errors.Is(err, errs.ErrForbidden) {
 				continue
 			}
@@ -236,4 +246,22 @@ func (r *Repository) GetRevisionImpactPlan(ctx context.Context, p value.Principa
 		return entity.RevisionImpactPage{}, errs.ErrUnavailable
 	}
 	return result, nil
+}
+
+func (r *Repository) revisionImpactItemAccess(ctx context.Context, tx pgx.Tx, s scope, item entity.RevisionImpactItem) error {
+	if item.ConsumerKind == "AGENT" || item.ConsumerKind == "AGENT_CONTINUATION" {
+		permission, target, err := r.resolveRuntimeConfigurationTarget(ctx, tx, s, "agent.manage", item.ConsumerRef)
+		if err != nil {
+			return err
+		}
+		return r.requireAccess(ctx, tx, s, permission, target)
+	}
+	if item.ConsumerKind != "WORKFLOW" && item.ConsumerKind != "SCHEDULE" {
+		return errs.ErrUnavailable
+	}
+	permission, target, err := r.resolveCommandTarget(ctx, tx, s, strings.ToLower(item.ConsumerKind)+".manage", item.ConsumerKind, item.ConsumerRef, item.ProjectRef)
+	if err != nil {
+		return err
+	}
+	return r.requireAccess(ctx, tx, s, permission, target)
 }

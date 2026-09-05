@@ -31,6 +31,9 @@ JOIN LATERAL (
         UNION ALL
         SELECT value.ref, value.content, value.digest, value.version_number::bigint, 2
         FROM control_plane.instruction_versions value
+        JOIN control_plane.agent_instruction_bindings active_instruction
+          ON active_instruction.instruction_id=value.id AND active_instruction.agent_id=agent.id
+         AND active_instruction.organization_id=agent.organization_id
         WHERE value.agent_id = agent.id AND value.state = 'PUBLISHED'
     ) source
     ORDER BY source.priority, source.revision DESC

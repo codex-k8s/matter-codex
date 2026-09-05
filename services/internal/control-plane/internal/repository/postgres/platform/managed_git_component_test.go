@@ -21,7 +21,7 @@ SET managed_by='GIT',source='https://git.example.test/config/prompt.txt',source_
 		t.Fatal(err)
 	}
 	for index, kind := range []command.Kind{command.CreatePromptTemplateDraft, command.ValidatePromptTemplateDraft, command.PublishPromptTemplateDraft} {
-		_, err := service.Execute(ctx, command.Command{Kind: kind, Principal: owner,
+		_, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: kind, Principal: owner,
 			Mutation: value.Mutation{IdempotencyKey: fmt.Sprintf("managed-git-forbidden-%d", index), ExpectedVersion: &configuration.Version},
 			Payload:  command.ManagedConfigurationInput{ConfigurationRef: configuration.Ref, RevisionRef: publishedRef, Name: "Forbidden Git edit", ContentFormat: "TEXT", Content: "Replacement"}})
 		if !errors.Is(err, errs.ErrConflict) {

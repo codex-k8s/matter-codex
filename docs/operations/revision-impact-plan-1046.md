@@ -43,9 +43,38 @@ command receipt и audit обеспечивают чтение результа�
 и изменение Agent используют существующие атомарные owner events; частичный
 effect без durable outcome не допускается.
 
-PromptTemplate и instructions включаются в тот же закрытый read registry
-отдельными специализированными Prepare/Publish после интеграции owner641.
-Generic metadata binding не считается заменой их фактического runtime input.
+PromptTemplate и Instructions используют тот же закрытый read registry через
+специализированные PrepareInstructionsImpact и PreparePromptTemplateImpact.
+Для Instructions SourceRef/SourceVersion — Agent/OCC, SourceRevisionRef —
+выбранный fallback, DraftRef/DraftVersion — VALID instruction revision.
+Для Prompt SourceRef/SourceVersion — managed set/OCC, SourceRevisionRef —
+прежняя current publication (пусто до первой), DraftRef/DraftVersion — VALID
+managed revision. Prepare не изменяет эти версии и не публикует content.
+
+PublishInstructionDraft и PublishPromptTemplateDraft требуют planRef и
+selectedItemRefs. Publication остаётся явным эффектом даже при пустом выборе;
+невыбранные потребители сохраняют прежние реальные bindings. Instructions
+активирует server-owned Agent binding; managed PromptTemplate сохраняет
+приоритет и не снимается неявно. Prompt применяет существующий owner Rebind
+к каждому выбранному consumer с fresh authority, consumer/binding locks,
+exact versions/revision и отдельным savepoint. Результат проверяется по
+фактически сохранённой связи. Один CONFLICT/FORBIDDEN не подменяется APPLIED
+и не отменяет независимый успешный элемент.
+
+Prompt set.version увеличивается при публикации и каждом успешном owner
+Rebind. ResultConsumerVersion может остаться прежней: изменяется binding,
+а не Agent/Workflow/Schedule entity. ResultBindingRef сохраняется,
+ResultBindingVersion растёт, ResultRevisionRef указывает новую публикацию.
+Instructions Agent version увеличивается один раз при publication; его
+binding меняется только для выбранного эффективного consumer. Get фильтрует
+элементы текущими правами до count/page, plan.total остаётся immutable.
+
+События новых Prepare отсутствуют: receipt/audit и GetRevisionImpactPlan.
+Prompt publication использует существующий MANAGED_CONFIGURATION_CHANGED;
+Instructions publication/rollback — INSTRUCTIONS_PUBLISHED. Draft save и
+Validate Instructions не публикуют ложное событие публикации. HTTP/PWA
+получают safe plan и затем читают актуальный owner snapshot, без общего
+выдуманного realtime event.
 
 # Контракт и проверка
 
@@ -82,3 +111,12 @@ lifecycle с новым literal поиском по текущим именам 
 штатного ResolvePrincipal; fixture исправлена, production guards сохранены.
 Первый policygen получил отсутствующие файлы общего Go cache; повтор PASS,
 чужие caches не изменялись. Live/browser acceptance нового impact — NOT RUN.
+
+Owner70 Prompt/Instructions поверх641/642/644 прошёл полный Bootstrap27.449s.
+Новый Prompt scenario0.40s проверяет фактический Rebind рядом с CONFLICT и
+FORBIDDEN, сохранение прежней связи неуспешного consumer и exact replay.
+Последующий PostgreSQL0.484s подтвердил Instructions NOT_SELECTED без смены
+активного binding и повтор terminal receipt. Три package race1.211/1.699/1.082s,
+полный vet/build, SQL/Proto replay/policy70/ABI/web-only release PASS.
+Buf remote rate limit обработан штатным fallback к точным локальным plugins;
+generated replay не изменил дерево. HTTP/PWA/live нового owner70 — NOT RUN.

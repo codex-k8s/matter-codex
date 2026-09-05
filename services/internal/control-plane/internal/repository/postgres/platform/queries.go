@@ -684,10 +684,12 @@ func (repository *Repository) attachInstructionsFrom(ctx context.Context, runner
 	defer rows.Close()
 	for rows.Next() {
 		var item entity.InstructionVersion
+		var binding entity.AgentInstructionsBinding
 		var problems []byte
-		if err := rows.Scan(&item.Ref, &item.VersionNumber, &item.State, &item.Content, &item.Digest, &item.Core, &item.ParentRef, &problems, &item.CreatedAt, &item.PublishedAt); err != nil {
+		if err := rows.Scan(&item.Ref, &item.VersionNumber, &item.State, &item.Content, &item.Digest, &item.Core, &item.ParentRef, &problems, &item.CreatedAt, &item.PublishedAt, &binding.Ref, &binding.Version, &binding.RevisionRef, &binding.Effective); err != nil {
 			return err
 		}
+		agent.InstructionBinding = &binding
 		_ = json.Unmarshal(problems, &item.ValidationProblems)
 		if item.State == "PUBLISHED" && agent.PublishedInstructions == nil {
 			copy := item
@@ -699,6 +701,9 @@ func (repository *Repository) attachInstructionsFrom(ctx context.Context, runner
 			copy := item
 			agent.DraftInstructions = &copy
 		}
+	}
+	if rows.Err() == nil && agent.InstructionBinding == nil {
+		return errs.ErrUnavailable
 	}
 	return rows.Err()
 }

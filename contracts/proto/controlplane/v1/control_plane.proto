@@ -250,6 +250,8 @@ service PlatformCommandService {
   rpc RebindRoleImageConsumers(RebindRoleImageConsumersRequest) returns (RebindRoleImageConsumersResponse);
   rpc PrepareRoleImageImpactPlan(PrepareRoleImageImpactPlanRequest) returns (PrepareRoleImageImpactPlanResponse);
   rpc PrepareEnvironmentDraftImpact(PrepareEnvironmentDraftImpactRequest) returns (PrepareEnvironmentDraftImpactResponse);
+  rpc PrepareInstructionsImpact(PrepareInstructionsImpactRequest) returns (PrepareInstructionsImpactResponse);
+  rpc PreparePromptTemplateImpact(PreparePromptTemplateImpactRequest) returns (PreparePromptTemplateImpactResponse);
   rpc CreateIntegrationDefinitionDraft(CreateIntegrationDefinitionDraftRequest) returns (CreateIntegrationDefinitionDraftResponse);
   rpc ValidateIntegrationDefinitionDraft(ValidateIntegrationDefinitionDraftRequest) returns (ValidateIntegrationDefinitionDraftResponse);
   rpc PublishIntegrationDefinitionDraft(PublishIntegrationDefinitionDraftRequest) returns (PublishIntegrationDefinitionDraftResponse);
@@ -843,6 +845,14 @@ message Agent {
   string role_definition_ref = 20;
   string role_definition_name = 21;
   AgentAvatar avatar = 22;
+  AgentInstructionsBinding instruction_binding = 23;
+}
+
+message AgentInstructionsBinding {
+  string ref = 1;
+  int64 version = 2;
+  string revision_ref = 3;
+  bool effective = 4;
 }
 
 message AgentAvatar {
@@ -1968,9 +1978,12 @@ message ValidateInstructionDraftResponse {
 message PublishInstructionDraftRequest {
   MutationContext mutation = 1;
   string agent_ref = 2;
+  string plan_ref = 3;
+  repeated string selected_item_refs = 4;
 }
 message PublishInstructionDraftResponse {
   Agent agent = 1;
+  RevisionImpactPlan plan = 2;
 }
 message RollbackInstructionsRequest {
   MutationContext mutation = 1;
@@ -4868,6 +4881,8 @@ enum TemplateVariableAvailabilityReason {
   TEMPLATE_VARIABLE_AVAILABILITY_REASON_AGENT_CONTEXT_REQUIRED = 3;
   TEMPLATE_VARIABLE_AVAILABILITY_REASON_RUNTIME_CONTEXT_REQUIRED = 4;
   TEMPLATE_VARIABLE_AVAILABILITY_REASON_NOT_MATERIALIZED = 5;
+  TEMPLATE_VARIABLE_AVAILABILITY_REASON_PERMISSION_REQUIRED = 6;
+  TEMPLATE_VARIABLE_AVAILABILITY_REASON_CAPABILITY_REQUIRED = 7;
 }
 
 message TemplateVariable {
@@ -5505,10 +5520,13 @@ message PublishPromptTemplateDraftRequest {
   MutationContext mutation = 1;
   string configuration_ref = 2;
   string revision_ref = 3;
+  string plan_ref = 4;
+  repeated string selected_item_refs = 5;
 }
 message PublishPromptTemplateDraftResponse {
   ManagedConfigurationSet configuration = 1;
   ManagedConfigurationRevision revision = 2;
+  RevisionImpactPlan plan = 3;
 }
 message RebindPromptTemplateConsumersRequest {
   MutationContext mutation = 1;
@@ -5674,6 +5692,17 @@ message PrepareEnvironmentDraftImpactRequest {
   string draft_ref = 2;
 }
 message PrepareEnvironmentDraftImpactResponse { RevisionImpactPlan plan = 1; }
+message PrepareInstructionsImpactRequest {
+  MutationContext mutation = 1;
+  string agent_ref = 2;
+}
+message PrepareInstructionsImpactResponse { RevisionImpactPlan plan = 1; }
+message PreparePromptTemplateImpactRequest {
+  MutationContext mutation = 1;
+  string configuration_ref = 2;
+  string revision_ref = 3;
+}
+message PreparePromptTemplateImpactResponse { RevisionImpactPlan plan = 1; }
 message GetRevisionImpactPlanRequest {
   string plan_ref = 1;
   string query = 2;
