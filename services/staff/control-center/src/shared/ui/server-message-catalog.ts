@@ -14,6 +14,14 @@ export const serverTokenTranslations = {
     "Подготовлен план обновления потребителей окружения",
     "Environment consumer update plan prepared",
   ],
+  AGENT_INSTRUCTIONS_IMPACT_PREPARED: [
+    "Подготовлен план обновления потребителей инструкций",
+    "Instruction consumer update plan prepared",
+  ],
+  PROMPT_TEMPLATE_IMPACT_PREPARED: [
+    "Подготовлен план обновления потребителей шаблона",
+    "Prompt template consumer update plan prepared",
+  ],
   CAPABILITY_AGENT_MANAGE_NAME: [
     "Управление сотрудниками",
     "Employee management",

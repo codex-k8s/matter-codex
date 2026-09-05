@@ -4,16 +4,105 @@ import {
   saveRuntimeEnvironmentDraft,
   validateRuntimeEnvironmentDraft,
   publishRuntimeEnvironmentDraft,
+  prepareEnvironmentDraftImpact,
   discardRuntimeEnvironmentDraft,
 } from "@/shared/api/generated/openapi/sdk.gen";
 import type {
   RuntimeEnvironmentDraft,
   RuntimeEnvironmentDraftSpecification,
   RuntimeEnvironmentSet,
+  RevisionImpactPlan,
+  RuntimeEnvironmentPublicationResult,
 } from "@/shared/api/generated/openapi/types.gen";
 import { requestSignal } from "@/shared/api/client";
 import { etag, mutate } from "@/shared/api/mutation";
 import { unwrap, type ApiReadback } from "@/shared/api/problem";
+import {
+  checkedPublicationPlan,
+  publicationPlanIdentity,
+  publicationSelection,
+} from "./publication-impact";
+
+export async function prepareEnvironmentPublication(
+  draft: RuntimeEnvironmentDraft,
+  signal: AbortSignal,
+): Promise<RevisionImpactPlan> {
+  const fresh = await readEnvironmentDraft(draft.projectRef, draft.ref, signal);
+  if (
+    fresh.version !== draft.version ||
+    fresh.state !== "VALID" ||
+    !fresh.validationDigest
+  )
+    throw new Error("Environment draft changed before impact preparation");
+  const plan = checkedPublicationPlan(
+    (
+      await mutate(
+        (headers) =>
+          prepareEnvironmentDraftImpact({
+            path: { draftRef: fresh.ref },
+            headers: { ...headers, "If-Match": etag(fresh.version) },
+            signal: requestSignal(signal),
+          }),
+        fresh.version,
+      )
+    ).data,
+  );
+  if (
+    plan.kind !== "RUNTIME_ENVIRONMENT" ||
+    plan.draftRef !== fresh.ref ||
+    plan.draftVersion !== fresh.version ||
+    (plan.sourceRef ?? "") !== (fresh.environmentRef ?? "") ||
+    plan.sourceVersion !== fresh.expectedEnvironmentVersion ||
+    (plan.sourceRevisionRef ?? "") !== (fresh.baseVersionRef ?? "") ||
+    plan.state !== "PREPARED"
+  )
+    throw new Error("Environment publication plan mismatch");
+  return plan;
+}
+
+export async function publishEnvironmentDraft(
+  draft: RuntimeEnvironmentDraft,
+  plan: RevisionImpactPlan,
+  selected: string[],
+  signal: AbortSignal,
+  key: string,
+): Promise<RuntimeEnvironmentPublicationResult> {
+  if (
+    plan.kind !== "RUNTIME_ENVIRONMENT" ||
+    plan.draftRef !== draft.ref ||
+    plan.draftVersion !== draft.version
+  )
+    throw new Error("Environment publication intent mismatch");
+  const result = (
+    await mutate(
+      (headers) =>
+        publishRuntimeEnvironmentDraft({
+          path: { draftRef: draft.ref },
+          body: publicationSelection(plan, selected),
+          headers: { ...headers, "If-Match": etag(draft.version) },
+          signal: requestSignal(signal),
+        }),
+      draft.version,
+      key,
+    )
+  ).data;
+  checkedPublicationPlan(result.plan);
+  if (
+    publicationPlanIdentity(result.plan) !== publicationPlanIdentity(plan) ||
+    result.plan.state !== "APPLIED" ||
+    result.draft.ref !== draft.ref ||
+    result.draft.projectRef !== draft.projectRef ||
+    result.draft.version !== draft.version + 1 ||
+    result.draft.state !== "PUBLISHED" ||
+    result.draft.publishedEnvironmentRef !== result.environment.ref ||
+    result.environment.projectRef !== draft.projectRef ||
+    result.environment.currentVersion.ref !==
+      result.plan.publishedRevisionRef ||
+    result.environment.currentVersion.digest !== plan.targetDigest
+  )
+    throw new Error("Environment publication receipt mismatch");
+  return result;
+}
 
 export function environmentDraftFingerprint(
   specification: RuntimeEnvironmentDraftSpecification,
@@ -114,13 +203,12 @@ export async function saveEnvironmentDraft(
   return saved;
 }
 export async function transitionEnvironmentDraft(
-  action: "validate" | "publish" | "discard",
+  action: "validate" | "discard",
   draft: RuntimeEnvironmentDraft,
   signal: AbortSignal,
 ): Promise<RuntimeEnvironmentDraft> {
   const operation = {
     validate: validateRuntimeEnvironmentDraft,
-    publish: publishRuntimeEnvironmentDraft,
     discard: discardRuntimeEnvironmentDraft,
   }[action];
   const result = await mutate(
@@ -134,13 +222,9 @@ export async function transitionEnvironmentDraft(
   );
   const saved = readback(result, draft.projectRef, draft.ref);
   if (
-    !(
-      action === "validate"
-        ? ["VALID", "INVALID"]
-        : action === "publish"
-          ? ["PUBLISHED"]
-          : ["DISCARDED"]
-    ).includes(saved.state)
+    !(action === "validate" ? ["VALID", "INVALID"] : ["DISCARDED"]).includes(
+      saved.state,
+    )
   )
     throw new Error("Invalid runtime environment draft transition");
   return saved;

@@ -5,11 +5,48 @@ import type {
   ManagedConfigurationRebindInput,
   ManagedConfigurationRevision,
   ManagedConfigurationDraftSaveInput,
+  RevisionImpactPlan,
+  RevisionImpactPublicationInput,
+  RoleImageRebindInput,
 } from "@/shared/api/generated/openapi/types.gen";
 import { mutate, etag } from "@/shared/api/mutation";
 import { unwrap } from "@/shared/api/problem";
 import { requestSignal } from "@/shared/api/client";
 import { canChangeDraft } from "./model";
+import { checkedPublicationPlan } from "@/features/runtime/publication-impact";
+
+export async function preparePromptPublication(
+  configuration: ManagedConfiguration,
+  revision: ManagedConfigurationRevision,
+): Promise<RevisionImpactPlan> {
+  if (configuration.kind !== "PROMPT_TEMPLATE")
+    throw new Error("Prompt publication scope mismatch");
+  const plan = checkedPublicationPlan(
+    (
+      await mutate(
+        (headers) =>
+          sdk.preparePromptTemplateImpact({
+            path: {
+              configurationRef: configuration.ref,
+              revisionRef: revision.ref,
+            },
+            headers: { ...headers, "If-Match": etag(configuration.version) },
+            signal: requestSignal(),
+          }),
+        configuration.version,
+      )
+    ).data,
+  );
+  if (
+    plan.kind !== "PROMPT_TEMPLATE" ||
+    plan.sourceRef !== configuration.ref ||
+    plan.sourceVersion !== configuration.version ||
+    plan.draftRef !== revision.ref ||
+    plan.state !== "PREPARED"
+  )
+    throw new Error("Prompt publication plan mismatch");
+  return plan;
+}
 
 export type ConfigurationKind = ManagedConfiguration["kind"];
 export async function listConfigurations(options: {
@@ -205,15 +242,58 @@ export async function changeDraft(
     throw new Error("Managed draft receipt mismatch");
   return next;
 }
+export async function publishPromptPublication(
+  configuration: ManagedConfiguration,
+  revision: ManagedConfigurationRevision,
+  publication: RevisionImpactPublicationInput,
+  key?: string,
+) {
+  if (configuration.kind !== "PROMPT_TEMPLATE")
+    throw new Error("Invalid prompt configuration kind");
+  return (
+    await mutate(
+      (headers) =>
+        sdk.publishPromptTemplateDraft({
+          path: {
+            configurationRef: configuration.ref,
+            revisionRef: revision.ref,
+          },
+          body: publication,
+          headers: { ...headers, "If-Match": etag(configuration.version) },
+          signal: requestSignal(),
+        }),
+      configuration.version,
+      key,
+    )
+  ).data;
+}
 export async function transition(
   action: "validate" | "publish",
   configuration: ManagedConfiguration,
   revision: ManagedConfigurationRevision,
+  publication?: RevisionImpactPublicationInput,
 ) {
+  if (action === "publish" && configuration.kind === "PROMPT_TEMPLATE") {
+    if (!publication)
+      throw new Error("Prompt publication requires an impact plan");
+    return publishPromptPublication(configuration, revision, publication);
+  }
+  const operation =
+    action === "validate"
+      ? operationsFor(configuration.kind).validate
+      : configuration.kind === "ROLE_IMAGE"
+        ? sdk.publishRoleImageRevisionDraft
+        : configuration.kind === "INTEGRATION_DEFINITION"
+          ? sdk.publishIntegrationDefinitionDraft
+          : configuration.kind === "SYSTEM_STT"
+            ? sdk.publishSystemSttConfigurationDraft
+            : undefined;
+  if (!operation)
+    throw new Error("Configuration publication requires specialized commands");
   return (
     await mutate(
       (headers) =>
-        operationsFor(configuration.kind)[action]({
+        operation({
           path: {
             configurationRef: configuration.ref,
             revisionRef: revision.ref,
@@ -228,12 +308,43 @@ export async function transition(
 export async function rebind(
   configuration: ManagedConfiguration,
   revision: ManagedConfigurationRevision,
-  body: ManagedConfigurationRebindInput,
+  body: ManagedConfigurationRebindInput | RoleImageRebindInput,
 ) {
+  if (configuration.kind === "ROLE_IMAGE") {
+    if (!("planRef" in body))
+      throw new Error("Role image rebind requires an impact plan");
+    return (
+      await mutate(
+        (headers) =>
+          sdk.rebindRoleImageConsumers({
+            path: {
+              configurationRef: configuration.ref,
+              revisionRef: revision.ref,
+            },
+            body,
+            headers: { ...headers, "If-Match": etag(configuration.version) },
+            signal: requestSignal(),
+          }),
+        configuration.version,
+      )
+    ).data;
+  }
+  if (!("consumers" in body))
+    throw new Error("Invalid configuration rebind selection");
+  const operation =
+    configuration.kind === "PROMPT_TEMPLATE"
+      ? sdk.rebindPromptTemplateConsumers
+      : configuration.kind === "INTEGRATION_DEFINITION"
+        ? sdk.rebindIntegrationDefinitionConsumers
+        : configuration.kind === "SYSTEM_STT"
+          ? sdk.rebindSystemSttConsumers
+          : undefined;
+  if (!operation)
+    throw new Error("Configuration rebind requires specialized commands");
   return (
     await mutate(
       (headers) =>
-        operationsFor(configuration.kind).rebind({
+        operation({
           path: {
             configurationRef: configuration.ref,
             revisionRef: revision.ref,

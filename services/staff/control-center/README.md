@@ -1099,6 +1099,75 @@ Email после OIDC ещё до Files. Это показывает, что с�
 согласованного пакета SDK; исходный full50d FAIL сохраняется. Отдельная CDP/heap
 диагностика продолжается без изменения timeout, GPU или sandbox.
 
+### Диагностика временного каталога Chromium
+
+На dirty consumer tree HTTP `4c8dc9184` отдельный Home2900 зафиксировал
+`Target.targetCrashed`, `status=crashed`, `errorCode=133` ещё на начальном Home,
+до Email/OIDC. Счётчики cgroup `oom/oom_kill/oom_group_kill/high/max` были нулевыми.
+Проверка среды выявила `/tmp` на tmpfs с `usrquota`: для текущего UID
+`bhardlimit=bsoftlimit=25673840 KiB`, `curspace=26290012160 bytes`, то есть
+свободная пользовательская квота равнялась нулю. Пробная временная запись 4096
+байт получила `errno=122`, `Disk quota exceeded`; файл закрыт и удалён автоматически.
+Свободные 6,2 GiB в `df` описывали файловую систему, а не эту квоту.
+
+Закреплённый Playwright 1.61.0 создаёт временные profile/artifacts/tracing через
+`os.tmpdir()` (`playwright-core/lib/coreBundle.js`, создание
+`playwright_*dev_profile-*`, `playwright-artifacts-*`, `playwright-tracing-*`).
+При незаданном `TMPDIR` использовался `/tmp`. Для воспроизводимого повторного
+запуска используется отдельный каталог на диске, без очистки чужих файлов:
+
+```bash
+install -d -m 700 "$HOME/.cache/kodex-pwa-browser-tmp"
+TMPDIR="$HOME/.cache/kodex-pwa-browser-tmp" npm run test:e2e:synthetic
+```
+
+Флаги Chromium, sandbox и timeout не меняются. Прежние full/scoped FAIL
+сохраняются; результат повтора фиксируется отдельно. Опциональная диагностика
+`KODEX_SYNTHETIC_DIAGNOSTICS=1` сохраняет безопасные CDP metrics/crash metadata
+и trace с начала synthetic-сценария. Чтения CDP и cleanup имеют независимый
+бюджет 5 s; JSON сохраняется до ожидания и после него, включая аварийный исход.
+Эта диагностика не применяется к live-профилю.
+
+Повтор того же Home2900 с дисковым `TMPDIR` прошёл: PASS 1/1 за 55,1 s,
+Chromium завершился с exitCode=0. Сохранились все assertions Email/OIDC,
+Files/Session; CDP получил metrics до и после смены протокола. Проверены также
+Prompt publication 504 до эффекта → явный повтор исходного intent и Environment
+publication 504 после эффекта → terminal protected GET без второй mutation.
+Это отдельный диагностический PASS, не замена полного synthetic baseline.
+
+### Планы публикации и восстановление исходного запроса
+
+OpenAPI source HTTP `4c8dc9184` потреблён целиком через canonical Go/TS generation.
+Prompt, Instructions и Environment используют specialized Prepare и общий
+`RevisionImpactPlan`; RoleImage — отдельный admitted image impact plan и typed
+Rebind. Подтверждение показывает immutable total отдельно от текущего owner
+total, серверный поиск/cursor и явный selection (включая пустой). APPLIED плана
+не скрывает CONFLICT/FORBIDDEN/NOT_SELECTED отдельных строк; смена состояния
+сбрасывает cursor и читает новый отчёт с первой страницы.
+
+Неизвестный исход сохраняет только kind/ownerRef/planRef, исходные version,
+idempotency key и selected item refs в sessionStorage. Новый intent не заменяет
+незавершённый. Пользовательское восстановление читает protected plan/source:
+APPLIED подтверждается без mutation, EXPIRED закрывает прежнюю попытку,
+PREPARED допускает только отдельное явное повторение того же запроса после
+проверки исходной версии. Latest version и новый key при повторе не подставляются.
+Содержимое инструкций, конфигурации и credential values в этом storage отсутствуют.
+
+История Instructions выделяет точный `instructionBinding.revisionRef`, отдельно
+от latest publication. `effective=false` означает, что сейчас используется
+назначенный шаблон промпта; выбранная Instructions revision при этом сохраняется.
+Новые typed SDK 641/writeback/72 сами по себе не означают завершённые consumers:
+их оставшаяся реализация и полный runtime путь остаются в scope #1022.
+
+Промежуточный пакет планов прошёл полный unit 1055/1055 (201 файл), lint,
+format:check, production/synthetic build/typecheck, E2E TypeScript/discovery и
+canonical Go/TS replay (пять generated файлов byte-identical). Первичные
+format/lint ошибки диагностического helper и избыточных guards исправлены;
+повтор прошёл. Известный production chunk warning сохраняется. Полный synthetic
+на этом промежуточном пакете NOT RUN по согласованному порядку: один новый
+полный прогон следует после оставшихся typed consumers 641/72/writeback и
+общих E2E исправлений. Прежний full50d 34/35 FAIL остаётся в истории.
+
 ## Проверенная документация библиотек
 
 Для Playwright проверены Context7 `/microsoft/playwright/v1.61.0` и актуальный

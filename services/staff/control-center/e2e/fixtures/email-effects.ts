@@ -1,5 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 import { installEmailOidc } from "./email-oidc";
+import { sampleBrowserDiagnostics } from "./browser-diagnostics";
 import type {
   EmailEffectReceiptView,
   EmailReconciliationInput,
@@ -9,6 +10,8 @@ export async function checkEmailEffects(
   page: Page,
   capture: () => Promise<void>,
 ): Promise<void> {
+  if (process.env.KODEX_SYNTHETIC_DIAGNOSTICS === "1")
+    await sampleBrowserDiagnostics(page, "BEFORE_EMAIL");
   const connection: IntegrationConnection = {
     ref: "email_synthetic",
     version: 5,
@@ -154,6 +157,8 @@ export async function checkEmailEffects(
       ],
       pathname: "/integrations",
     });
+  if (process.env.KODEX_SYNTHETIC_DIAGNOSTICS === "1")
+    await sampleBrowserDiagnostics(page, "AFTER_OIDC");
   await expect(
     dialog.getByText("Исход неизвестен", { exact: true }),
   ).toBeVisible();
@@ -161,10 +166,14 @@ export async function checkEmailEffects(
     dialog.getByRole("button", { name: "Зафиксировать решение", exact: true }),
   ).toBeDisabled();
   expect(decisions).toBe(0);
+  if (process.env.KODEX_SYNTHETIC_DIAGNOSTICS === "1")
+    await sampleBrowserDiagnostics(page, "BEFORE_SELECT");
   await dialog
     .getByRole("region", { name: "Почтовые операции" })
     .getByRole("combobox")
     .selectOption("NO_EFFECT_CONFIRMED");
+  if (process.env.KODEX_SYNTHETIC_DIAGNOSTICS === "1")
+    await sampleBrowserDiagnostics(page, "AFTER_SELECT");
   await dialog
     .getByLabel("Примечание", { exact: true })
     .fill("Synthetic owner decision");

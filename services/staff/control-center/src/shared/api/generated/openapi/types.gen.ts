@@ -334,10 +334,12 @@ export type ManagedConfigurationDraftInput = {
     name: string;
     contentFormat: 'TEXT' | 'JSON' | 'YAML' | 'TOML';
     content: string;
+    promptScope?: PromptTemplateScopeInput;
 };
 
 export type ManagedConfigurationDraftSaveInput = {
     contentFormat: 'TEXT' | 'JSON' | 'YAML' | 'TOML';
+    promptScope?: PromptTemplateScopeInput;
     /**
      * Неполный текст допустим; ограничение 256 KiB применяется к UTF-8 байтам. Пустая строка разрешена, отсутствие поля и null запрещены.
      */
@@ -349,10 +351,182 @@ export type ManagedConfigurationCopyInput = {
 };
 
 export type ManagedConfigurationConsumer = {
-    kind: 'AGENT' | 'WORKFLOW' | 'SCHEDULE' | 'RUNTIME_ENVIRONMENT' | 'INTEGRATION_CONNECTION' | 'STT_SERVICE';
+    kind: 'AGENT' | 'AGENT_CONTINUATION' | 'WORKFLOW' | 'SCHEDULE' | 'RUNTIME_ENVIRONMENT' | 'INTEGRATION_CONNECTION' | 'STT_SERVICE';
     ref: string;
     revisionRef: OpaqueRef;
     version: number;
+};
+
+export type PrepareConfigurationWriteBackInput = {
+    expectedSourceVersion: number;
+    content: string;
+};
+
+export type ConfigurationWriteBackDecisionInput = {
+    approvalDigest: string;
+};
+
+export type ConfigurationWriteBack = {
+    ref: OpaqueRef;
+    configurationRef: OpaqueRef;
+    sourceRef: OpaqueRef;
+    connectionRef: OpaqueRef;
+    version: number;
+    configurationVersion: number;
+    sourceVersion: number;
+    connectionVersion: number;
+    kind: 'ROLE_IMAGE' | 'INTEGRATION_DEFINITION';
+    repositoryRef: string;
+    sourceRefName: string;
+    path: string;
+    baseCommitSha: string;
+    candidateCommitSha?: string;
+    baseContentSha256: string;
+    proposedContentSha256: string;
+    approvalDigest: string;
+    contentFormat: 'JSON' | 'YAML';
+    proposalBranch: string;
+    state: 'WAITING_APPROVAL' | 'QUEUED' | 'CLAIMED' | 'EFFECT_STARTED' | 'SUCCEEDED' | 'REJECTED' | 'CANCELLED' | 'EXPIRED' | 'FAILED' | 'UNKNOWN_OUTCOME';
+    failureCode?: 'UNAVAILABLE' | 'CREDENTIAL_REJECTED' | 'ACCESS_DENIED' | 'SOURCE_CHANGED' | 'CONTENT_INVALID' | 'RESPONSE_INVALID' | 'AUTHORITY_CHANGED' | 'DEADLINE_EXCEEDED' | 'BRANCH_CONFLICT' | 'OUTCOME_UNCONFIRMED';
+    pullRequestRef?: string;
+    pullRequestUrl?: string;
+    createdAt: Timestamp;
+    expiresAt: Timestamp;
+    approvedAt?: Timestamp;
+    completedAt?: Timestamp;
+    branchConfirmedAt?: Timestamp;
+    pullRequestConfirmedAt?: Timestamp;
+    nextActions: [
+        ConfigurationWriteBackAction,
+        ConfigurationWriteBackAction,
+        ConfigurationWriteBackAction
+    ];
+};
+
+export type ConfigurationWriteBackAction = {
+    action: 'APPROVE' | 'REJECT' | 'CANCEL';
+    enabled: boolean;
+    reason: 'NONE' | 'FORBIDDEN' | 'STATE' | 'SOURCE_CHANGED' | 'EXPIRED' | 'OUTCOME_UNKNOWN';
+};
+
+export type ConfigurationWriteBackView = {
+    proposal: ConfigurationWriteBack;
+    baseContent: string;
+    proposedContent: string;
+};
+
+export type ConfigurationWriteBackPage = {
+    items: Array<ConfigurationWriteBack>;
+    total: number;
+    nextPageToken?: string;
+};
+
+export type RoleImageRebindInput = {
+    planRef: OpaqueRef;
+    impactDigest: string;
+    selectedItemRefs: Array<OpaqueRef>;
+};
+
+export type RoleImageRebindResult = {
+    configuration: ManagedConfiguration;
+    revision: ManagedConfigurationRevision;
+    plan: RoleImageImpactPlan;
+};
+
+export type RevisionImpactPublicationInput = {
+    planRef: OpaqueRef;
+    selectedItemRefs: Array<OpaqueRef>;
+};
+
+export type RuntimeEnvironmentPublicationResult = {
+    draft: RuntimeEnvironmentDraft;
+    environment: RuntimeEnvironmentSet;
+    plan: RevisionImpactPlan;
+};
+
+export type RevisionImpactPlan = {
+    ref: OpaqueRef;
+    version: number;
+    kind: 'RUNTIME_ENVIRONMENT' | 'PROMPT_TEMPLATE' | 'AGENT_INSTRUCTIONS';
+    sourceRef?: OpaqueRef;
+    sourceVersion: number;
+    sourceRevisionRef?: OpaqueRef;
+    draftRef: OpaqueRef;
+    draftVersion: number;
+    targetDigest: string;
+    digest: string;
+    total: number;
+    state: 'PREPARED' | 'APPLIED' | 'EXPIRED';
+    createdAt: string;
+    expiresAt: string;
+    publishedRevisionRef?: OpaqueRef;
+};
+
+export type RevisionImpactItem = {
+    ref: OpaqueRef;
+    /**
+     * Пустая строка допустима только для организационного Agent или AGENT_CONTINUATION в плане PromptTemplate; область и права проверяет owner.
+     */
+    projectRef: string;
+    consumerKind: 'AGENT' | 'AGENT_CONTINUATION' | 'WORKFLOW' | 'SCHEDULE';
+    consumerRef: OpaqueRef;
+    consumerVersion: number;
+    bindingRef: OpaqueRef;
+    bindingVersion: number;
+    sourceRevisionRef: OpaqueRef;
+    outcome: 'PENDING' | 'APPLIED' | 'CONFLICT' | 'FORBIDDEN' | 'NOT_SELECTED';
+    resultRevisionRef?: OpaqueRef;
+    resultBindingRef?: OpaqueRef;
+    resultBindingVersion?: number;
+    resultConsumerVersion?: number;
+};
+
+export type RevisionImpactPage = {
+    plan: RevisionImpactPlan;
+    items: Array<RevisionImpactItem>;
+    total: number;
+    nextPageToken?: string;
+};
+
+export type RoleImageImpactPlan = {
+    ref: OpaqueRef;
+    version: number;
+    configurationRef: OpaqueRef;
+    configurationVersion: number;
+    revisionRef: OpaqueRef;
+    revisionDigest: string;
+    recipeRef: OpaqueRef;
+    recipeGeneration: number;
+    buildRef: OpaqueRef;
+    artifactRef: OpaqueRef;
+    artifactDigest: string;
+    admissionPolicyDigest: string;
+    digest: string;
+    total: number;
+    state: 'PREPARED' | 'APPLIED' | 'EXPIRED';
+    createdAt: Timestamp;
+    expiresAt: Timestamp;
+};
+
+export type RoleImageImpactItem = {
+    ref: OpaqueRef;
+    environmentRef: OpaqueRef;
+    environmentVersion: number;
+    sourceVersionRef: OpaqueRef;
+    sourceVersionDigest: string;
+    projectRef: OpaqueRef;
+    consumer?: RuntimeEnvironmentConsumer;
+    outcome: 'PENDING' | 'APPLIED' | 'CONFLICT' | 'FORBIDDEN' | 'NOT_SELECTED';
+    resultEnvironmentVersionRef?: OpaqueRef;
+    resultBindingRef?: OpaqueRef;
+    resultBindingVersion?: number;
+};
+
+export type RoleImageImpactPage = {
+    plan: RoleImageImpactPlan;
+    items: Array<RoleImageImpactItem>;
+    total: number;
+    nextPageToken?: string;
 };
 
 export type ManagedConfigurationRebindInput = {
@@ -372,6 +546,7 @@ export type ManagedConfigurationRevision = {
     createdAt: Timestamp;
     validatedAt?: Timestamp;
     publishedAt?: Timestamp;
+    promptScope?: PromptTemplateScope;
 };
 
 export type RoleImageGitSourceInput = {
@@ -838,6 +1013,7 @@ export type Agent = {
     runtimeModel?: string;
     runtimeReady: boolean;
     publishedInstructions?: InstructionVersion;
+    instructionBinding?: AgentInstructionsBinding;
     draftInstructions?: InstructionVersion;
     capabilities: Array<PlatformCapability>;
     integrations: Array<string>;
@@ -845,6 +1021,13 @@ export type Agent = {
     currentActivity?: string;
     updatedAt: Timestamp;
     nextActions: Array<NextAction>;
+};
+
+export type AgentInstructionsBinding = {
+    ref: OpaqueRef;
+    version: number;
+    revisionRef: OpaqueRef;
+    effective: boolean;
 };
 
 export type AgentInput = {
@@ -892,9 +1075,29 @@ export type AgentCommand = {
     grantRef?: OpaqueRef;
 };
 
+/**
+ * PUBLISH требует planRef и явный selectedItemRefs (пустой массив допустим); остальные действия не принимают эти поля.
+ */
 export type InstructionCommand = {
     action: 'VALIDATE' | 'PUBLISH' | 'ROLLBACK';
     publishedInstructionRef?: OpaqueRef;
+    planRef?: OpaqueRef;
+    selectedItemRefs?: Array<OpaqueRef>;
+};
+
+export type InstructionPublicationResult = {
+    agent: {
+        ref: OpaqueRef;
+        projectRef: OpaqueRef;
+        version: number;
+    };
+    plan: RevisionImpactPlan;
+};
+
+export type PromptTemplatePublicationResult = {
+    configuration: ManagedConfiguration;
+    revision: ManagedConfigurationRevision;
+    plan: RevisionImpactPlan;
 };
 
 export type ArtifactBindingTargetReason = 'AVAILABLE' | 'ALREADY_BOUND' | 'NOT_BOUND' | 'AGENT_CAPABILITY_REQUIRED' | 'AGENT_ARCHIVED' | 'ARTIFACT_UNAVAILABLE';
@@ -1614,7 +1817,7 @@ export type RuntimeEnvironmentVersionPage = {
     nextPageToken?: string;
 };
 
-export type TemplateVariableAvailabilityReason = 'AVAILABLE' | 'PROJECT_CONTEXT_REQUIRED' | 'AGENT_CONTEXT_REQUIRED' | 'RUNTIME_CONTEXT_REQUIRED' | 'NOT_MATERIALIZED';
+export type TemplateVariableAvailabilityReason = 'AVAILABLE' | 'PROJECT_CONTEXT_REQUIRED' | 'AGENT_CONTEXT_REQUIRED' | 'RUNTIME_CONTEXT_REQUIRED' | 'NOT_MATERIALIZED' | 'PERMISSION_REQUIRED' | 'CAPABILITY_REQUIRED';
 
 export type TemplateVariable = {
     name: string;
@@ -1625,7 +1828,7 @@ export type TemplateVariable = {
     collection: boolean;
     available: boolean;
     reason: TemplateVariableAvailabilityReason;
-    itemValueType?: 'STRING' | 'OPAQUE_REF' | 'INTEGER' | 'BOOLEAN' | 'TIMESTAMP' | 'OBJECT' | 'FILE_DESCRIPTOR' | 'TOOL_DESCRIPTOR';
+    itemValueType?: 'STRING' | 'OPAQUE_REF' | 'INTEGER' | 'BOOLEAN' | 'TIMESTAMP' | 'OBJECT' | 'FILE_DESCRIPTOR' | 'TOOL_DESCRIPTOR' | 'INTEGRATION_DESCRIPTOR';
     itemFields: Array<TemplateVariableField>;
     rangeExample?: string;
 };
@@ -1640,6 +1843,7 @@ export type TemplateVariablePage = {
     items: Array<TemplateVariable>;
     total: number;
     nextPageToken?: string;
+    contextPin?: PromptContextPin;
 };
 
 export type ModelCapability = {
@@ -1687,14 +1891,126 @@ export type ProviderDefinitionPage = {
     nextPageToken: string;
 };
 
-export type PromptTemplateInput = {
-    template: string;
+export type PromptVariableCatalogInput = {
+    projectRef?: OpaqueRef;
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE' | 'SESSION_CONTINUATION';
+    targetRef: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
+    query?: string;
+    pageSize?: number;
+    pageToken?: string;
 };
 
-export type PromptTemplatePreviewInput = PromptTemplateInput & {
-    targetKind?: 'SYNTHETIC' | 'SESSION' | 'RUN';
+export type PromptTemplateScopeInput = {
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE';
+    targetRef: OpaqueRef;
+    agentRef?: OpaqueRef;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    expectedContextDigest?: string;
+    templateKind: 'INSTRUCTIONS' | 'CONTINUATION';
+};
+
+export type PromptTemplateScope = {
+    targetKind: 'AGENT' | 'WORKFLOW_STAGE';
+    targetRef: OpaqueRef;
+    contextPin: PromptContextPin;
+    templateKind: 'INSTRUCTIONS' | 'CONTINUATION';
+};
+
+export type PromptTemplateInput = {
+    template: string;
+    targetKind?: PromptPreviewTargetKind;
     targetRef?: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
+};
+
+export type PromptTemplatePreviewInput = {
+    template: string;
+    targetKind?: PromptPreviewTargetKind;
+    targetRef?: OpaqueRef;
+    context?: PromptPreviewContext;
+    expectedContextDigest?: string;
     includeFullMaterialization?: boolean;
+};
+
+export type PromptPreviewTargetKind = 'SYNTHETIC' | 'SESSION' | 'RUN' | 'AGENT' | 'WORKFLOW_STAGE' | 'SESSION_CONTINUATION';
+
+export type PromptPreviewContext = {
+    agentRef?: OpaqueRef;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    expectedAgentVersion?: number;
+    expectedWorkflowVersion?: number;
+    input?: {
+        [key: string]: unknown;
+    };
+    attachmentSetRef?: OpaqueRef;
+    task?: string;
+};
+
+export type PromptContextPin = {
+    digest: string;
+    agentRef?: OpaqueRef;
+    agentVersion?: number;
+    workflowRef?: OpaqueRef;
+    workflowVersion?: number;
+    workflowRevisionRef?: OpaqueRef;
+    workflowStageKey?: string;
+    runtimeConfigurationRef?: OpaqueRef;
+    runtimeConfigurationDigest?: string;
+    environmentBindingRef?: OpaqueRef;
+    environmentBindingVersion?: number;
+    environmentVersionRef?: OpaqueRef;
+    environmentDigest?: string;
+    attachmentSetRef?: OpaqueRef;
+    attachmentManifestDigest?: string;
+    previousRuntimeRevisionRef?: OpaqueRef;
+};
+
+export type PromptSemanticSlot = 'WORKFLOW' | 'STAGE' | 'PURPOSE' | 'EXPECTED_RESULT' | 'INPUT' | 'CONSTRAINTS' | 'EFFECTIVE_CAPABILITIES' | 'FILES' | 'TOOLS' | 'INTEGRATIONS' | 'RUNTIME_CHANGES';
+
+export type PromptSectionSource = 'USER_TEMPLATE' | 'PLATFORM';
+
+export type PromptSlotProvenance = {
+    slot: PromptSemanticSlot;
+    source: PromptSectionSource;
+    position: number;
+};
+
+export type PromptPreviewSection = {
+    source: PromptSectionSource;
+    slot?: PromptSemanticSlot;
+    content: string;
+    userKind?: 'BASE_TEMPLATE' | 'WORKFLOW_CONTEXT' | 'AUTOMATION_TASK';
+    templateRef?: OpaqueRef;
+    templateDigest?: string;
+};
+
+export type PromptRuntimeDescriptor = {
+    ref?: string;
+    version?: number;
+    digest?: string;
+    value?: string;
+};
+
+export type PromptRuntimeChange = {
+    component: 'INSTRUCTIONS' | 'MODEL' | 'REASONING' | 'IMAGE' | 'ENVIRONMENT' | 'FILES' | 'SKILLS' | 'MEMORY' | 'TOOLS' | 'MCP' | 'INTEGRATIONS' | 'CAPABILITIES' | 'POLICY';
+    previous: Array<PromptRuntimeDescriptor>;
+    current: Array<PromptRuntimeDescriptor>;
+    action: 'USE_CURRENT_CONTEXT';
+};
+
+export type PromptRuntimeDiff = {
+    previousRevisionRef: OpaqueRef;
+    currentRevisionRef?: OpaqueRef;
+    sessionRef: OpaqueRef;
+    turnRef?: OpaqueRef;
+    attempt?: number;
+    changes: Array<PromptRuntimeChange>;
+    digest: string;
 };
 
 export type PromptTemplateDiagnostic = {
@@ -1703,17 +2019,32 @@ export type PromptTemplateDiagnostic = {
     message: string;
     line: number;
     column: number;
+    variableName?: string;
 };
 
 export type PromptTemplateValidation = {
     valid: boolean;
     diagnostics: Array<PromptTemplateDiagnostic>;
+    contextPin?: PromptContextPin;
 };
 
 export type PromptTemplatePreview = {
     safePreview: string;
     fullMaterializedPrompt?: string;
     diagnostics: Array<PromptTemplateDiagnostic>;
+    complete: boolean;
+    templateRef: OpaqueRef;
+    templateDigest: string;
+    materializationDigest: string;
+    effectiveCapabilities: Array<string>;
+    serviceTemplateRevision: string;
+    serviceTemplateDigest: string;
+    variableSnapshotDigest: string;
+    locale: string;
+    slots: Array<PromptSlotProvenance>;
+    sections: Array<PromptPreviewSection>;
+    contextPin?: PromptContextPin;
+    runtimeDiff?: PromptRuntimeDiff;
 };
 
 export type RoleEnvironmentPlatform = {
@@ -3109,6 +3440,16 @@ export type ArtifactScanStateQuery = 'PENDING' | 'SCANNING' | 'CLEAN' | 'QUARANT
 
 export type ArtifactSourceKindQuery = 'CONTROL_CENTER' | 'AGENT_RESULT' | 'INTEGRATION_RESULT' | 'KNOWLEDGE_SOURCE' | 'INTERACTION_ATTACHMENT';
 
+export type AgentStateQuery = 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
+
+export type WorkflowStateQuery = 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
+
+export type ProviderAccountStateQuery = 'PENDING_AUTHORIZATION' | 'AUTHORIZED' | 'REAUTHORIZATION_REQUIRED' | 'REVOKED' | 'DISABLED';
+
+export type AuditActionQuery = string;
+
+export type AuditOutcomeQuery = string;
+
 /**
  * Группа источников для одного owner-запроса; несовместима с sourceKind. Пустая группа не ограничивает источники.
  */
@@ -3133,6 +3474,8 @@ export type TemplateRuntimeRevisionRef = OpaqueRef;
 export type PageSize = number;
 
 export type PageToken = string;
+
+export type WriteBackProposalRef = OpaqueRef;
 
 export type VfsPageToken = string;
 
@@ -3837,6 +4180,7 @@ export type ListAgentsData = {
         projectRef: OpaqueRef;
     };
     query?: {
+        state?: 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -3931,6 +4275,7 @@ export type ListOrganizationAgentsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'DRAFT' | 'READY' | 'RUNNING' | 'DISABLED' | 'ARCHIVED';
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;
@@ -3961,6 +4306,7 @@ export type ListOrganizationWorkflowsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;
@@ -4426,6 +4772,38 @@ export type CreateInstructionDraftResponses = {
 
 export type CreateInstructionDraftResponse = CreateInstructionDraftResponses[keyof CreateInstructionDraftResponses];
 
+export type PrepareInstructionsImpactData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        agentRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/agents/{agentRef}/instructions/impact-plans';
+};
+
+export type PrepareInstructionsImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareInstructionsImpactError = PrepareInstructionsImpactErrors[keyof PrepareInstructionsImpactErrors];
+
+export type PrepareInstructionsImpactResponses = {
+    /**
+     * Неизменяемый план публикации инструкций и выбранных привязок
+     */
+    200: RevisionImpactPlan;
+};
+
+export type PrepareInstructionsImpactResponse = PrepareInstructionsImpactResponses[keyof PrepareInstructionsImpactResponses];
+
 export type CommandAgentInstructionsData = {
     body: InstructionCommand;
     headers: {
@@ -4453,7 +4831,7 @@ export type CommandAgentInstructionsResponses = {
     /**
      * Команда к версии инструкций применена
      */
-    200: Agent;
+    200: Agent | InstructionPublicationResult;
 };
 
 export type CommandAgentInstructionsResponse = CommandAgentInstructionsResponses[keyof CommandAgentInstructionsResponses];
@@ -4966,6 +5344,7 @@ export type ListProviderAccountsData = {
     body?: never;
     path?: never;
     query?: {
+        state?: 'PENDING_AUTHORIZATION' | 'AUTHORIZED' | 'REAUTHORIZATION_REQUIRED' | 'REVOKED' | 'DISABLED';
         definitionKey?: 'openai-codex';
         query?: string;
         pageSize?: number;
@@ -5411,6 +5790,34 @@ export type ListPromptTemplateVariablesResponses = {
 };
 
 export type ListPromptTemplateVariablesResponse = ListPromptTemplateVariablesResponses[keyof ListPromptTemplateVariablesResponses];
+
+export type QueryPromptTemplateVariablesData = {
+    body: PromptVariableCatalogInput;
+    headers: {
+        'X-CSRF-Token': string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/prompt-templates/catalog/query';
+};
+
+export type QueryPromptTemplateVariablesErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type QueryPromptTemplateVariablesError = QueryPromptTemplateVariablesErrors[keyof QueryPromptTemplateVariablesErrors];
+
+export type QueryPromptTemplateVariablesResponses = {
+    /**
+     * Каталог выбранного контекста без пользовательских значений в URL
+     */
+    200: TemplateVariablePage;
+};
+
+export type QueryPromptTemplateVariablesResponse = QueryPromptTemplateVariablesResponses[keyof QueryPromptTemplateVariablesResponses];
 
 export type ValidatePromptTemplateData = {
     body: PromptTemplateInput;
@@ -5905,8 +6312,71 @@ export type ValidateRuntimeEnvironmentDraftResponses = {
 
 export type ValidateRuntimeEnvironmentDraftResponse = ValidateRuntimeEnvironmentDraftResponses[keyof ValidateRuntimeEnvironmentDraftResponses];
 
-export type PublishRuntimeEnvironmentDraftData = {
+export type PrepareEnvironmentDraftImpactData = {
     body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        draftRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/runtime-environment-drafts/{draftRef}/impact-plans';
+};
+
+export type PrepareEnvironmentDraftImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareEnvironmentDraftImpactError = PrepareEnvironmentDraftImpactErrors[keyof PrepareEnvironmentDraftImpactErrors];
+
+export type PrepareEnvironmentDraftImpactResponses = {
+    /**
+     * Неизменяемый план до публикации черновика
+     */
+    201: RevisionImpactPlan;
+};
+
+export type PrepareEnvironmentDraftImpactResponse = PrepareEnvironmentDraftImpactResponses[keyof PrepareEnvironmentDraftImpactResponses];
+
+export type GetRevisionImpactPlanData = {
+    body?: never;
+    path: {
+        planRef: OpaqueRef;
+    };
+    query?: {
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/revision-impact-plans/{planRef}';
+};
+
+export type GetRevisionImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetRevisionImpactPlanError = GetRevisionImpactPlanErrors[keyof GetRevisionImpactPlanErrors];
+
+export type GetRevisionImpactPlanResponses = {
+    /**
+     * Текущая видимость и результаты неизменяемого плана
+     */
+    200: RevisionImpactPage;
+};
+
+export type GetRevisionImpactPlanResponse = GetRevisionImpactPlanResponses[keyof GetRevisionImpactPlanResponses];
+
+export type PublishRuntimeEnvironmentDraftData = {
+    body: RevisionImpactPublicationInput;
     headers: {
         'If-Match': string;
         'Idempotency-Key': string;
@@ -5930,9 +6400,9 @@ export type PublishRuntimeEnvironmentDraftError = PublishRuntimeEnvironmentDraft
 
 export type PublishRuntimeEnvironmentDraftResponses = {
     /**
-     * Проверенный черновик опубликован; publishedEnvironmentRef указывает на результат
+     * Черновик опубликован, результаты выбранных замен сохранены в плане
      */
-    200: RuntimeEnvironmentDraft;
+    200: RuntimeEnvironmentPublicationResult;
 };
 
 export type PublishRuntimeEnvironmentDraftResponse = PublishRuntimeEnvironmentDraftResponses[keyof PublishRuntimeEnvironmentDraftResponses];
@@ -7249,6 +7719,7 @@ export type ListWorkflowsData = {
         projectRef: OpaqueRef;
     };
     query?: {
+        state?: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -8687,6 +9158,7 @@ export type ListIntegrationConnectionsData = {
     body?: never;
     path?: never;
     query?: {
+        definitionKey?: string;
         query?: string;
         pageSize?: number;
         pageToken?: string;
@@ -9821,6 +10293,8 @@ export type ListAuditEventsData = {
     body?: never;
     path?: never;
     query?: {
+        outcome?: string;
+        action?: string;
         projectRef?: OpaqueRef;
         query?: string;
         pageSize?: number;
@@ -9979,8 +10453,41 @@ export type ValidatePromptTemplateDraftResponses = {
 
 export type ValidatePromptTemplateDraftResponse = ValidatePromptTemplateDraftResponses[keyof ValidatePromptTemplateDraftResponses];
 
-export type PublishPromptTemplateDraftData = {
+export type PreparePromptTemplateImpactData = {
     body?: never;
+    headers: {
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+        'If-Match': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+        revisionRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/prompt-template-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans';
+};
+
+export type PreparePromptTemplateImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PreparePromptTemplateImpactError = PreparePromptTemplateImpactErrors[keyof PreparePromptTemplateImpactErrors];
+
+export type PreparePromptTemplateImpactResponses = {
+    /**
+     * Неизменяемый план публикации шаблона и выбранных привязок
+     */
+    200: RevisionImpactPlan;
+};
+
+export type PreparePromptTemplateImpactResponse = PreparePromptTemplateImpactResponses[keyof PreparePromptTemplateImpactResponses];
+
+export type PublishPromptTemplateDraftData = {
+    body: RevisionImpactPublicationInput;
     headers: {
         'Idempotency-Key': string;
         'X-CSRF-Token': string;
@@ -10005,9 +10512,9 @@ export type PublishPromptTemplateDraftError = PublishPromptTemplateDraftErrors[k
 
 export type PublishPromptTemplateDraftResponses = {
     /**
-     * Авторитетная конфигурация и ревизия
+     * Опубликованная конфигурация, ревизия и итоговый план
      */
-    200: ManagedConfigurationResult;
+    200: PromptTemplatePublicationResult;
 };
 
 export type PublishPromptTemplateDraftResponse = PublishPromptTemplateDraftResponses[keyof PublishPromptTemplateDraftResponses];
@@ -10335,8 +10842,289 @@ export type PublishRoleImageRevisionDraftResponses = {
 
 export type PublishRoleImageRevisionDraftResponse = PublishRoleImageRevisionDraftResponses[keyof PublishRoleImageRevisionDraftResponses];
 
+export type PrepareRoleImageImpactPlanData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+        revisionRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/role-image-configurations/{configurationRef}/revisions/{revisionRef}/impact-plans';
+};
+
+export type PrepareRoleImageImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareRoleImageImpactPlanError = PrepareRoleImageImpactPlanErrors[keyof PrepareRoleImageImpactPlanErrors];
+
+export type PrepareRoleImageImpactPlanResponses = {
+    /**
+     * Неизменяемый план применения допущенного образа
+     */
+    201: RoleImageImpactPlan;
+};
+
+export type PrepareRoleImageImpactPlanResponse = PrepareRoleImageImpactPlanResponses[keyof PrepareRoleImageImpactPlanResponses];
+
+export type PrepareRoleImageGitWriteBackData = {
+    body: PrepareConfigurationWriteBackInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/role-image-configurations/{configurationRef}/git-write-backs';
+};
+
+export type PrepareRoleImageGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareRoleImageGitWriteBackError = PrepareRoleImageGitWriteBackErrors[keyof PrepareRoleImageGitWriteBackErrors];
+
+export type PrepareRoleImageGitWriteBackResponses = {
+    /**
+     * Предложение отдельной ветки и PR для явного подтверждения
+     */
+    201: ConfigurationWriteBack;
+};
+
+export type PrepareRoleImageGitWriteBackResponse = PrepareRoleImageGitWriteBackResponses[keyof PrepareRoleImageGitWriteBackResponses];
+
+export type PrepareIntegrationDefinitionGitWriteBackData = {
+    body: PrepareConfigurationWriteBackInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/integration-definition-configurations/{configurationRef}/git-write-backs';
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackError = PrepareIntegrationDefinitionGitWriteBackErrors[keyof PrepareIntegrationDefinitionGitWriteBackErrors];
+
+export type PrepareIntegrationDefinitionGitWriteBackResponses = {
+    /**
+     * Предложение отдельной ветки и PR для явного подтверждения
+     */
+    201: ConfigurationWriteBack;
+};
+
+export type PrepareIntegrationDefinitionGitWriteBackResponse = PrepareIntegrationDefinitionGitWriteBackResponses[keyof PrepareIntegrationDefinitionGitWriteBackResponses];
+
+export type ApproveManagedConfigurationGitWriteBackData = {
+    body: ConfigurationWriteBackDecisionInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/approve';
+};
+
+export type ApproveManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ApproveManagedConfigurationGitWriteBackError = ApproveManagedConfigurationGitWriteBackErrors[keyof ApproveManagedConfigurationGitWriteBackErrors];
+
+export type ApproveManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type ApproveManagedConfigurationGitWriteBackResponse = ApproveManagedConfigurationGitWriteBackResponses[keyof ApproveManagedConfigurationGitWriteBackResponses];
+
+export type RejectManagedConfigurationGitWriteBackData = {
+    body: ConfigurationWriteBackDecisionInput;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/reject';
+};
+
+export type RejectManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type RejectManagedConfigurationGitWriteBackError = RejectManagedConfigurationGitWriteBackErrors[keyof RejectManagedConfigurationGitWriteBackErrors];
+
+export type RejectManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type RejectManagedConfigurationGitWriteBackResponse = RejectManagedConfigurationGitWriteBackResponses[keyof RejectManagedConfigurationGitWriteBackResponses];
+
+export type CancelManagedConfigurationGitWriteBackData = {
+    body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}/cancel';
+};
+
+export type CancelManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type CancelManagedConfigurationGitWriteBackError = CancelManagedConfigurationGitWriteBackErrors[keyof CancelManagedConfigurationGitWriteBackErrors];
+
+export type CancelManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Устойчивое состояние предложения
+     */
+    200: ConfigurationWriteBack;
+};
+
+export type CancelManagedConfigurationGitWriteBackResponse = CancelManagedConfigurationGitWriteBackResponses[keyof CancelManagedConfigurationGitWriteBackResponses];
+
+export type GetManagedConfigurationGitWriteBackData = {
+    body?: never;
+    path: {
+        proposalRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/managed-configuration-git-write-backs/{proposalRef}';
+};
+
+export type GetManagedConfigurationGitWriteBackErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetManagedConfigurationGitWriteBackError = GetManagedConfigurationGitWriteBackErrors[keyof GetManagedConfigurationGitWriteBackErrors];
+
+export type GetManagedConfigurationGitWriteBackResponses = {
+    /**
+     * Точный план и исходные документы
+     */
+    200: ConfigurationWriteBackView;
+};
+
+export type GetManagedConfigurationGitWriteBackResponse = GetManagedConfigurationGitWriteBackResponses[keyof GetManagedConfigurationGitWriteBackResponses];
+
+export type ListManagedConfigurationGitWriteBacksData = {
+    body?: never;
+    path: {
+        configurationRef: OpaqueRef;
+    };
+    query?: {
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/managed-configurations/{configurationRef}/git-write-backs';
+};
+
+export type ListManagedConfigurationGitWriteBacksErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type ListManagedConfigurationGitWriteBacksError = ListManagedConfigurationGitWriteBacksErrors[keyof ListManagedConfigurationGitWriteBacksErrors];
+
+export type ListManagedConfigurationGitWriteBacksResponses = {
+    /**
+     * История предложений без содержимого документов
+     */
+    200: ConfigurationWriteBackPage;
+};
+
+export type ListManagedConfigurationGitWriteBacksResponse = ListManagedConfigurationGitWriteBacksResponses[keyof ListManagedConfigurationGitWriteBacksResponses];
+
+export type GetRoleImageImpactPlanData = {
+    body?: never;
+    path: {
+        planRef: OpaqueRef;
+    };
+    query?: {
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/role-image-impact-plans/{planRef}';
+};
+
+export type GetRoleImageImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetRoleImageImpactPlanError = GetRoleImageImpactPlanErrors[keyof GetRoleImageImpactPlanErrors];
+
+export type GetRoleImageImpactPlanResponses = {
+    /**
+     * План и текущие результаты выбранных потребителей
+     */
+    200: RoleImageImpactPage;
+};
+
+export type GetRoleImageImpactPlanResponse = GetRoleImageImpactPlanResponses[keyof GetRoleImageImpactPlanResponses];
+
 export type RebindRoleImageConsumersData = {
-    body: ManagedConfigurationRebindInput;
+    body: RoleImageRebindInput;
     headers: {
         'Idempotency-Key': string;
         'X-CSRF-Token': string;
@@ -10363,7 +11151,7 @@ export type RebindRoleImageConsumersResponses = {
     /**
      * Авторитетная конфигурация и ревизия
      */
-    200: ManagedConfigurationResult;
+    200: RoleImageRebindResult;
 };
 
 export type RebindRoleImageConsumersResponse = RebindRoleImageConsumersResponses[keyof RebindRoleImageConsumersResponses];

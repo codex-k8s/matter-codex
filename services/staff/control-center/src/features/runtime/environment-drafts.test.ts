@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   RuntimeEnvironmentDraft,
   RuntimeEnvironmentDraftSpecification,
+  RevisionImpactPlan,
 } from "@/shared/api/generated/openapi/types.gen";
 const sdk = vi.hoisted(() => ({
   create: vi.fn(),
@@ -10,6 +11,7 @@ const sdk = vi.hoisted(() => ({
   validate: vi.fn(),
   publish: vi.fn(),
   discard: vi.fn(),
+  prepare: vi.fn(),
 }));
 vi.mock("@/shared/api/generated/openapi/sdk.gen", () => ({
   createRuntimeEnvironmentDraft: sdk.create,
@@ -18,6 +20,7 @@ vi.mock("@/shared/api/generated/openapi/sdk.gen", () => ({
   validateRuntimeEnvironmentDraft: sdk.validate,
   publishRuntimeEnvironmentDraft: sdk.publish,
   discardRuntimeEnvironmentDraft: sdk.discard,
+  prepareEnvironmentDraftImpact: sdk.prepare,
 }));
 vi.mock("@/shared/api/client", () => ({
   requestSignal: (signal: AbortSignal) => signal,
@@ -28,6 +31,8 @@ import {
   saveEnvironmentDraft,
   transitionEnvironmentDraft,
   environmentDraftFingerprint,
+  publishEnvironmentDraft,
+  prepareEnvironmentPublication,
 } from "./environment-drafts";
 const specification: RuntimeEnvironmentDraftSpecification = {
   name: "",
@@ -132,21 +137,61 @@ describe("серверные черновики окружений", () => {
     );
     expect(invalid.diagnostics).toEqual(["ENVIRONMENT_VALIDATION_FAILED"]);
     const valid = await transitionEnvironmentDraft("validate", invalid, signal);
-    sdk.publish.mockResolvedValue(result(draft("PUBLISHED", 4)));
-    const published = await transitionEnvironmentDraft(
-      "publish",
+    const plan: RevisionImpactPlan = {
+      ref: "plan",
+      version: 1,
+      kind: "RUNTIME_ENVIRONMENT",
+      sourceVersion: 0,
+      draftRef: valid.ref,
+      draftVersion: valid.version,
+      targetDigest: "target",
+      digest: "plan-digest",
+      total: 0,
+      state: "PREPARED",
+      createdAt: "2026-09-06T00:00:00Z",
+      expiresAt: "2099-09-06T00:00:00Z",
+    };
+    sdk.publish.mockResolvedValue({
+      data: {
+        draft: draft("PUBLISHED", 4),
+        environment: {
+          ref: "environment_synthetic",
+          projectRef: valid.projectRef,
+          currentVersion: { ref: "version", digest: "target" },
+        },
+        plan: {
+          ...plan,
+          version: 2,
+          state: "APPLIED",
+          publishedRevisionRef: "version",
+        },
+      },
+      response: new Response(),
+    });
+    const published = await publishEnvironmentDraft(
       valid,
+      plan,
+      [],
       signal,
+      "original-key",
     );
-    expect(published.publishedEnvironmentRef).toBe("environment_synthetic");
+    expect(published.draft.publishedEnvironmentRef).toBe(
+      "environment_synthetic",
+    );
     sdk.discard.mockResolvedValue(result(draft("DISCARDED", 2)));
     expect(
       (await transitionEnvironmentDraft("discard", draft(), signal)).state,
     ).toBe("DISCARDED");
     const publishRequest = sdk.publish.mock.calls[0]?.[0] as {
       headers: Record<string, string>;
+      body: unknown;
     };
     expect(publishRequest.headers["If-Match"]).toBe('"3"');
+    expect(publishRequest.body).toEqual({
+      planRef: "plan",
+      selectedItemRefs: [],
+    });
+    expect(publishRequest.headers["Idempotency-Key"]).toBe("original-key");
   });
   it("отклоняет чужой scope и несовпадающий ETag без повторной команды", async () => {
     sdk.read.mockResolvedValue(
@@ -171,6 +216,52 @@ describe("серверные черновики окружений", () => {
       ),
     ).rejects.toThrow();
     expect(sdk.save).toHaveBeenCalledOnce();
+  });
+  it("готовит план только после fresh VALID draft и проверяет исходный immutable base", async () => {
+    const current = {
+      ...draft("VALID", 3),
+      environmentRef: "environment",
+      expectedEnvironmentVersion: 7,
+      baseVersionRef: "base",
+    };
+    const plan: RevisionImpactPlan = {
+      ref: "plan",
+      version: 1,
+      kind: "RUNTIME_ENVIRONMENT",
+      sourceRef: "environment",
+      sourceVersion: 7,
+      sourceRevisionRef: "base",
+      draftRef: current.ref,
+      draftVersion: 3,
+      targetDigest: "target",
+      digest: "digest",
+      total: 0,
+      state: "PREPARED",
+      createdAt: "2026-09-06T00:00:00Z",
+      expiresAt: "2099-09-06T00:00:00Z",
+    };
+    sdk.read.mockResolvedValue(result(current));
+    sdk.prepare.mockResolvedValue({ data: plan, response: new Response() });
+    expect(
+      await prepareEnvironmentPublication(
+        current,
+        new AbortController().signal,
+      ),
+    ).toEqual(plan);
+    const count = sdk.prepare.mock.calls.length;
+    sdk.read.mockResolvedValue(result({ ...current, version: 4 }));
+    await expect(
+      prepareEnvironmentPublication(current, new AbortController().signal),
+    ).rejects.toThrow();
+    expect(sdk.prepare.mock.calls).toHaveLength(count);
+    sdk.read.mockResolvedValue(result(current));
+    sdk.prepare.mockResolvedValue({
+      data: { ...plan, sourceRevisionRef: "other" },
+      response: new Response(),
+    });
+    await expect(
+      prepareEnvironmentPublication(current, new AbortController().signal),
+    ).rejects.toThrow();
   });
   it("сравнивает specification независимо от порядка ключей JSON", () => {
     expect(environmentDraftFingerprint(specification)).toBe(

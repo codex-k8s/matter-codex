@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import VoiceTextarea from "@/shared/ui/VoiceTextarea.vue";
 import EnvironmentImpactDialog from "@/features/runtime/EnvironmentImpactDialog.vue";
+import PublicationImpactSelection from "@/features/runtime/PublicationImpactSelection.vue";
+import {
+  readPublicationAttempt,
+  rememberPublicationAttempt,
+  forgetPublicationAttempt,
+  type PublicationAttempt,
+} from "@/features/runtime/publication-attempt";
+import {
+  readPublicationImpact,
+  restorePublicationImpact,
+  publicationSelection,
+} from "@/features/runtime/publication-impact";
 import {
   Boxes,
   CheckCircle2,
@@ -66,6 +78,8 @@ import {
   saveEnvironmentDraft,
   transitionEnvironmentDraft,
   environmentDraftFingerprint,
+  prepareEnvironmentPublication,
+  publishEnvironmentDraft,
 } from "@/features/runtime/environment-drafts";
 import {
   rememberEnvironmentDraft,
@@ -89,6 +103,7 @@ import type {
   RuntimeSecretDescriptor,
   RuntimeEnvironmentDraft,
   RuntimeEnvironmentDraftSpecification,
+  RevisionImpactPlan,
 } from "@/shared/api/generated/openapi/types.gen";
 import { asProblem, type AppProblem } from "@/shared/api/problem";
 import AsyncEntityPicker from "@/shared/ui/AsyncEntityPicker.vue";
@@ -134,6 +149,10 @@ watch(environmentRef, () => {
 });
 const discardDraftOpen = ref(false);
 const serverDraft = ref<RuntimeEnvironmentDraft>();
+const publicationPlan = ref<RevisionImpactPlan>();
+const publicationUnknown = ref(false);
+const publicationAttempt = ref<PublicationAttempt>();
+let publicationKey = "";
 const loadingDraft = ref(false);
 const initialFingerprint = ref("");
 const leaveOpen = ref(false);
@@ -689,25 +708,190 @@ async function discardDraft(): Promise<void> {
   }
 }
 
-async function publish(): Promise<void> {
+async function preparePublication(): Promise<void> {
+  if (busy.value || !serverDraft.value || draftDirty.value || !canPublish.value)
+    return;
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const stored = readPublicationAttempt(
+      "RUNTIME_ENVIRONMENT",
+      serverDraft.value.ref,
+      window.sessionStorage,
+    );
+    if (stored) {
+      const report = await restorePublicationImpact(
+        stored.planRef,
+        draftController.signal,
+      );
+      if (
+        report.plan.kind !== "RUNTIME_ENVIRONMENT" ||
+        report.plan.draftRef !== serverDraft.value.ref ||
+        report.plan.draftVersion !== stored.version
+      )
+        throw new Error("Environment publication recovery scope mismatch");
+      publicationPlan.value = report.plan;
+      publicationAttempt.value = stored;
+      publicationKey = stored.key;
+      publicationUnknown.value = true;
+      if (report.plan.state === "EXPIRED") {
+        publicationUnknown.value = false;
+        publicationAttempt.value = undefined;
+        forgetPublicationAttempt(
+          "RUNTIME_ENVIRONMENT",
+          stored.ownerRef,
+          window.sessionStorage,
+        );
+      }
+      return;
+    }
+    publicationPlan.value = await prepareEnvironmentPublication(
+      serverDraft.value,
+      draftController.signal,
+    );
+    publicationKey = crypto.randomUUID();
+    publicationAttempt.value = undefined;
+    publicationUnknown.value = false;
+  } catch (error) {
+    if (!disposed) problem.value = asProblem(error);
+  } finally {
+    if (!disposed) busy.value = false;
+  }
+}
+
+async function recoverPublication(): Promise<void> {
+  if (busy.value || !serverDraft.value || !publicationPlan.value) return;
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const fresh = await readEnvironmentDraft(
+      projectRef.value,
+      serverDraft.value.ref,
+      draftController.signal,
+    );
+    const report = await readPublicationImpact(
+      publicationPlan.value,
+      draftController.signal,
+    );
+    if (report.plan.state === "EXPIRED") {
+      publicationPlan.value = report.plan;
+      publicationUnknown.value = false;
+      publicationAttempt.value = undefined;
+      forgetPublicationAttempt(
+        "RUNTIME_ENVIRONMENT",
+        fresh.ref,
+        window.sessionStorage,
+      );
+      return;
+    }
+    if (
+      fresh.state !== "PUBLISHED" ||
+      report.plan.state !== "APPLIED" ||
+      fresh.ref !== report.plan.draftRef ||
+      (report.plan.sourceRef &&
+        fresh.publishedEnvironmentRef !== report.plan.sourceRef) ||
+      !fresh.publishedEnvironmentRef
+    )
+      throw new Error("Environment publication outcome is not confirmed");
+    serverDraft.value = fresh;
+    publicationPlan.value = report.plan;
+    publicationUnknown.value = false;
+    forgetPublicationAttempt(
+      "RUNTIME_ENVIRONMENT",
+      fresh.ref,
+      window.sessionStorage,
+    );
+    publicationAttempt.value = undefined;
+    await runtime.loadEnvironment(fresh.publishedEnvironmentRef);
+  } catch (error) {
+    if (!disposed) problem.value = asProblem(error);
+  } finally {
+    if (!disposed) busy.value = false;
+  }
+}
+
+async function retryPublication(): Promise<void> {
+  const attempt = publicationAttempt.value,
+    plan = publicationPlan.value;
+  if (!attempt || !plan || busy.value) return;
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const fresh = await readEnvironmentDraft(
+      projectRef.value,
+      attempt.ownerRef,
+      draftController.signal,
+    );
+    const report = await readPublicationImpact(plan, draftController.signal);
+    if (report.plan.state !== "PREPARED") {
+      busy.value = false;
+      await recoverPublication();
+      return;
+    }
+    if (
+      fresh.state !== "VALID" ||
+      fresh.version !== attempt.version ||
+      report.plan.draftVersion !== attempt.version
+    )
+      throw new Error(
+        "Original environment publication intent is no longer applicable",
+      );
+    serverDraft.value = fresh;
+    publicationPlan.value = report.plan;
+    publicationKey = attempt.key;
+    publicationUnknown.value = false;
+    busy.value = false;
+    await publish(attempt.selectedItemRefs);
+  } catch (error) {
+    if (!disposed) problem.value = asProblem(error);
+  } finally {
+    if (!disposed) busy.value = false;
+  }
+}
+async function publish(selected: string[]): Promise<void> {
   if (
     busy.value ||
     !serverDraft.value ||
     serverDraft.value.state !== "VALID" ||
     !serverDraft.value.validationDigest ||
     draftDirty.value ||
-    !canPublish.value
+    !canPublish.value ||
+    !publicationPlan.value ||
+    publicationUnknown.value
   )
     return;
   busy.value = true;
   problem.value = undefined;
   try {
-    const published = await transitionEnvironmentDraft(
-      "publish",
+    const attempt: PublicationAttempt = {
+      kind: "RUNTIME_ENVIRONMENT",
+      ownerRef: serverDraft.value.ref,
+      planRef: publicationPlan.value.ref,
+      version: serverDraft.value.version,
+      selectedItemRefs: [...selected],
+      key: publicationKey,
+    };
+    publicationSelection(publicationPlan.value, selected);
+    rememberPublicationAttempt(attempt, window.sessionStorage);
+    publicationAttempt.value = attempt;
+    publicationUnknown.value = true;
+    const result = await publishEnvironmentDraft(
       serverDraft.value,
+      publicationPlan.value,
+      selected,
       draftController.signal,
+      publicationKey,
     );
     if (disposed) return;
+    publicationUnknown.value = false;
+    forgetPublicationAttempt(
+      "RUNTIME_ENVIRONMENT",
+      serverDraft.value.ref,
+      window.sessionStorage,
+    );
+    publicationAttempt.value = undefined;
+    publicationPlan.value = result.plan;
+    const published = result.draft;
     serverDraft.value = published;
     const ref = published.publishedEnvironmentRef;
     if (!ref) throw new Error("Published environment reference is missing");
@@ -718,19 +902,20 @@ async function publish(): Promise<void> {
       throw new Error("Published environment readback is unavailable");
     reauthRestored.value = false;
     sync(saved);
-    serverDraft.value = undefined;
-    await router.replace({
-      path: `/projects/${encodeURIComponent(projectRef.value)}/environments/${encodeURIComponent(ref)}`,
-      query: {},
-    });
     await runtime.loadEnvironmentVersions(ref);
   } catch (error) {
     if (disposed) return;
     const normalized = asProblem(error);
-    if (
-      !requiresRuntimeEnvironmentPolicyReauth(normalized) ||
-      !serverDraft.value
-    ) {
+    if ([400, 401, 403, 404, 409, 412, 422].includes(normalized.status)) {
+      forgetPublicationAttempt(
+        "RUNTIME_ENVIRONMENT",
+        serverDraft.value.ref,
+        window.sessionStorage,
+      );
+      publicationAttempt.value = undefined;
+      publicationUnknown.value = false;
+    }
+    if (!requiresRuntimeEnvironmentPolicyReauth(normalized)) {
       problem.value = normalized;
       return;
     }
@@ -955,7 +1140,7 @@ onBeforeUnmount(() => {
           !serverDraft?.validationDigest ||
           draftDirty
         "
-        @click="publish"
+        @click="preparePublication"
       >
         <Send :size="16" />{{ $t("managed.publish") }}
       </button>
@@ -1020,6 +1205,15 @@ onBeforeUnmount(() => {
         :to="`/projects/${encodeURIComponent(projectRef)}/environments/${encodeURIComponent(serverDraft.publishedEnvironmentRef)}`"
         >{{ $t("common.open") }}</RouterLink
       >
+      <button
+        v-if="serverDraft && !draftDirty"
+        class="button"
+        type="button"
+        :disabled="busy"
+        @click="preparePublication"
+      >
+        {{ $t("publicationImpact.restore") }}
+      </button>
     </section>
     <ModalDialog
       v-if="leaveOpen"
@@ -2060,6 +2254,38 @@ onBeforeUnmount(() => {
       </div>
     </AsyncState>
   </PageFrame>
+  <ModalDialog
+    v-if="publicationPlan"
+    :title="$t('publicationImpact.title')"
+    size="lg"
+    :busy="busy"
+    @close="publicationPlan = undefined"
+  >
+    <ProblemNotice v-if="problem" :problem="problem" />
+    <button
+      v-if="publicationUnknown"
+      type="button"
+      class="button"
+      :disabled="busy"
+      @click="recoverPublication"
+    >
+      {{ $t("common.refresh") }}
+    </button>
+    <button
+      v-if="publicationUnknown && publicationAttempt"
+      type="button"
+      class="button"
+      :disabled="busy"
+      @click="retryPublication"
+    >
+      {{ $t("publicationImpact.retryOriginal") }}
+    </button>
+    <PublicationImpactSelection
+      :plan="publicationPlan"
+      :busy="busy || publicationUnknown"
+      @publish="publish"
+    />
+  </ModalDialog>
   <EnvironmentImpactDialog
     v-if="impactVersionRef && environmentRef"
     :key="`${environmentRef}:${impactVersionRef}`"

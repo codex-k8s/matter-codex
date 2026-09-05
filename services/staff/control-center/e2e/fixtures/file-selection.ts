@@ -234,6 +234,7 @@ export async function checkFileSelection(
   );
   await expect(selected).toBeEnabled();
   await expect(page.locator(".files-workspace__toolbar")).toContainText("из 7");
+  await expect(page.locator(".files-workspace__count")).toBeVisible();
   await expect(unavailable).toBeDisabled();
   await selected.check();
   const name = page.locator(

@@ -17,6 +17,8 @@ import type {
   ManagedConfigurationImpact,
   ManagedConfigurationResult,
   ManagedConfigurationRevision,
+  RevisionImpactPlan,
+  RoleImageImpactPlan,
 } from "@/shared/api/generated/openapi/types.gen";
 import { asProblem, type AppProblem } from "@/shared/api/problem";
 import CodeEditor from "@/shared/ui/CodeEditor.vue";
@@ -28,6 +30,27 @@ import { useUnsavedChanges } from "@/shared/ui/unsaved-changes";
 import * as api from "./api";
 import ConfigurationFields from "./ConfigurationFields.vue";
 import GitSourcePanel from "./GitSourcePanel.vue";
+import PublicationImpactSelection from "@/features/runtime/PublicationImpactSelection.vue";
+import {
+  readPublicationAttempt,
+  rememberPublicationAttempt,
+  forgetPublicationAttempt,
+  type PublicationAttempt,
+} from "@/features/runtime/publication-attempt";
+import RoleImageImpactSelection from "./RoleImageImpactSelection.vue";
+import {
+  prepareImageImpact,
+  applyImageImpact,
+  restoreImageImpact,
+  roleImagePlanIdentity,
+  imageImpactSelection,
+} from "./role-image-impact";
+import {
+  checkedPublicationPlan,
+  publicationPlanIdentity,
+  publicationSelection,
+  restorePublicationImpact,
+} from "@/features/runtime/publication-impact";
 import {
   normalizedConfigurationDocument,
   parseConfigurationDocument,
@@ -62,6 +85,22 @@ const format = ref<ManagedConfigurationRevision["contentFormat"]>(
 const busy = ref(false);
 const sourceBusy = ref(false);
 const problem = ref<AppProblem>();
+const publicationPlan = ref<RevisionImpactPlan>();
+const publicationUnknown = ref(false);
+const imagePlan = ref<RoleImageImpactPlan>();
+const imageUnknown = ref(false);
+const promptAttempt = ref<PublicationAttempt>();
+const imageAttempt = ref<PublicationAttempt>();
+let promptKey = "";
+let imageKey = "";
+function clearImageAttempt(ref: string): void {
+  forgetPublicationAttempt("ROLE_IMAGE", ref, window.sessionStorage);
+  imageAttempt.value = undefined;
+}
+function clearPromptAttempt(ref: string): void {
+  forgetPublicationAttempt("PROMPT_TEMPLATE", ref, window.sessionStorage);
+  promptAttempt.value = undefined;
+}
 const historyOpen = ref(false);
 const diffOpen = ref(false);
 const compareRef = ref("");
@@ -354,9 +393,175 @@ async function transition(action: "validate" | "publish"): Promise<void> {
       : canPublish(current, target))
   )
     return;
+  if (action === "publish" && current.kind === "PROMPT_TEMPLATE") {
+    await perform(async () => {
+      const stored = readPublicationAttempt(
+        "PROMPT_TEMPLATE",
+        current.ref,
+        window.sessionStorage,
+      );
+      if (stored) {
+        const report = await restorePublicationImpact(
+          stored.planRef,
+          controller.signal,
+        );
+        if (
+          report.plan.kind !== "PROMPT_TEMPLATE" ||
+          report.plan.sourceRef !== current.ref ||
+          report.plan.sourceVersion !== stored.version
+        )
+          throw new Error("Prompt publication recovery scope mismatch");
+        publicationPlan.value = report.plan;
+        promptAttempt.value = stored;
+        promptKey = stored.key;
+        publicationUnknown.value = report.plan.state === "PREPARED";
+        if (!publicationUnknown.value) clearPromptAttempt(current.ref);
+      } else {
+        publicationPlan.value = await api.preparePromptPublication(
+          current,
+          target,
+        );
+        publicationUnknown.value = false;
+        promptAttempt.value = undefined;
+        promptKey = crypto.randomUUID();
+      }
+    });
+    return;
+  }
   await perform(async () =>
     accept(await api.transition(action, current, target)),
   );
+}
+async function publishPrompt(selected: string[]): Promise<void> {
+  const current = configuration.value,
+    target = revision.value,
+    plan = publicationPlan.value;
+  if (
+    !current ||
+    !target ||
+    !plan ||
+    publicationUnknown.value ||
+    dirty.value ||
+    busy.value
+  )
+    return;
+  await perform(async () => {
+    if (
+      current.kind !== "PROMPT_TEMPLATE" ||
+      plan.sourceRef !== current.ref ||
+      plan.sourceVersion !== current.version ||
+      plan.draftRef !== target.ref
+    )
+      throw new Error("Prompt publication intent changed");
+    const input = publicationSelection(plan, selected);
+    const attempt: PublicationAttempt = {
+      kind: "PROMPT_TEMPLATE",
+      ownerRef: current.ref,
+      planRef: plan.ref,
+      version: current.version,
+      selectedItemRefs: [...selected],
+      key: promptKey,
+    };
+    rememberPublicationAttempt(attempt, window.sessionStorage);
+    promptAttempt.value = attempt;
+    publicationUnknown.value = true;
+    try {
+      const result = await api.publishPromptPublication(
+        current,
+        target,
+        input,
+        promptKey,
+      );
+      if (!("plan" in result))
+        throw new Error("Prompt publication receipt is missing");
+      checkedPublicationPlan(result.plan);
+      if (
+        publicationPlanIdentity(result.plan) !==
+          publicationPlanIdentity(plan) ||
+        result.plan.state !== "APPLIED" ||
+        result.configuration.ref !== current.ref ||
+        result.revision.ref !== result.plan.publishedRevisionRef ||
+        result.revision.state !== "PUBLISHED"
+      )
+        throw new Error("Prompt publication receipt mismatch");
+      publicationPlan.value = result.plan;
+      publicationUnknown.value = false;
+      clearPromptAttempt(current.ref);
+      accept(result);
+    } catch (error) {
+      if (
+        [400, 401, 403, 404, 409, 412, 422].includes(asProblem(error).status)
+      ) {
+        publicationUnknown.value = false;
+        clearPromptAttempt(current.ref);
+      }
+      throw error;
+    }
+  });
+}
+async function retryPromptPublication(): Promise<void> {
+  const attempt = promptAttempt.value,
+    plan = publicationPlan.value;
+  if (!attempt || !plan || busy.value || dirty.value) return;
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const report = await restorePublicationImpact(
+      attempt.planRef,
+      controller.signal,
+    );
+    if (publicationPlanIdentity(report.plan) !== publicationPlanIdentity(plan))
+      throw new Error("Prompt recovery plan changed");
+    if (report.plan.state !== "PREPARED") {
+      busy.value = false;
+      await recoverPromptPublication();
+      return;
+    }
+    const fresh = await api.history(attempt.ownerRef, controller.signal);
+    if (
+      fresh.configuration.version !== attempt.version ||
+      report.plan.sourceVersion !== attempt.version ||
+      revision.value?.ref !== report.plan.draftRef
+    )
+      throw new Error(
+        "Original prompt publication intent is no longer applicable",
+      );
+    configuration.value = fresh.configuration;
+    publicationPlan.value = report.plan;
+    promptKey = attempt.key;
+    publicationUnknown.value = false;
+    busy.value = false;
+    await publishPrompt(attempt.selectedItemRefs);
+  } catch (error) {
+    if (!disposed) problem.value = asProblem(error);
+  } finally {
+    if (!disposed) busy.value = false;
+  }
+}
+async function recoverPromptPublication(): Promise<void> {
+  const current = configuration.value,
+    plan = publicationPlan.value;
+  if (!current || !plan || busy.value) return;
+  await perform(async () => {
+    const report = await restorePublicationImpact(plan.ref, controller.signal);
+    if (
+      publicationPlanIdentity(report.plan) === publicationPlanIdentity(plan) &&
+      report.plan.state === "EXPIRED"
+    ) {
+      publicationPlan.value = report.plan;
+      publicationUnknown.value = false;
+      clearPromptAttempt(current.ref);
+      return;
+    }
+    if (
+      publicationPlanIdentity(report.plan) !== publicationPlanIdentity(plan) ||
+      report.plan.state !== "APPLIED"
+    )
+      throw new Error("Prompt publication outcome is not confirmed");
+    publicationPlan.value = report.plan;
+    publicationUnknown.value = false;
+    clearPromptAttempt(current.ref);
+  });
 }
 async function showImpact(more = false): Promise<void> {
   const current = configuration.value,
@@ -369,6 +574,38 @@ async function showImpact(more = false): Promise<void> {
     (more && (impactLoading.value || !impactValue.value?.nextPageToken))
   )
     return;
+  if (current.kind === "ROLE_IMAGE") {
+    await perform(async () => {
+      const saved = readPublicationAttempt(
+        "ROLE_IMAGE",
+        current.ref,
+        window.sessionStorage,
+      );
+      if (saved) {
+        const report = await restoreImageImpact(
+          saved.planRef,
+          controller.signal,
+        );
+        if (
+          report.plan.configurationRef !== current.ref ||
+          report.plan.revisionRef !== target.ref ||
+          report.plan.configurationVersion !== saved.version
+        )
+          throw new Error("Role image recovery scope mismatch");
+        imagePlan.value = report.plan;
+        imageAttempt.value = saved;
+        imageKey = saved.key;
+        imageUnknown.value = report.plan.state === "PREPARED";
+        if (!imageUnknown.value) clearImageAttempt(current.ref);
+      } else {
+        imagePlan.value = await prepareImageImpact(current, target);
+        imageUnknown.value = false;
+        imageAttempt.value = undefined;
+        imageKey = crypto.randomUUID();
+      }
+    });
+    return;
+  }
   clearTimeout(impactTimer);
   impactController?.abort();
   const active = new AbortController();
@@ -462,6 +699,96 @@ async function rebind(): Promise<void> {
       }),
     ),
   );
+}
+async function applyRoleImage(selected: string[]): Promise<void> {
+  const plan = imagePlan.value;
+  if (!plan || busy.value || imageUnknown.value || dirty.value) return;
+  await perform(async () => {
+    const attempt: PublicationAttempt = {
+      kind: "ROLE_IMAGE",
+      ownerRef: plan.configurationRef,
+      planRef: plan.ref,
+      version: plan.configurationVersion,
+      selectedItemRefs: [...selected],
+      key: imageKey,
+    };
+    imageImpactSelection(plan, selected);
+    rememberPublicationAttempt(attempt, window.sessionStorage);
+    imageAttempt.value = attempt;
+    imageUnknown.value = true;
+    try {
+      const result = await applyImageImpact(plan, selected, imageKey);
+      imagePlan.value = result.plan;
+      imageUnknown.value = false;
+      clearImageAttempt(plan.configurationRef);
+      accept(result);
+    } catch (error) {
+      if (
+        [400, 401, 403, 404, 409, 412, 422].includes(asProblem(error).status)
+      ) {
+        imageUnknown.value = false;
+        clearImageAttempt(plan.configurationRef);
+      }
+      throw error;
+    }
+  });
+}
+async function retryRoleImage(): Promise<void> {
+  const attempt = imageAttempt.value,
+    plan = imagePlan.value;
+  if (!attempt || !plan || busy.value || dirty.value) return;
+  busy.value = true;
+  problem.value = undefined;
+  try {
+    const report = await restoreImageImpact(attempt.planRef, controller.signal);
+    if (roleImagePlanIdentity(report.plan) !== roleImagePlanIdentity(plan))
+      throw new Error("Role image recovery plan changed");
+    if (report.plan.state !== "PREPARED") {
+      busy.value = false;
+      await recoverRoleImage();
+      return;
+    }
+    const fresh = await api.history(attempt.ownerRef, controller.signal);
+    if (
+      fresh.configuration.version !== attempt.version ||
+      report.plan.configurationVersion !== attempt.version
+    )
+      throw new Error("Original role image intent is no longer applicable");
+    configuration.value = fresh.configuration;
+    imagePlan.value = report.plan;
+    imageKey = attempt.key;
+    imageUnknown.value = false;
+    busy.value = false;
+    await applyRoleImage(attempt.selectedItemRefs);
+  } catch (error) {
+    if (!disposed) problem.value = asProblem(error);
+  } finally {
+    if (!disposed) busy.value = false;
+  }
+}
+async function recoverRoleImage(): Promise<void> {
+  const plan = imagePlan.value;
+  if (!plan || busy.value) return;
+  await perform(async () => {
+    const report = await restoreImageImpact(plan.ref, controller.signal);
+    if (
+      roleImagePlanIdentity(report.plan) === roleImagePlanIdentity(plan) &&
+      report.plan.state === "EXPIRED"
+    ) {
+      imagePlan.value = report.plan;
+      imageUnknown.value = false;
+      clearImageAttempt(plan.configurationRef);
+      return;
+    }
+    if (
+      roleImagePlanIdentity(report.plan) !== roleImagePlanIdentity(plan) ||
+      report.plan.state !== "APPLIED"
+    )
+      throw new Error("Role image impact outcome is not confirmed");
+    imagePlan.value = report.plan;
+    imageUnknown.value = false;
+    clearImageAttempt(plan.configurationRef);
+  });
 }
 async function changeSource(): Promise<void> {
   const current = configuration.value;
@@ -863,6 +1190,70 @@ watch(
         @click="changeSource"
       >
         {{ $t(`managed.${sourceAction}`) }}
+      </button>
+    </ModalDialog>
+    <ModalDialog
+      v-if="imagePlan"
+      :title="$t('managed.impact')"
+      size="lg"
+      :busy="busy"
+      @close="imagePlan = undefined"
+    >
+      <ProblemNotice v-if="problem" :problem="problem" />
+      <button
+        v-if="imageUnknown"
+        class="button"
+        type="button"
+        :disabled="busy"
+        @click="recoverRoleImage"
+      >
+        {{ $t("common.refresh") }}
+      </button>
+      <RoleImageImpactSelection
+        :plan="imagePlan"
+        :busy="busy || imageUnknown"
+        @apply="applyRoleImage"
+      />
+      <button
+        v-if="imageUnknown && imageAttempt"
+        type="button"
+        class="button"
+        :disabled="busy"
+        @click="retryRoleImage"
+      >
+        {{ $t("publicationImpact.retryOriginal") }}
+      </button>
+    </ModalDialog>
+    <ModalDialog
+      v-if="publicationPlan"
+      :title="$t('publicationImpact.title')"
+      size="lg"
+      :busy="busy"
+      @close="publicationPlan = undefined"
+    >
+      <ProblemNotice v-if="problem" :problem="problem" />
+      <button
+        v-if="publicationUnknown"
+        class="button"
+        type="button"
+        :disabled="busy"
+        @click="recoverPromptPublication"
+      >
+        {{ $t("common.refresh") }}
+      </button>
+      <PublicationImpactSelection
+        :plan="publicationPlan"
+        :busy="busy || publicationUnknown"
+        @publish="publishPrompt"
+      />
+      <button
+        v-if="publicationUnknown && promptAttempt"
+        type="button"
+        class="button"
+        :disabled="busy"
+        @click="retryPromptPublication"
+      >
+        {{ $t("publicationImpact.retryOriginal") }}
       </button>
     </ModalDialog>
   </section>
