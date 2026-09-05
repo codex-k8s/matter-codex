@@ -154,6 +154,7 @@ test("only case, whitespace and terminal punctuation are normalized", () => {
     "раз два три четыре пять",
     " РАЗ\nдва  три\tчетыре пять?! ",
     "раз два три четыре пять…",
+    "\u0085раз\u0085два\u2003три четыре пять ! ? . \n",
   ])
     assert.equal(matchesRussianFixture(value), true);
   for (const value of [
@@ -165,6 +166,7 @@ test("only case, whitespace and terminal punctuation are normalized", () => {
     "раз два три четыре",
     "1 2 3 4 5",
     "раз два три четыре пять ещё",
+    "\ufeffраз два три четыре пять",
   ])
     assert.equal(matchesRussianFixture(value), false);
 });

@@ -32,10 +32,9 @@ export function matchesRussianFixture(value) {
   return (
     typeof value === "string" &&
     value
-      .trim()
-      .replace(/\p{P}+$/gu, "")
-      .trim()
-      .replace(/\s+/gu, " ")
+      .replace(/[\p{P}\p{White_Space}]+$/gu, "")
+      .replace(/^\p{White_Space}+/u, "")
+      .replace(/\p{White_Space}+/gu, " ")
       .toLowerCase() === "раз два три четыре пять"
   );
 }
