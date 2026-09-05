@@ -4,7 +4,7 @@ title: Материализация Skills и памяти в agent-runner
 type: operations
 status: approved
 owner: backend
-version: 1.2.0
+version: 1.3.0
 updated: 2026-09-06
 ---
 
@@ -22,6 +22,25 @@ SkillBundle, KodexMemoryRecord, role instructions, AGENTS.md, environment tools
 callback и отсутствие raw command/output в событиях сохраняются. Это позволяет
 отличить последующий quota failure от отказа запуска provider и выполняет
 инвариант наблюдаемости частичного результата `AGENT-DOC-001`.
+
+Дефект #1072: одновременные canary обходили временные файлы друг друга и
+давали ложный `RUNTIME_IO_ERROR`; исходный regression воспроизвёл четыре
+ошибки на здоровом workspace. Canary, публикация provenance, очистка outbox
+и служебная запись prompt/instructions теперь согласованы `flock` на inode
+workspace directory. Ожидание ограничено1s и более коротким caller context;
+helper остаётся в общем2s бюджете. Lock не создаёт файлов, не наследуется
+через exec и освобождается при закрытии FD либо гибели процесса. Он не
+меняет ACL и не исключает пользовательские пути из quota/security checks.
+Workspace volume — локальный `emptyDir`; lock не полагается на NFS session PVC.
+
+Проверяются параллельные canary, publish/reset, отдельный процесс держателя,
+отмена ожидающего, освобождение после crash и отказ symlink root. Первый
+вариант regression с непрерывным повторным захватом одним worker исчерпал
+новый1s lock budget; проверка filesystem race разделена на конечные
+одновременные раунды, а ограничение contention проверяется отдельно.
+Через Context7 проверен `/golang/sys`; семантика Linux `LOCK_EX|LOCK_NB`,
+open-file-description и close проверена по
+[flock(2)](https://man7.org/linux/man-pages/man2/flock.2.html).
 
 ## Producer и mounts
 
