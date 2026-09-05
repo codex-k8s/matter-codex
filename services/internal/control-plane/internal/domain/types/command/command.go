@@ -184,6 +184,7 @@ const (
 	PublishRoleImageRevision           Kind = "PUBLISH_ROLE_IMAGE_REVISION_DRAFT"
 	RebindRoleImage                    Kind = "REBIND_ROLE_IMAGE_CONSUMERS"
 	PrepareRoleImageImpactPlan         Kind = "PREPARE_ROLE_IMAGE_IMPACT_PLAN"
+	PrepareEnvironmentDraftImpact      Kind = "PREPARE_ENVIRONMENT_DRAFT_IMPACT"
 	CreateIntegrationDefinition        Kind = "CREATE_INTEGRATION_DEFINITION_DRAFT"
 	ValidateIntegrationDefinition      Kind = "VALIDATE_INTEGRATION_DEFINITION_DRAFT"
 	PublishIntegrationDefinition       Kind = "PUBLISH_INTEGRATION_DEFINITION_DRAFT"
@@ -242,6 +243,8 @@ type RuntimeEnvironmentDraftInput struct {
 	DraftRef, ProjectRef, EnvironmentRef string
 	ExpectedEnvironmentVersion           int64
 	Specification                        entity.RuntimeEnvironmentDraftSpecification
+	PlanRef                              string
+	SelectedItemRefs                     []string
 }
 type RuntimeSecretRebindInput struct {
 	SecretRef  string
@@ -510,6 +513,7 @@ type Result struct {
 	ConfigurationWriteBack  *entity.ConfigurationWriteBack
 	ManagedRevision         *entity.ManagedConfigurationRevision
 	RoleImageImpactPlan     *entity.RoleImageImpactPlan
+	RevisionImpactPlan      *entity.RevisionImpactPlan
 }
 
 type EmailReconciliationInput struct {

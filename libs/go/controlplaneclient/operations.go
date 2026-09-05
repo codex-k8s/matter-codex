@@ -36,6 +36,8 @@ func STTPolicyProjectionOperations() map[string]string {
 func ControlAPIGatewayOperations() map[string]string {
 	return map[string]string{
 		"platform.command.role-image-impact-plans.prepare":           controlplanev1.PlatformCommandService_PrepareRoleImageImpactPlan_FullMethodName,
+		"platform.command.environment-draft-impact.prepare":          controlplanev1.PlatformCommandService_PrepareEnvironmentDraftImpact_FullMethodName,
+		"platform.query.revision-impact-plans.get":                   controlplanev1.PlatformQueryService_GetRevisionImpactPlan_FullMethodName,
 		"platform.query.role-image-impact-plans.get":                 controlplanev1.PlatformQueryService_GetRoleImageImpactPlan_FullMethodName,
 		"platform.command.role-image-writebacks.prepare":             controlplanev1.PlatformCommandService_PrepareRoleImageGitWriteBack_FullMethodName,
 		"platform.command.integration-definition-writebacks.prepare": controlplanev1.PlatformCommandService_PrepareIntegrationDefinitionGitWriteBack_FullMethodName,

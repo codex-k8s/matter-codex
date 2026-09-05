@@ -298,6 +298,7 @@ type Repository interface {
 	ListManagedConfigurations(context.Context, value.Principal, query.Filter) ([]entity.ManagedConfigurationSet, int64, string, error)
 	GetManagedConfigurationImpact(context.Context, value.Principal, string, string, query.Filter) (entity.ManagedConfigurationImpact, error)
 	GetRoleImageImpactPlan(context.Context, value.Principal, string, string, query.Page) (entity.RoleImageImpactPage, error)
+	GetRevisionImpactPlan(context.Context, value.Principal, string, string, query.Page) (entity.RevisionImpactPage, error)
 	GetEffectiveManagedConfiguration(context.Context, value.Principal, string, string, string) (entity.ManagedConfigurationBindingSnapshot, error)
 	GetSystemSTTConfiguration(context.Context, value.Principal) (entity.SystemSTTConfiguration, error)
 	ListProviderAccounts(context.Context, value.Principal, query.Filter) ([]entity.ProviderAccount, string, []string, error)

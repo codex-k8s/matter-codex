@@ -39,6 +39,8 @@ var (
 	queryRoleImageImpactOutcome string
 	//go:embed sql/role_image_impact__finish.sql
 	queryRoleImageImpactFinish string
+	//go:embed sql/role_image_impact__search_items.sql
+	queryRoleImageImpactSearchItems string
 )
 
 const maximumRoleImageImpactItems = 1000
@@ -311,6 +313,10 @@ func (r *Repository) GetRoleImageImpactPlan(ctx context.Context, p value.Princip
 	}
 	limit := boundedPage(page)
 	result.Plan = row.public
+	matching, err := impactSearchRefs(ctx, tx, queryRoleImageImpactSearchItems, row.id, search)
+	if err != nil {
+		return result, err
+	}
 	for _, item := range items {
 		if _, _, err = r.environmentImpactTarget(ctx, tx, s, item.EnvironmentRef, item.SourceVersionRef); err != nil {
 			if errors.Is(err, errs.ErrNotFound) || errors.Is(err, errs.ErrForbidden) {
@@ -326,7 +332,7 @@ func (r *Repository) GetRoleImageImpactPlan(ctx context.Context, p value.Princip
 				return result, err
 			}
 		}
-		if search != "" && !strings.Contains(strings.ToLower(item.EnvironmentRef+" "+item.Consumer.AgentRef+" "+item.Consumer.ProjectRef), strings.ToLower(search)) {
+		if matching != nil && !matching[item.Ref] {
 			continue
 		}
 		result.Total++

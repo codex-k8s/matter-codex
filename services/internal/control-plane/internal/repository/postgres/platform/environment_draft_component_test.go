@@ -72,11 +72,16 @@ WHERE project.name = 'Role image promotion' AND image.promotion_state = 'PROMOTE
 		t.Fatal("validation changed saved timestamp")
 	}
 	publicationVersion := draft.Version
-	published, err := invoke(command.PublishRuntimeEnvironmentDraft, "draft-publish-complete", &publicationVersion, command.RuntimeEnvironmentDraftInput{DraftRef: draft.Ref})
+	prepared, err := invoke(command.PrepareEnvironmentDraftImpact, "draft-impact-new", &publicationVersion, command.RuntimeEnvironmentDraftInput{DraftRef: draft.Ref})
+	if err != nil || prepared.RevisionImpactPlan == nil || prepared.RevisionImpactPlan.Total != 0 {
+		t.Fatalf("prepare new environment impact: %v", err)
+	}
+	publishInput := command.RuntimeEnvironmentDraftInput{DraftRef: draft.Ref, PlanRef: prepared.RevisionImpactPlan.Ref, SelectedItemRefs: []string{}}
+	published, err := invoke(command.PublishRuntimeEnvironmentDraft, "draft-publish-complete", &publicationVersion, publishInput)
 	if err != nil || published.RuntimeEnvironmentDraft.State != "PUBLISHED" || published.RuntimeEnvironment == nil || published.RuntimeEnvironment.CurrentVersion.Digest != draft.ValidationDigest {
 		t.Fatalf("publish draft: %v", err)
 	}
-	replay, err := invoke(command.PublishRuntimeEnvironmentDraft, "draft-publish-complete", &publicationVersion, command.RuntimeEnvironmentDraftInput{DraftRef: draft.Ref})
+	replay, err := invoke(command.PublishRuntimeEnvironmentDraft, "draft-publish-complete", &publicationVersion, publishInput)
 	if err != nil || replay.RuntimeEnvironment.Ref != published.RuntimeEnvironment.Ref {
 		t.Fatalf("publication replay: %v", err)
 	}
@@ -104,13 +109,17 @@ WHERE project.name = 'Role image promotion' AND image.promotion_state = 'PROMOTE
 	if err != nil || checked.RuntimeEnvironmentDraft.State != "VALID" {
 		t.Fatalf("target draft validation: %v", err)
 	}
+	stalePlan, err := invoke(command.PrepareEnvironmentDraftImpact, "draft-impact-before-stale", &checked.RuntimeEnvironmentDraft.Version, command.RuntimeEnvironmentDraftInput{DraftRef: changeDraft.Ref})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if _, err := service.Execute(ctx, command.Command{Kind: command.PublishRuntimeEnvironment, Principal: owner,
 		Mutation: value.Mutation{IdempotencyKey: "draft-target-concurrent-publish", ExpectedVersion: &target.Version},
 		Payload:  environmentDraftPayload(*checked.RuntimeEnvironmentDraft)}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := invoke(command.PublishRuntimeEnvironmentDraft, "draft-target-stale-publish", &checked.RuntimeEnvironmentDraft.Version,
-		command.RuntimeEnvironmentDraftInput{DraftRef: changeDraft.Ref}); !errors.Is(err, errs.ErrVersionMismatch) {
+		command.RuntimeEnvironmentDraftInput{DraftRef: changeDraft.Ref, PlanRef: stalePlan.RevisionImpactPlan.Ref}); !errors.Is(err, errs.ErrVersionMismatch) {
 		t.Fatalf("stale target publication: %v", err)
 	}
 	discarded, err := invoke(command.DiscardRuntimeEnvironmentDraft, "draft-target-discard", &checked.RuntimeEnvironmentDraft.Version,
@@ -209,4 +218,5 @@ WHERE project.name = 'Role image promotion' AND image.promotion_state = 'PROMOTE
 	if err != nil || untouched.EnvironmentBinding.VersionRef != target.CurrentVersion.Ref {
 		t.Fatalf("unselected consumer changed: %v", err)
 	}
+	testEnvironmentPrepublicationImpact(t, ctx, repository, service, owner, projectRef, target.Ref, spec, firstAgent.Ref, secondAgent.Ref)
 }

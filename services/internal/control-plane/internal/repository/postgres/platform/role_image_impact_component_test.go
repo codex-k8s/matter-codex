@@ -102,6 +102,10 @@ func testRoleImageImpactLifecycle(t *testing.T, ctx context.Context, r *Reposito
 	if err != nil {
 		t.Fatal(err)
 	}
+	byName, err := service.GetRoleImageImpactPlan(ctx, owner, plan.Ref, "Unselected image consumer", query.Page{Size: 20})
+	if err != nil || byName.Total != 1 || len(byName.Items) != 1 || byName.Items[0].Consumer.AgentRef != unselectedAgent.Ref {
+		t.Fatalf("role image impact name search: %v", err)
+	}
 	expired := plan
 	expired.Ref, err = newRef("riip")
 	if err != nil {

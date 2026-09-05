@@ -253,6 +253,8 @@ func (repository *Repository) applyCommand(ctx context.Context, tx pgx.Tx, scope
 	case command.CreateRuntimeEnvironmentDraft, command.SaveRuntimeEnvironmentDraft, command.ValidateRuntimeEnvironmentDraft,
 		command.PublishRuntimeEnvironmentDraft, command.DiscardRuntimeEnvironmentDraft:
 		return repository.changeRuntimeEnvironmentDraft(ctx, tx, scope, input)
+	case command.PrepareEnvironmentDraftImpact:
+		return repository.prepareEnvironmentDraftImpact(ctx, tx, scope, input)
 	case command.RebindRuntimeEnvironment:
 		return repository.rebindRuntimeEnvironment(ctx, tx, scope, input)
 	case command.RebindRuntimeSecret:
