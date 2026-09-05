@@ -10,6 +10,11 @@ updated: 2026-09-04
 
 # agent-runner
 
+Потоковый file consumer описан в
+[`runner-file-transfer-1026.md`](../../../docs/operations/runner-file-transfer-1026.md):
+отдельный bounded file client и authenticated relative GET bridge сохраняют
+command deadlines и exact RuntimeRevision/catalog authority.
+
 `agent-runner` — защищённый runtime ABI внутри каждого promoted role image. Это
 не legacy service и не общий long-lived bot. Для обычного turn отдельный runner
 стартует внутри нового execution-scoped Pod этой роли; системный помощник имеет

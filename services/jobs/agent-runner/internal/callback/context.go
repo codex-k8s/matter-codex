@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
+	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/filetransfer"
 	"github.com/codex-k8s/kodex/services/jobs/agent-runner/internal/model"
 )
 
@@ -19,6 +20,8 @@ import (
 // типизированную привязку к SkillBundle. Controller разрешает её из snapshot,
 // а не из переданного ref либо обычного списка workspace inputs.
 func (client *Client) WriteSkillFile(ctx context.Context, input model.Input, skill runtimecontract.RuntimeSkillBundle, pin runtimecontract.RuntimeSkillFile, destination io.Writer) error {
+	ctx, cancel := context.WithTimeout(ctx, filetransfer.TotalTimeout)
+	defer cancel()
 	snapshot, err := input.RequiredContextSnapshot(time.Now())
 	if err != nil {
 		return err
@@ -50,7 +53,7 @@ func (client *Client) WriteSkillFile(ctx context.Context, input model.Input, ski
 	request.Header.Set("Authorization", "Bearer "+client.token)
 	bindExecutionHeaders(request, input, "artifact")
 	request.Header.Set("Accept", "application/octet-stream")
-	response, err := client.http.Do(request)
+	response, err := client.files.Do(request)
 	if err != nil {
 		return errors.New("runtime skill file callback is unavailable")
 	}

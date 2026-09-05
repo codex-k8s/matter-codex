@@ -66,7 +66,7 @@ func TestSkillCallbackUsesExactExecutionAndContextPins(t *testing.T) {
 			}))
 			defer server.Close()
 			base, _ := url.Parse(server.URL)
-			client := &Client{http: server.Client(), base: base, token: "fixture-ticket"}
+			client := &Client{http: server.Client(), files: server.Client(), base: base, token: "fixture-ticket"}
 			var destination bytes.Buffer
 			err := client.WriteSkillFile(t.Context(), input, skill, pin, &destination)
 			if (err == nil) != (mode == "positive") || calls != 1 {
