@@ -4,7 +4,7 @@ title: Сквозная приёмка доработок MVP
 type: verification-plan
 status: approved
 owner: qa
-version: 1.11.0
+version: 1.12.0
 updated: 2026-09-06
 ---
 
@@ -560,6 +560,66 @@ SHA. Функциональные browser-проверки используют 
 Direct adapter smoke подтверждает только adapter. Он не заменяет сквозную
 проверку права/configuration/credential projection/gateway/UI на стенде.
 Тестовый ключ не подставляется в браузер или из учётной записи агента.
+
+### Защищённый HTTP smoke
+
+Repo-owned `tools/dev/stt-http-acceptance.mjs` запускается после разрешённого
+deploy и настройки STT через предусмотренный owner lifecycle. Он использует
+точный tracked MP3, опубликованную конфигурацию и уже созданный приватный
+authenticated browser snapshot. Bootstrap snapshot, из которого удалены
+Kodex API cookies, здесь не подходит. Сценарий не создаёт конфигурацию,
+не читает provider key и не меняет разрешения пользователя.
+
+Карта: MVP-UI-57/60 → owner web session → fresh bootstrap eligibility и
+`GET /api/v1/system-stt-configuration` → один multipart
+`POST /api/v1/speech/transcriptions` → HTTP gateway → protected streaming
+STT RPC → owner projection/configuration/credential → OpenAI → безопасный
+receipt → проверка configuration readback. Дополнительный проектный маршрут
+проверяется отдельным запуском с `--project-ref`; org authority остаётся
+серверной. `ready` административной конфигурации не подменяет fresh
+пользовательскую `speechTranscription`.
+
+Используются существующие env: `KODEX_E2E_BASE_URL`,
+`KODEX_E2E_STORAGE_STATE`, `KODEX_E2E_STATE_DIRECTORY`,
+`KODEX_E2E_RESOURCE_PREFIX`, точное значение
+`KODEX_E2E_CONFIRM_DISPOSABLE` и явный provider opt-in
+`KODEX_PROVIDER_E2E_API_KEY=1`. Это включатель разрешённого платного теста,
+не значение ключа. State directory должен быть owner-private0700,
+authenticated storage file —0600 непосредственно в нём. Значения cookie/key
+не передаются аргументами и не выводятся. Проверяется чистый checkout exact
+SHA, HTTPS origin без redirect и только два exact host API cookie.
+
+```bash
+node tools/dev/stt-http-acceptance.mjs --expected-sha "$EXPECTED_SHA"
+# Отдельный уникальный KODEX_E2E_RESOURCE_PREFIX для проектного варианта.
+node tools/dev/stt-http-acceptance.mjs --expected-sha "$EXPECTED_SHA" \
+  --project-ref "$PROJECT_REF"
+```
+
+До платного POST создаётся и синхронизируется reservation/evidence file
+`<prefix>-stt-http.json`; существующий файл закрыто останавливает повтор
+после crash или неизвестного результата. POST не повторяется при429/503,
+timeout, redirect, потере ответа либо ошибочном receipt. Общий бюджет120s,
+transcription response ограничен64KiB до полной буферизации. Source SHA,
+fixture digest, match, safe receipt IDs и configuration revision/digest
+сохраняются без audio/transcript/model prompt/cookie/provider credential.
+До и после запроса сверяются конфигурация и credential generation;
+receipt должен содержать exact revision/model и PROVIDER_COMPLETED.
+Несовпадение не объявляется успешным после автоматического нового запроса.
+
+Локальный `make test-stt-http-acceptance` проверяет org/project paths,
+fresh eligibility, forged/stale receipts, неизвестные результаты без retry,
+ограничение/отмену stream и private file boundaries. Нормализация допускает
+только регистр, whitespace и конечную пунктуацию; символы внутри слов
+не удаляются. Эти fixtures не являются настоящим OpenAI либо browser PASS.
+Реальные MediaRecorder/вставка/отмена и отрицательные пользовательские
+сценарии матрицы остаются отдельной обязательной проверкой после deploy.
+
+При подготовке оснастки через Context7 проверен
+[Node.js24 filesystem API](https://nodejs.org/docs/latest-v24.x/api/fs.html),
+через OpenAI Docs — официальный
+[file transcription guide](https://developers.openai.com/api/docs/guides/speech-to-text).
+Модель и параметры выбирает опубликованная owner configuration.
 
 ## Образы и пакеты
 

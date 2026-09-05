@@ -208,8 +208,10 @@ export async function boundedResponseBody(response, maximumBytes) {
   if (
     declared !== null &&
     (!/^[0-9]+$/.test(declared) || Number(declared) > maximumBytes)
-  )
+  ) {
+    await response.body?.cancel().catch(() => {});
     fail("response size exceeds limit");
+  }
   const reader = response.body?.getReader();
   if (!reader) fail("response body is absent");
   const chunks = [];

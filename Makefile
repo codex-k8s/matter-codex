@@ -136,6 +136,10 @@ test-runtime-controller-artifact-transfer:
 test-runtime-workspace-acceptance:
 	@timeout 30s node --test tools/dev/runtime-workspace-acceptance.test.mjs
 
+.PHONY: test-stt-http-acceptance
+test-stt-http-acceptance:
+	@timeout 30s node --test tools/dev/stt-http-acceptance.test.mjs
+
 test-stt-tts-service-contract:
 	@./scripts/tests/stt-tts-service-contract-test.sh
 
