@@ -2277,6 +2277,19 @@ export type Workflow = {
     purpose: string;
     state: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
     revision?: number;
+    /**
+     * Точная owner revision отображаемых steps/inputFields; опубликованная, иначе сохранённый draft. Отсутствует без обеих revisions.
+     */
+    revisionRef?: OpaqueRef;
+    /**
+     * Точная сохранённая draft revision владельца; отсутствует без draft.
+     */
+    draftRevisionRef?: OpaqueRef;
+    /**
+     * Точная опубликованная revision владельца; отсутствует до публикации.
+     */
+    publishedRevisionRef?: OpaqueRef;
+    draft?: WorkflowDraftSnapshot;
     coordinatorAgentRef?: OpaqueRef;
     inputFields: Array<WorkflowInputField>;
     steps: Array<WorkflowStep>;
@@ -2286,6 +2299,23 @@ export type Workflow = {
     validationMessages: Array<string>;
     updatedAt: Timestamp;
     nextActions: Array<NextAction>;
+};
+
+/**
+ * Сохранённый draft для редактора; все поля и ref происходят из одной owner revision. Не подменяет опубликованный основной вид Workflow.
+ */
+export type WorkflowDraftSnapshot = {
+    ref: OpaqueRef;
+    version: number;
+    revision: number;
+    state: 'DRAFT' | 'VALID' | 'PUBLISHED' | 'ARCHIVED';
+    coordinatorAgentRef?: OpaqueRef;
+    inputFields: Array<WorkflowInputField>;
+    steps: Array<WorkflowStep>;
+    maxConcurrency?: number;
+    timeoutSeconds?: number;
+    completionCriteria?: string;
+    validationMessages: Array<string>;
 };
 
 export type WorkflowInput = {

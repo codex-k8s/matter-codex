@@ -329,6 +329,15 @@ var errPublicSecretDescriptor = errors.New("public Secret descriptor revision is
 var errPublicProviderStatusReason = errors.New("public provider status reason is invalid")
 
 func normalizeProtoJSONShape(value map[string]any, descriptor protoreflect.MessageDescriptor) error {
+	if descriptor.FullName() == "controlplane.v1.WorkflowVersion" {
+		ref, ok := value["ref"].(string)
+		if !ok || !fileTargetRef(ref) {
+			return errors.New("workflow revision reference is invalid")
+		}
+		if _, ok := controlplanev1.WorkflowState_value[fmt.Sprint(value["state"])]; !ok || value["state"] == "WORKFLOW_STATE_UNSPECIFIED" {
+			return errors.New("workflow revision state is invalid")
+		}
+	}
 	if descriptor.FullName() == "controlplane.v1.ProviderAccount" {
 		if reason, exists := value["safeStatusReason"]; exists {
 			switch reason {
@@ -379,6 +388,14 @@ func normalizeProtoJSONShape(value map[string]any, descriptor protoreflect.Messa
 			return err
 		}
 		value[field.JSONName()] = normalized
+	}
+	if descriptor.FullName() == "controlplane.v1.WorkflowVersion" {
+		for _, key := range []string{"version", "revision"} {
+			number, ok := value[key].(float64)
+			if !ok || number < 1 || number > float64(maximumSafeJSONInteger) || number != float64(int64(number)) {
+				return errors.New("workflow revision number is invalid")
+			}
+		}
 	}
 	if descriptor.FullName() == "controlplane.v1.AgentInstructionsBinding" {
 		ref, refOK := value["ref"].(string)
@@ -765,9 +782,26 @@ func target(value map[string]any) (string, any, bool) {
 }
 
 func flattenWorkflow(value map[string]any) {
+	for source, field := range map[string]string{"publishedVersion": "publishedRevisionRef", "draftVersion": "draftRevisionRef"} {
+		if snapshot, ok := value[source].(map[string]any); ok {
+			value[field] = snapshot["ref"]
+		}
+	}
+	if draft, ok := value["draftVersion"].(map[string]any); ok {
+		snapshot := map[string]any{}
+		for _, key := range []string{"ref", "version", "revision", "state", "coordinatorAgentRef", "inputFields", "steps", "maxConcurrency", "timeoutSeconds", "completionCriteria", "validationMessages"} {
+			if item, exists := draft[key]; exists {
+				snapshot[key] = item
+			}
+		}
+		value["draft"] = snapshot
+	}
 	version, _ := value["publishedVersion"].(map[string]any)
 	if version == nil {
 		version, _ = value["draftVersion"].(map[string]any)
+	}
+	if version != nil {
+		value["revisionRef"] = version["ref"]
 	}
 	for _, key := range []string{"revision", "coordinatorAgentRef", "inputFields", "steps", "maxConcurrency", "timeoutSeconds", "completionCriteria", "validationMessages"} {
 		if item, exists := version[key]; exists {
