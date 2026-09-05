@@ -1371,16 +1371,43 @@ paths:
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
           content: { application/json: { schema: { $ref: '#/components/schemas/RuntimeEnvironmentDraft' } } }
         default: { $ref: '#/components/responses/Problem' }
+  /api/v1/runtime-environment-drafts/{draftRef}/impact-plans:
+    post:
+      tags: [Agents]
+      operationId: prepareEnvironmentDraftImpact
+      parameters: [{ $ref: '#/components/parameters/RuntimeEnvironmentDraftRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      responses:
+        '201':
+          description: Неизменяемый план до публикации черновика
+          content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPlan' } } }
+        default: { $ref: '#/components/responses/Problem' }
+  /api/v1/revision-impact-plans/{planRef}:
+    get:
+      tags: [Agents]
+      operationId: getRevisionImpactPlan
+      parameters:
+        - { name: planRef, in: path, required: true, schema: { $ref: '#/components/schemas/OpaqueRef' } }
+        - { name: query, in: query, schema: { type: string, maxLength: 200 } }
+        - { $ref: '#/components/parameters/PageSize' }
+        - { $ref: '#/components/parameters/PageToken' }
+      responses:
+        '200':
+          description: Текущая видимость и результаты неизменяемого плана
+          content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPage' } } }
+        default: { $ref: '#/components/responses/Problem' }
   /api/v1/runtime-environment-drafts/{draftRef}/publication:
     post:
       tags: [Agents]
       operationId: publishRuntimeEnvironmentDraft
       parameters: [{ $ref: '#/components/parameters/RuntimeEnvironmentDraftRef' }, { $ref: '#/components/parameters/IfMatch' }, { $ref: '#/components/parameters/IdempotencyKey' }, { $ref: '#/components/parameters/CsrfToken' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/RevisionImpactPublicationInput' } } }
       responses:
         '200':
-          description: Проверенный черновик опубликован; publishedEnvironmentRef указывает на результат
+          description: Черновик опубликован, результаты выбранных замен сохранены в плане
           headers: { ETag: { $ref: '#/components/headers/ETag' } }
-          content: { application/json: { schema: { $ref: '#/components/schemas/RuntimeEnvironmentDraft' } } }
+          content: { application/json: { schema: { $ref: '#/components/schemas/RuntimeEnvironmentPublicationResult' } } }
         default: { $ref: '#/components/responses/Problem' }
   /api/v1/runtime-environments/{environmentRef}:
     get:
@@ -5184,6 +5211,68 @@ components:
         configuration: { $ref: '#/components/schemas/ManagedConfiguration' }
         revision: { $ref: '#/components/schemas/ManagedConfigurationRevision' }
         plan: { $ref: '#/components/schemas/RoleImageImpactPlan' }
+    RevisionImpactPublicationInput:
+      type: object
+      additionalProperties: false
+      required: [planRef, selectedItemRefs]
+      properties:
+        planRef: { $ref: '#/components/schemas/OpaqueRef' }
+        selectedItemRefs: { type: array, maxItems: 1000, uniqueItems: true, items: { $ref: '#/components/schemas/OpaqueRef' } }
+    RuntimeEnvironmentPublicationResult:
+      type: object
+      additionalProperties: false
+      required: [draft, environment, plan]
+      properties:
+        draft: { $ref: '#/components/schemas/RuntimeEnvironmentDraft' }
+        environment: { $ref: '#/components/schemas/RuntimeEnvironmentSet' }
+        plan: { $ref: '#/components/schemas/RevisionImpactPlan' }
+    RevisionImpactPlan:
+      type: object
+      additionalProperties: false
+      required: [ref, version, kind, sourceVersion, draftRef, draftVersion, targetDigest, digest, total, state, createdAt, expiresAt]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        version: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        kind: { type: string, enum: [RUNTIME_ENVIRONMENT, PROMPT_TEMPLATE, AGENT_INSTRUCTIONS] }
+        sourceRef: { $ref: '#/components/schemas/OpaqueRef' }
+        sourceVersion: { type: integer, format: int64, minimum: 0, maximum: 9007199254740991 }
+        sourceRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        draftRef: { $ref: '#/components/schemas/OpaqueRef' }
+        draftVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        targetDigest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        digest: { type: string, pattern: '^[a-f0-9]{64}$' }
+        total: { type: integer, format: int64, minimum: 0, maximum: 1000 }
+        state: { type: string, enum: [PREPARED, APPLIED, EXPIRED] }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        publishedRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+    RevisionImpactItem:
+      type: object
+      additionalProperties: false
+      required: [ref, projectRef, consumerKind, consumerRef, consumerVersion, bindingRef, bindingVersion, sourceRevisionRef, outcome]
+      properties:
+        ref: { $ref: '#/components/schemas/OpaqueRef' }
+        projectRef: { $ref: '#/components/schemas/OpaqueRef' }
+        consumerKind: { type: string, enum: [AGENT, AGENT_CONTINUATION, WORKFLOW, SCHEDULE] }
+        consumerRef: { $ref: '#/components/schemas/OpaqueRef' }
+        consumerVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        bindingRef: { $ref: '#/components/schemas/OpaqueRef' }
+        bindingVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        sourceRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        outcome: { type: string, enum: [PENDING, APPLIED, CONFLICT, FORBIDDEN, NOT_SELECTED] }
+        resultRevisionRef: { $ref: '#/components/schemas/OpaqueRef' }
+        resultBindingRef: { $ref: '#/components/schemas/OpaqueRef' }
+        resultBindingVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+        resultConsumerVersion: { type: integer, format: int64, minimum: 1, maximum: 9007199254740991 }
+    RevisionImpactPage:
+      type: object
+      additionalProperties: false
+      required: [plan, items, total]
+      properties:
+        plan: { $ref: '#/components/schemas/RevisionImpactPlan' }
+        items: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/RevisionImpactItem' } }
+        total: { type: integer, format: int64, minimum: 0, maximum: 1000 }
+        nextPageToken: { type: string, maxLength: 512 }
     RoleImageImpactPlan:
       type: object
       additionalProperties: false

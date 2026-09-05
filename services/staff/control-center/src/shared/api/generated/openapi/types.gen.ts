@@ -431,6 +431,58 @@ export type RoleImageRebindResult = {
     plan: RoleImageImpactPlan;
 };
 
+export type RevisionImpactPublicationInput = {
+    planRef: OpaqueRef;
+    selectedItemRefs: Array<OpaqueRef>;
+};
+
+export type RuntimeEnvironmentPublicationResult = {
+    draft: RuntimeEnvironmentDraft;
+    environment: RuntimeEnvironmentSet;
+    plan: RevisionImpactPlan;
+};
+
+export type RevisionImpactPlan = {
+    ref: OpaqueRef;
+    version: number;
+    kind: 'RUNTIME_ENVIRONMENT' | 'PROMPT_TEMPLATE' | 'AGENT_INSTRUCTIONS';
+    sourceRef?: OpaqueRef;
+    sourceVersion: number;
+    sourceRevisionRef?: OpaqueRef;
+    draftRef: OpaqueRef;
+    draftVersion: number;
+    targetDigest: string;
+    digest: string;
+    total: number;
+    state: 'PREPARED' | 'APPLIED' | 'EXPIRED';
+    createdAt: string;
+    expiresAt: string;
+    publishedRevisionRef?: OpaqueRef;
+};
+
+export type RevisionImpactItem = {
+    ref: OpaqueRef;
+    projectRef: OpaqueRef;
+    consumerKind: 'AGENT' | 'AGENT_CONTINUATION' | 'WORKFLOW' | 'SCHEDULE';
+    consumerRef: OpaqueRef;
+    consumerVersion: number;
+    bindingRef: OpaqueRef;
+    bindingVersion: number;
+    sourceRevisionRef: OpaqueRef;
+    outcome: 'PENDING' | 'APPLIED' | 'CONFLICT' | 'FORBIDDEN' | 'NOT_SELECTED';
+    resultRevisionRef?: OpaqueRef;
+    resultBindingRef?: OpaqueRef;
+    resultBindingVersion?: number;
+    resultConsumerVersion?: number;
+};
+
+export type RevisionImpactPage = {
+    plan: RevisionImpactPlan;
+    items: Array<RevisionImpactItem>;
+    total: number;
+    nextPageToken?: string;
+};
+
 export type RoleImageImpactPlan = {
     ref: OpaqueRef;
     version: number;
@@ -6019,8 +6071,71 @@ export type ValidateRuntimeEnvironmentDraftResponses = {
 
 export type ValidateRuntimeEnvironmentDraftResponse = ValidateRuntimeEnvironmentDraftResponses[keyof ValidateRuntimeEnvironmentDraftResponses];
 
-export type PublishRuntimeEnvironmentDraftData = {
+export type PrepareEnvironmentDraftImpactData = {
     body?: never;
+    headers: {
+        'If-Match': string;
+        'Idempotency-Key': string;
+        'X-CSRF-Token': string;
+    };
+    path: {
+        draftRef: OpaqueRef;
+    };
+    query?: never;
+    url: '/api/v1/runtime-environment-drafts/{draftRef}/impact-plans';
+};
+
+export type PrepareEnvironmentDraftImpactErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type PrepareEnvironmentDraftImpactError = PrepareEnvironmentDraftImpactErrors[keyof PrepareEnvironmentDraftImpactErrors];
+
+export type PrepareEnvironmentDraftImpactResponses = {
+    /**
+     * Неизменяемый план до публикации черновика
+     */
+    201: RevisionImpactPlan;
+};
+
+export type PrepareEnvironmentDraftImpactResponse = PrepareEnvironmentDraftImpactResponses[keyof PrepareEnvironmentDraftImpactResponses];
+
+export type GetRevisionImpactPlanData = {
+    body?: never;
+    path: {
+        planRef: OpaqueRef;
+    };
+    query?: {
+        query?: string;
+        pageSize?: number;
+        pageToken?: string;
+    };
+    url: '/api/v1/revision-impact-plans/{planRef}';
+};
+
+export type GetRevisionImpactPlanErrors = {
+    /**
+     * Безопасная ошибка API
+     */
+    default: Problem;
+};
+
+export type GetRevisionImpactPlanError = GetRevisionImpactPlanErrors[keyof GetRevisionImpactPlanErrors];
+
+export type GetRevisionImpactPlanResponses = {
+    /**
+     * Текущая видимость и результаты неизменяемого плана
+     */
+    200: RevisionImpactPage;
+};
+
+export type GetRevisionImpactPlanResponse = GetRevisionImpactPlanResponses[keyof GetRevisionImpactPlanResponses];
+
+export type PublishRuntimeEnvironmentDraftData = {
+    body: RevisionImpactPublicationInput;
     headers: {
         'If-Match': string;
         'Idempotency-Key': string;
@@ -6044,9 +6159,9 @@ export type PublishRuntimeEnvironmentDraftError = PublishRuntimeEnvironmentDraft
 
 export type PublishRuntimeEnvironmentDraftResponses = {
     /**
-     * Проверенный черновик опубликован; publishedEnvironmentRef указывает на результат
+     * Черновик опубликован, результаты выбранных замен сохранены в плане
      */
-    200: RuntimeEnvironmentDraft;
+    200: RuntimeEnvironmentPublicationResult;
 };
 
 export type PublishRuntimeEnvironmentDraftResponse = PublishRuntimeEnvironmentDraftResponses[keyof PublishRuntimeEnvironmentDraftResponses];

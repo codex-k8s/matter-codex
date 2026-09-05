@@ -3315,6 +3315,99 @@ func (e ProviderModelCatalogStatusState) Valid() bool {
 	}
 }
 
+// Defines values for RevisionImpactItemConsumerKind.
+const (
+	RevisionImpactItemConsumerKindAGENT             RevisionImpactItemConsumerKind = "AGENT"
+	RevisionImpactItemConsumerKindAGENTCONTINUATION RevisionImpactItemConsumerKind = "AGENT_CONTINUATION"
+	RevisionImpactItemConsumerKindSCHEDULE          RevisionImpactItemConsumerKind = "SCHEDULE"
+	RevisionImpactItemConsumerKindWORKFLOW          RevisionImpactItemConsumerKind = "WORKFLOW"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactItemConsumerKind enum.
+func (e RevisionImpactItemConsumerKind) Valid() bool {
+	switch e {
+	case RevisionImpactItemConsumerKindAGENT:
+		return true
+	case RevisionImpactItemConsumerKindAGENTCONTINUATION:
+		return true
+	case RevisionImpactItemConsumerKindSCHEDULE:
+		return true
+	case RevisionImpactItemConsumerKindWORKFLOW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactItemOutcome.
+const (
+	RevisionImpactItemOutcomeAPPLIED     RevisionImpactItemOutcome = "APPLIED"
+	RevisionImpactItemOutcomeCONFLICT    RevisionImpactItemOutcome = "CONFLICT"
+	RevisionImpactItemOutcomeFORBIDDEN   RevisionImpactItemOutcome = "FORBIDDEN"
+	RevisionImpactItemOutcomeNOTSELECTED RevisionImpactItemOutcome = "NOT_SELECTED"
+	RevisionImpactItemOutcomePENDING     RevisionImpactItemOutcome = "PENDING"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactItemOutcome enum.
+func (e RevisionImpactItemOutcome) Valid() bool {
+	switch e {
+	case RevisionImpactItemOutcomeAPPLIED:
+		return true
+	case RevisionImpactItemOutcomeCONFLICT:
+		return true
+	case RevisionImpactItemOutcomeFORBIDDEN:
+		return true
+	case RevisionImpactItemOutcomeNOTSELECTED:
+		return true
+	case RevisionImpactItemOutcomePENDING:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactPlanKind.
+const (
+	RevisionImpactPlanKindAGENTINSTRUCTIONS  RevisionImpactPlanKind = "AGENT_INSTRUCTIONS"
+	RevisionImpactPlanKindPROMPTTEMPLATE     RevisionImpactPlanKind = "PROMPT_TEMPLATE"
+	RevisionImpactPlanKindRUNTIMEENVIRONMENT RevisionImpactPlanKind = "RUNTIME_ENVIRONMENT"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactPlanKind enum.
+func (e RevisionImpactPlanKind) Valid() bool {
+	switch e {
+	case RevisionImpactPlanKindAGENTINSTRUCTIONS:
+		return true
+	case RevisionImpactPlanKindPROMPTTEMPLATE:
+		return true
+	case RevisionImpactPlanKindRUNTIMEENVIRONMENT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RevisionImpactPlanState.
+const (
+	RevisionImpactPlanStateAPPLIED  RevisionImpactPlanState = "APPLIED"
+	RevisionImpactPlanStateEXPIRED  RevisionImpactPlanState = "EXPIRED"
+	RevisionImpactPlanStatePREPARED RevisionImpactPlanState = "PREPARED"
+)
+
+// Valid indicates whether the value is a known member of the RevisionImpactPlanState enum.
+func (e RevisionImpactPlanState) Valid() bool {
+	switch e {
+	case RevisionImpactPlanStateAPPLIED:
+		return true
+	case RevisionImpactPlanStateEXPIRED:
+		return true
+	case RevisionImpactPlanStatePREPARED:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RoleEnvironmentPlatformArchitecture.
 const (
 	Amd64 RoleEnvironmentPlatformArchitecture = "amd64"
@@ -5750,40 +5843,40 @@ func (e VFSNodeScanState) Valid() bool {
 
 // Defines values for VFSNodeSelectionReason.
 const (
-	ACTIVERUNUSESARTIFACT VFSNodeSelectionReason = "ACTIVE_RUN_USES_ARTIFACT"
-	ARTIFACTHASBINDINGS   VFSNodeSelectionReason = "ARTIFACT_HAS_BINDINGS"
-	ARTIFACTNOTACTIVE     VFSNodeSelectionReason = "ARTIFACT_NOT_ACTIVE"
-	ARTIFACTNOTDELETED    VFSNodeSelectionReason = "ARTIFACT_NOT_DELETED"
-	ARTIFACTUSEDBYSKILL   VFSNodeSelectionReason = "ARTIFACT_USED_BY_SKILL"
-	AVAILABLE             VFSNodeSelectionReason = "AVAILABLE"
-	DIRECTORY             VFSNodeSelectionReason = "DIRECTORY"
-	IMMUTABLECONTEXT      VFSNodeSelectionReason = "IMMUTABLE_CONTEXT"
-	LIFECYCLEBLOCKED      VFSNodeSelectionReason = "LIFECYCLE_BLOCKED"
-	PERMISSIONREQUIRED    VFSNodeSelectionReason = "PERMISSION_REQUIRED"
+	VFSNodeSelectionReasonACTIVERUNUSESARTIFACT VFSNodeSelectionReason = "ACTIVE_RUN_USES_ARTIFACT"
+	VFSNodeSelectionReasonARTIFACTHASBINDINGS   VFSNodeSelectionReason = "ARTIFACT_HAS_BINDINGS"
+	VFSNodeSelectionReasonARTIFACTNOTACTIVE     VFSNodeSelectionReason = "ARTIFACT_NOT_ACTIVE"
+	VFSNodeSelectionReasonARTIFACTNOTDELETED    VFSNodeSelectionReason = "ARTIFACT_NOT_DELETED"
+	VFSNodeSelectionReasonARTIFACTUSEDBYSKILL   VFSNodeSelectionReason = "ARTIFACT_USED_BY_SKILL"
+	VFSNodeSelectionReasonAVAILABLE             VFSNodeSelectionReason = "AVAILABLE"
+	VFSNodeSelectionReasonDIRECTORY             VFSNodeSelectionReason = "DIRECTORY"
+	VFSNodeSelectionReasonIMMUTABLECONTEXT      VFSNodeSelectionReason = "IMMUTABLE_CONTEXT"
+	VFSNodeSelectionReasonLIFECYCLEBLOCKED      VFSNodeSelectionReason = "LIFECYCLE_BLOCKED"
+	VFSNodeSelectionReasonPERMISSIONREQUIRED    VFSNodeSelectionReason = "PERMISSION_REQUIRED"
 )
 
 // Valid indicates whether the value is a known member of the VFSNodeSelectionReason enum.
 func (e VFSNodeSelectionReason) Valid() bool {
 	switch e {
-	case ACTIVERUNUSESARTIFACT:
+	case VFSNodeSelectionReasonACTIVERUNUSESARTIFACT:
 		return true
-	case ARTIFACTHASBINDINGS:
+	case VFSNodeSelectionReasonARTIFACTHASBINDINGS:
 		return true
-	case ARTIFACTNOTACTIVE:
+	case VFSNodeSelectionReasonARTIFACTNOTACTIVE:
 		return true
-	case ARTIFACTNOTDELETED:
+	case VFSNodeSelectionReasonARTIFACTNOTDELETED:
 		return true
-	case ARTIFACTUSEDBYSKILL:
+	case VFSNodeSelectionReasonARTIFACTUSEDBYSKILL:
 		return true
-	case AVAILABLE:
+	case VFSNodeSelectionReasonAVAILABLE:
 		return true
-	case DIRECTORY:
+	case VFSNodeSelectionReasonDIRECTORY:
 		return true
-	case IMMUTABLECONTEXT:
+	case VFSNodeSelectionReasonIMMUTABLECONTEXT:
 		return true
-	case LIFECYCLEBLOCKED:
+	case VFSNodeSelectionReasonLIFECYCLEBLOCKED:
 		return true
-	case PERMISSIONREQUIRED:
+	case VFSNodeSelectionReasonPERMISSIONREQUIRED:
 		return true
 	default:
 		return false
@@ -6197,25 +6290,25 @@ func (e GetArtifactImpactParamsAction) Valid() bool {
 
 // Defines values for ListManagedConfigurationsParamsKind.
 const (
-	ListManagedConfigurationsParamsKindEMAILMAILBOX          ListManagedConfigurationsParamsKind = "EMAIL_MAILBOX"
-	ListManagedConfigurationsParamsKindINTEGRATIONDEFINITION ListManagedConfigurationsParamsKind = "INTEGRATION_DEFINITION"
-	ListManagedConfigurationsParamsKindPROMPTTEMPLATE        ListManagedConfigurationsParamsKind = "PROMPT_TEMPLATE"
-	ListManagedConfigurationsParamsKindROLEIMAGE             ListManagedConfigurationsParamsKind = "ROLE_IMAGE"
-	ListManagedConfigurationsParamsKindSYSTEMSTT             ListManagedConfigurationsParamsKind = "SYSTEM_STT"
+	EMAILMAILBOX          ListManagedConfigurationsParamsKind = "EMAIL_MAILBOX"
+	INTEGRATIONDEFINITION ListManagedConfigurationsParamsKind = "INTEGRATION_DEFINITION"
+	PROMPTTEMPLATE        ListManagedConfigurationsParamsKind = "PROMPT_TEMPLATE"
+	ROLEIMAGE             ListManagedConfigurationsParamsKind = "ROLE_IMAGE"
+	SYSTEMSTT             ListManagedConfigurationsParamsKind = "SYSTEM_STT"
 )
 
 // Valid indicates whether the value is a known member of the ListManagedConfigurationsParamsKind enum.
 func (e ListManagedConfigurationsParamsKind) Valid() bool {
 	switch e {
-	case ListManagedConfigurationsParamsKindEMAILMAILBOX:
+	case EMAILMAILBOX:
 		return true
-	case ListManagedConfigurationsParamsKindINTEGRATIONDEFINITION:
+	case INTEGRATIONDEFINITION:
 		return true
-	case ListManagedConfigurationsParamsKindPROMPTTEMPLATE:
+	case PROMPTTEMPLATE:
 		return true
-	case ListManagedConfigurationsParamsKindROLEIMAGE:
+	case ROLEIMAGE:
 		return true
-	case ListManagedConfigurationsParamsKindSYSTEMSTT:
+	case SYSTEMSTT:
 		return true
 	default:
 		return false
@@ -8735,6 +8828,68 @@ type PublicRuntimeRevisionIdentity struct {
 	Version        int64      `json:"version"`
 }
 
+// RevisionImpactItem defines model for RevisionImpactItem.
+type RevisionImpactItem struct {
+	BindingRef            OpaqueRef                      `json:"bindingRef"`
+	BindingVersion        int64                          `json:"bindingVersion"`
+	ConsumerKind          RevisionImpactItemConsumerKind `json:"consumerKind"`
+	ConsumerRef           OpaqueRef                      `json:"consumerRef"`
+	ConsumerVersion       int64                          `json:"consumerVersion"`
+	Outcome               RevisionImpactItemOutcome      `json:"outcome"`
+	ProjectRef            OpaqueRef                      `json:"projectRef"`
+	Ref                   OpaqueRef                      `json:"ref"`
+	ResultBindingRef      *OpaqueRef                     `json:"resultBindingRef,omitempty"`
+	ResultBindingVersion  *int64                         `json:"resultBindingVersion,omitempty"`
+	ResultConsumerVersion *int64                         `json:"resultConsumerVersion,omitempty"`
+	ResultRevisionRef     *OpaqueRef                     `json:"resultRevisionRef,omitempty"`
+	SourceRevisionRef     OpaqueRef                      `json:"sourceRevisionRef"`
+}
+
+// RevisionImpactItemConsumerKind defines model for RevisionImpactItem.ConsumerKind.
+type RevisionImpactItemConsumerKind string
+
+// RevisionImpactItemOutcome defines model for RevisionImpactItem.Outcome.
+type RevisionImpactItemOutcome string
+
+// RevisionImpactPage defines model for RevisionImpactPage.
+type RevisionImpactPage struct {
+	Items         []RevisionImpactItem `json:"items"`
+	NextPageToken *string              `json:"nextPageToken,omitempty"`
+	Plan          RevisionImpactPlan   `json:"plan"`
+	Total         int64                `json:"total"`
+}
+
+// RevisionImpactPlan defines model for RevisionImpactPlan.
+type RevisionImpactPlan struct {
+	CreatedAt            time.Time               `json:"createdAt"`
+	Digest               string                  `json:"digest"`
+	DraftRef             OpaqueRef               `json:"draftRef"`
+	DraftVersion         int64                   `json:"draftVersion"`
+	ExpiresAt            time.Time               `json:"expiresAt"`
+	Kind                 RevisionImpactPlanKind  `json:"kind"`
+	PublishedRevisionRef *OpaqueRef              `json:"publishedRevisionRef,omitempty"`
+	Ref                  OpaqueRef               `json:"ref"`
+	SourceRef            *OpaqueRef              `json:"sourceRef,omitempty"`
+	SourceRevisionRef    *OpaqueRef              `json:"sourceRevisionRef,omitempty"`
+	SourceVersion        int64                   `json:"sourceVersion"`
+	State                RevisionImpactPlanState `json:"state"`
+	TargetDigest         string                  `json:"targetDigest"`
+	Total                int64                   `json:"total"`
+	Version              int64                   `json:"version"`
+}
+
+// RevisionImpactPlanKind defines model for RevisionImpactPlan.Kind.
+type RevisionImpactPlanKind string
+
+// RevisionImpactPlanState defines model for RevisionImpactPlan.State.
+type RevisionImpactPlanState string
+
+// RevisionImpactPublicationInput defines model for RevisionImpactPublicationInput.
+type RevisionImpactPublicationInput struct {
+	PlanRef          OpaqueRef   `json:"planRef"`
+	SelectedItemRefs []OpaqueRef `json:"selectedItemRefs"`
+}
+
 // RoleEnvironment defines model for RoleEnvironment.
 type RoleEnvironment struct {
 	Available                 bool                      `json:"available"`
@@ -9414,6 +9569,13 @@ type RuntimeEnvironmentPolicyInput struct {
 	NetworkDestinations []RuntimeNetworkDestination `json:"networkDestinations"`
 	Resources           RuntimeResourcePolicy       `json:"resources"`
 	Volumes             []RuntimeVolumeInput        `json:"volumes"`
+}
+
+// RuntimeEnvironmentPublicationResult defines model for RuntimeEnvironmentPublicationResult.
+type RuntimeEnvironmentPublicationResult struct {
+	Draft       RuntimeEnvironmentDraft `json:"draft"`
+	Environment RuntimeEnvironmentSet   `json:"environment"`
+	Plan        RevisionImpactPlan      `json:"plan"`
 }
 
 // RuntimeEnvironmentReadiness defines model for RuntimeEnvironmentReadiness.
@@ -12025,6 +12187,13 @@ type ListProviderDefinitionsParams struct {
 	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
 }
 
+// GetRevisionImpactPlanParams defines parameters for GetRevisionImpactPlan.
+type GetRevisionImpactPlanParams struct {
+	Query     *string    `form:"query,omitempty" json:"query,omitempty"`
+	PageSize  *PageSize  `form:"pageSize,omitempty" json:"pageSize,omitempty"`
+	PageToken *PageToken `form:"pageToken,omitempty" json:"pageToken,omitempty"`
+}
+
 // CreateRoleImageRevisionDraftParams defines parameters for CreateRoleImageRevisionDraft.
 type CreateRoleImageRevisionDraftParams struct {
 	IdempotencyKey IdempotencyKey   `json:"Idempotency-Key"`
@@ -12158,6 +12327,13 @@ type DiscardRuntimeEnvironmentDraftParams struct {
 
 // SaveRuntimeEnvironmentDraftParams defines parameters for SaveRuntimeEnvironmentDraft.
 type SaveRuntimeEnvironmentDraftParams struct {
+	IfMatch        IfMatch        `json:"If-Match"`
+	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
+	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
+}
+
+// PrepareEnvironmentDraftImpactParams defines parameters for PrepareEnvironmentDraftImpact.
+type PrepareEnvironmentDraftImpactParams struct {
 	IfMatch        IfMatch        `json:"If-Match"`
 	IdempotencyKey IdempotencyKey `json:"Idempotency-Key"`
 	XCSRFToken     CsrfToken      `json:"X-CSRF-Token"`
@@ -12882,6 +13058,9 @@ type CommandRunJSONRequestBody = RunCommand
 // SaveRuntimeEnvironmentDraftJSONRequestBody defines body for SaveRuntimeEnvironmentDraft for application/json ContentType.
 type SaveRuntimeEnvironmentDraftJSONRequestBody = RuntimeEnvironmentDraftSpecification
 
+// PublishRuntimeEnvironmentDraftJSONRequestBody defines body for PublishRuntimeEnvironmentDraft for application/json ContentType.
+type PublishRuntimeEnvironmentDraftJSONRequestBody = RevisionImpactPublicationInput
+
 // SetRuntimeEnvironmentEnabledJSONRequestBody defines body for SetRuntimeEnvironmentEnabled for application/json ContentType.
 type SetRuntimeEnvironmentEnabledJSONRequestBody = EnabledInput
 
@@ -13539,6 +13718,9 @@ type ServerInterface interface {
 	// (GET /api/v1/provider-definitions)
 	ListProviderDefinitions(w http.ResponseWriter, r *http.Request, params ListProviderDefinitionsParams)
 
+	// (GET /api/v1/revision-impact-plans/{planRef})
+	GetRevisionImpactPlan(w http.ResponseWriter, r *http.Request, planRef OpaqueRef, params GetRevisionImpactPlanParams)
+
 	// (GET /api/v1/role-environments)
 	ListRoleEnvironments(w http.ResponseWriter, r *http.Request)
 
@@ -13604,6 +13786,9 @@ type ServerInterface interface {
 
 	// (PUT /api/v1/runtime-environment-drafts/{draftRef})
 	SaveRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params SaveRuntimeEnvironmentDraftParams)
+
+	// (POST /api/v1/runtime-environment-drafts/{draftRef}/impact-plans)
+	PrepareEnvironmentDraftImpact(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params PrepareEnvironmentDraftImpactParams)
 
 	// (POST /api/v1/runtime-environment-drafts/{draftRef}/publication)
 	PublishRuntimeEnvironmentDraft(w http.ResponseWriter, r *http.Request, draftRef RuntimeEnvironmentDraftRef, params PublishRuntimeEnvironmentDraftParams)
@@ -30504,6 +30689,80 @@ func (siw *ServerInterfaceWrapper) ListProviderDefinitions(w http.ResponseWriter
 	handler.ServeHTTP(w, r)
 }
 
+// GetRevisionImpactPlan operation middleware
+func (siw *ServerInterfaceWrapper) GetRevisionImpactPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "planRef" -------------
+	var planRef OpaqueRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "planRef", r.PathValue("planRef"), &planRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "planRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRevisionImpactPlanParams
+
+	// ------------- Optional query parameter "query" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "query", r.URL.Query(), &params.Query, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "query"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "query", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageSize" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageSize", r.URL.Query(), &params.PageSize, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageSize"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageSize", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pageToken" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pageToken", r.URL.Query(), &params.PageToken, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pageToken"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pageToken", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRevisionImpactPlan(w, r, planRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRoleEnvironments operation middleware
 func (siw *ServerInterfaceWrapper) ListRoleEnvironments(w http.ResponseWriter, r *http.Request) {
 
@@ -32417,6 +32676,112 @@ func (siw *ServerInterfaceWrapper) SaveRuntimeEnvironmentDraft(w http.ResponseWr
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SaveRuntimeEnvironmentDraft(w, r, draftRef, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PrepareEnvironmentDraftImpact operation middleware
+func (siw *ServerInterfaceWrapper) PrepareEnvironmentDraftImpact(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "draftRef" -------------
+	var draftRef RuntimeEnvironmentDraftRef
+
+	err = runtime.BindStyledParameterWithOptions("simple", "draftRef", r.PathValue("draftRef"), &draftRef, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "draftRef", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionCookieScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PrepareEnvironmentDraftImpactParams
+
+	headers := r.Header
+
+	// ------------- Required header parameter "If-Match" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("If-Match")]; found {
+		var IfMatch IfMatch
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "If-Match", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "If-Match", valueList[0], &IfMatch, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "If-Match", Err: err})
+			return
+		}
+
+		params.IfMatch = IfMatch
+
+	} else {
+		err := fmt.Errorf("Header parameter If-Match is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "If-Match", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "Idempotency-Key" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("Idempotency-Key")]; found {
+		var IdempotencyKey IdempotencyKey
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "Idempotency-Key", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "Idempotency-Key", valueList[0], &IdempotencyKey, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "Idempotency-Key", Err: err})
+			return
+		}
+
+		params.IdempotencyKey = IdempotencyKey
+
+	} else {
+		err := fmt.Errorf("Header parameter Idempotency-Key is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "Idempotency-Key", Err: err})
+		return
+	}
+
+	// ------------- Required header parameter "X-CSRF-Token" -------------
+	if valueList, found := headers[http.CanonicalHeaderKey("X-CSRF-Token")]; found {
+		var XCSRFToken CsrfToken
+		n := len(valueList)
+		if n != 1 {
+			siw.ErrorHandlerFunc(w, r, &TooManyValuesForParamError{ParamName: "X-CSRF-Token", Count: n})
+			return
+		}
+
+		err = runtime.BindStyledParameterWithOptions("simple", "X-CSRF-Token", valueList[0], &XCSRFToken, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""})
+		if err != nil {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "X-CSRF-Token", Err: err})
+			return
+		}
+
+		params.XCSRFToken = XCSRFToken
+
+	} else {
+		err := fmt.Errorf("Header parameter X-CSRF-Token is required, but not found")
+		siw.ErrorHandlerFunc(w, r, &RequiredHeaderError{ParamName: "X-CSRF-Token", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PrepareEnvironmentDraftImpact(w, r, draftRef, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -38803,6 +39168,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/provider-accounts/{providerAccountRef}/enabled", wrapper.SetProviderAccountEnabled)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/provider-accounts/{providerAccountRef}/revocation", wrapper.RevokeProviderAccount)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/provider-definitions", wrapper.ListProviderDefinitions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/revision-impact-plans/{planRef}", wrapper.GetRevisionImpactPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/role-environments", wrapper.ListRoleEnvironments)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/drafts", wrapper.CreateRoleImageRevisionDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/role-image-configurations/{configurationRef}/git-source", wrapper.ConfigureRoleImageGitSource)
@@ -38825,6 +39191,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.DiscardRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.GetRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}", wrapper.SaveRuntimeEnvironmentDraft)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/impact-plans", wrapper.PrepareEnvironmentDraftImpact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/publication", wrapper.PublishRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runtime-environment-drafts/{draftRef}/validation", wrapper.ValidateRuntimeEnvironmentDraft)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runtime-environments", wrapper.ListOrganizationRuntimeEnvironmentSets)
