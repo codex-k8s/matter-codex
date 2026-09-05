@@ -90,7 +90,7 @@ func testPromptDeclaredScope(t *testing.T, ctx context.Context, service *platfor
 		t.Fatalf("validate declared prompt scope: %v", err)
 	}
 	version = validated.ManagedConfiguration.Version
-	published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-publish", ExpectedVersion: &version},
+	published, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scoped-publish", ExpectedVersion: &version},
 		Payload: command.ManagedConfigurationInput{ConfigurationRef: draft.ManagedConfiguration.Ref, RevisionRef: draft.ManagedRevision.Ref}})
 	if err != nil || published.ManagedRevision == nil || published.ManagedRevision.PromptScope == nil || published.ManagedRevision.PromptScope.ContextPin.Digest != draft.ManagedRevision.PromptScope.ContextPin.Digest {
 		t.Fatalf("publish changed declared scope: %v", err)
@@ -116,7 +116,7 @@ func testPromptDeclaredScope(t *testing.T, ctx context.Context, service *platfor
 		if err != nil || checked.ManagedRevision == nil || checked.ManagedRevision.State != test.state || len(checked.ManagedRevision.ValidationDiagnostics) == 0 {
 			t.Fatalf("scope availability %s: state=%v err=%v", test.key, checked.ManagedRevision, err)
 		}
-		published, err := service.Execute(ctx, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scope-publish-" + test.key, ExpectedVersion: &checked.ManagedConfiguration.Version}, Payload: payload})
+		published, err := executePromptPublicationFixture(t, ctx, service, command.Command{Kind: command.PublishPromptTemplateDraft, Principal: owner, Mutation: value.Mutation{IdempotencyKey: "prompt-scope-publish-" + test.key, ExpectedVersion: &checked.ManagedConfiguration.Version}, Payload: payload})
 		if test.state == "INVALID" {
 			if !errors.Is(err, errs.ErrConflict) {
 				t.Fatalf("unavailable scope published: %v", err)

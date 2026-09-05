@@ -44,7 +44,7 @@ type Repository struct {
 	objects                       objectstorage.Store
 	skillScanner                  skillpolicy.Scanner
 	integrationDefinitions        map[string]integrationpackage.Package
-	roleImageCatalogResolver func(entity.RoleEnvironmentSelection) (entity.RoleImageRecipeInput,error)
+	roleImageCatalogResolver      func(entity.RoleEnvironmentSelection) (entity.RoleImageRecipeInput, error)
 	runtimeSecretNamespace        string
 	runtimeSecretStagingNamespace string
 }
@@ -303,6 +303,9 @@ func (repository *Repository) Bootstrap(ctx context.Context) error {
 		promptRef, organizationID, agentID, corePrompt, hex.EncodeToString(promptDigest[:])); err != nil {
 		return errors.New("create system assistant core prompt")
 	}
+	if _, _, err := assignInstructionBinding(ctx, tx, organizationID, agentID, promptRef); err != nil {
+		return err
+	}
 	systemSessionRef, err := newRef("ses")
 	if err != nil {
 		return err
@@ -534,6 +537,9 @@ func (repository *Repository) reconcileSystemAssistantCorePrompt(
 		"digest":          expectedDigestText,
 	}).Scan(&insertedRef); err != nil || insertedRef != promptRef {
 		return errors.New("create system assistant core prompt revision")
+	}
+	if _, _, err := assignInstructionBinding(ctx, tx, organizationID, agentID, promptRef); err != nil {
+		return err
 	}
 	tag, err := tx.Exec(ctx, queryRepositoryBootstrapUpdateAssistantCorePrompt, pgx.StrictNamedArgs{
 		"prompt_ref":       promptRef,

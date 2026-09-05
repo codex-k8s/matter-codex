@@ -1262,6 +1262,7 @@ func knownCommand(kind command.Kind) bool {
 		command.AddMembership, command.ChangeMembership, command.RemoveMembership,
 		command.CreateAgent, command.UpdateAgent, command.SetAgentEnabled, command.ArchiveAgent,
 		command.SetAgentAvatar, command.RemoveAgentAvatar,
+		command.PrepareInstructionsImpact, command.PreparePromptTemplateImpact,
 		command.CreateInstructions, command.ValidateInstructions, command.PublishInstructions,
 		command.RollbackInstructions, command.PublishAgentRuntimeConfig,
 		command.CreateConfigOverlayDraft, command.ValidateConfigOverlayDraft, command.PublishConfigOverlayDraft,

@@ -72,6 +72,12 @@ func (repository *Repository) authorizeCommand(ctx context.Context, tx pgx.Tx, c
 	if input.Kind == command.PrepareEnvironmentDraftImpact || input.Kind == command.PublishRuntimeEnvironmentDraft {
 		return repository.authorizeEnvironmentDraftImpact(ctx, tx, current, input)
 	}
+	if input.Kind == command.PublishInstructions {
+		return repository.authorizeInstructionsImpactPublish(ctx, tx, current, input)
+	}
+	if input.Kind == command.PublishPromptTemplateDraft {
+		return repository.authorizePromptImpactPublish(ctx, tx, current, input)
+	}
 	if input.Kind == command.ChangeArtifactBinding {
 		payload, ok := input.Payload.(command.ArtifactBindingInput)
 		if !ok {

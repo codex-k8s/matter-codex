@@ -303,7 +303,7 @@ func operationRequestProfile(operationID, fullMethod string) requestProfile {
 		return "FORBIDDEN"
 	}
 	switch operationID {
-	case "platform.command.environment-draft-impact.prepare":
+	case "platform.command.environment-draft-impact.prepare", "platform.command.instructions-impact.prepare", "platform.command.prompt-template-impact.prepare":
 		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "REQUIRED", Attempt: "FORBIDDEN", Idempotency: "REQUIRED"}
 	case "platform.query.artifact-binding-targets.list", "platform.query.run-attachment-eligibility.get":
 		return requestProfile{Mode: mode, Resource: "REQUIRED", Version: "FORBIDDEN", Attempt: "FORBIDDEN", Idempotency: "FORBIDDEN"}

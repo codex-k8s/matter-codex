@@ -67,6 +67,8 @@ const (
 	SetAgentAvatar                     Kind = "SET_AGENT_AVATAR"
 	RemoveAgentAvatar                  Kind = "REMOVE_AGENT_AVATAR"
 	CreateInstructions                 Kind = "CREATE_INSTRUCTION_DRAFT"
+	PrepareInstructionsImpact          Kind = "PREPARE_INSTRUCTIONS_IMPACT"
+	PreparePromptTemplateImpact        Kind = "PREPARE_PROMPT_TEMPLATE_IMPACT"
 	ValidateInstructions               Kind = "VALIDATE_INSTRUCTION_DRAFT"
 	PublishInstructions                Kind = "PUBLISH_INSTRUCTION_DRAFT"
 	RollbackInstructions               Kind = "ROLLBACK_INSTRUCTIONS"
@@ -217,6 +219,8 @@ type MembershipInput struct {
 	Active                             bool
 }
 type AgentInput struct {
+	PlanRef                                                                                                 string
+	SelectedItemRefs                                                                                        []string
 	Ref, ProjectRef, RoleDefinitionRef, Name, Purpose, RoleDescription, AvatarURL, RuntimeRef, Instructions string
 	Enabled                                                                                                 bool
 }

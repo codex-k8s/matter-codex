@@ -12,6 +12,7 @@ WHERE ar.organization_id=@organization_id::uuid
   AND ar.lifecycle_state=@lifecycle_state
   AND (@scan_state='' OR ar.scan_state=@scan_state)
   AND (@source_kind='' OR ar.source=@source_kind)
+  AND (cardinality(@source_kinds::text[])=0 OR ar.source=ANY(@source_kinds::text[]))
   AND (
     @artifact_type=''
     OR (@artifact_type='IMAGE' AND ar.media_type LIKE 'image/%')

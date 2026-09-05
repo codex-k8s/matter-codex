@@ -377,6 +377,7 @@ type AgentAvatar struct {
 }
 
 type Agent struct {
+	InstructionBinding                                                *AgentInstructionsBinding
 	Ref, ProjectRef, RoleDefinitionRef, RoleDefinitionName, SystemKey string
 	Name, Purpose, RoleDescription, AvatarURL                         string
 	State, RuntimeKey, RuntimeName, Provider, Model, RuntimeRevision  string
@@ -388,6 +389,12 @@ type Agent struct {
 	CreatedAt, UpdatedAt                                              time.Time
 	NextActions                                                       []string
 	Avatar                                                            AgentAvatar
+}
+
+type AgentInstructionsBinding struct {
+	Ref, RevisionRef string
+	Version          int64
+	Effective        bool
 }
 
 type WorkflowInputField struct {

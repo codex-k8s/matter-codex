@@ -78,6 +78,7 @@ func (repository *Repository) ListPromptContextVariables(ctx context.Context, pr
 		item.Reason = variableAvailabilityReason(item, available, true)
 		if reason := snapshot.UnavailableVariables[item.Name]; reason != "" {
 			item.Reason = reason
+			item.Available = false
 		}
 		if needle == "" || strings.Contains(strings.ToLower(item.Name+" "+item.Description), needle) {
 			items = append(items, item)
