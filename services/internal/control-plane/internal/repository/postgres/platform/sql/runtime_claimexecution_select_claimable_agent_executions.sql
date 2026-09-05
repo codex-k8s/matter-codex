@@ -125,6 +125,8 @@ SELECT n.id::text,
                  JOIN control_plane.artifacts knowledge_artifact ON knowledge_artifact.id=knowledge_binding.artifact_id
                  WHERE knowledge_binding.target_kind='KNOWLEDGE'
                    AND knowledge_binding.target_ref=a.ref
+                   AND knowledge_artifact.organization_id=r.organization_id
+                   AND knowledge_artifact.project_id=r.project_id
                    AND knowledge_artifact.scan_state='CLEAN'
                    AND knowledge_artifact.lifecycle_state='ACTIVE'),'{}')
        ELSE '{}'::text[] END,
@@ -136,7 +138,8 @@ SELECT n.id::text,
                'targetRef', occurrence.target_ref, 'targetVersion', occurrence.target_version,
                'targetDigest', occurrence.target_digest, 'text', occurrence.automation_text,
                'textDigest', occurrence.automation_text_digest, 'promptInputs', occurrence.prompt_inputs,
-               'promptInputsDigest', occurrence.prompt_inputs_digest))
+               'promptInputsDigest', occurrence.prompt_inputs_digest, 'promptInputFormat', occurrence.prompt_input_format,
+               'promptInputsRaw', occurrence.prompt_inputs::text))
            FROM control_plane.schedule_occurrences occurrence
            JOIN control_plane.schedules schedule ON schedule.id = occurrence.schedule_id
            JOIN control_plane.schedule_revisions revision ON revision.id = occurrence.schedule_revision_id
@@ -418,12 +421,15 @@ SELECT n.id::text,
              AND integration_grant.target_kind = 'AGENT'
              AND integration_grant.target_ref = a.ref
              AND integration_grant.enabled
+             AND integration_grant.definition_version=connection.definition_version
+             AND integration_grant.definition_digest=connection.definition_digest
              AND definition.enabled
              AND (definition.adapter_owner,definition.execution_route) IN
                  (('integration-gateway','MANAGED_MCP'),('interaction-gateway','INTERACTION'))
              AND definition.adapter_readiness = 'READY'
              AND capability.value->>'operation' NOT IN ('mattermost.inbound','mattermost.gate_decisions')
              AND connection.enabled
+             AND connection.lifecycle_state='ACTIVE'
              AND connection.state = 'CONNECTED'
            ), '[]'::jsonb),
            CASE
@@ -656,6 +662,9 @@ JOIN LATERAL (
         SELECT instruction.ref, instruction.digest, instruction.content,
                instruction.version_number::bigint, 2
         FROM control_plane.instruction_versions instruction
+        JOIN control_plane.agent_instruction_bindings active_instruction
+          ON active_instruction.instruction_id=instruction.id AND active_instruction.agent_id=a.id
+         AND active_instruction.organization_id=a.organization_id
         WHERE instruction.agent_id = a.id
           AND instruction.state = 'PUBLISHED'
     ) source

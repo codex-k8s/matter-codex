@@ -31,6 +31,7 @@ import (
 	platformservice "github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/service/platform"
 	roleimageservice "github.com/codex-k8s/kodex/services/internal/control-plane/internal/domain/service/roleimage"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/maintenance/providercredentialcleanup"
+	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/maintenance/providermodelcatalog"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/providercredentialclient"
 	platformrepository "github.com/codex-k8s/kodex/services/internal/control-plane/internal/repository/postgres/platform"
 	"github.com/codex-k8s/kodex/services/internal/control-plane/internal/skillscanclient"
@@ -81,14 +82,12 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	if err := repository.ConfigureRuntimeSecrets(config.RuntimeSecretNamespace); err != nil {
 		return fmt.Errorf("configure runtime secrets: %w", err)
 	}
-	if config.EmailConfigurationFile != "" {
-		raw, err := readBoundedFileLimit(config.EmailConfigurationFile, 24<<20)
-		if err != nil {
-			return fmt.Errorf("read email configuration: %w", err)
-		}
-		if err := repository.ConfigureEmail(startup, raw); err != nil {
-			return fmt.Errorf("configure email projection: %w", err)
-		}
+	if err := repository.ConfigureRuntimeSecretStaging(config.RuntimeSecretStagingNamespace); err != nil {
+		return fmt.Errorf("configure runtime secret staging: %w", err)
+	}
+	emailProjection, err := initializeEmailProjection(startup, repository, config)
+	if err != nil {
+		return fmt.Errorf("initialize email projection: %w", err)
 	}
 	skillScanner, err := skillscanclient.New(config.SkillScannerSocket, config.SkillScannerTimeout)
 	if err != nil {
@@ -143,8 +142,13 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	if err != nil {
 		return fmt.Errorf("construct provider credential materializer adapter: %w", err)
 	}
+	emailCredentials, err := constructEmailCredentialMaterializer(config)
+	if err != nil {
+		return fmt.Errorf("construct email credential materializer: %w", err)
+	}
 	service, err := platformservice.New(repository,
 		platformservice.WithCredentialMaterializer(credentialMaterializer),
+		platformservice.WithEmailCredentialMaterializer(emailCredentials),
 		platformservice.WithProviderCredentialMaterializer(providerMaterializer),
 	)
 	if err != nil {
@@ -161,6 +165,7 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	if err != nil {
 		return fmt.Errorf("construct role image service: %w", err)
 	}
+	repository.ConfigureRoleImageCatalog(roleEnvironmentCatalog.Resolve)
 	workerGrantTrustFiles := workerGrantTrustFilesFor(config)
 	proofService, err := authorityproof.New(startup, service, authorityproof.Config{
 		PolicyFile: config.AuthorityPolicyFile, SignerPrivateJWKFile: config.ProofSignerFile,
@@ -232,7 +237,7 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 			grpcserver.StreamErrorBoundary(grpcserver.ErrorObserverFunc(func(_ context.Context, method string, code codes.Code, _ error) {
 				slog.Error("unexpected gRPC stream failure", "method", method, "code", code.String())
 			})),
-			authorityclient.VerifierStreamServerInterceptor(authority.Verifier()),
+			authorityclient.VerifierStreamServerInterceptor(authority.Verifier(), controlplanev1.RuntimeWorkService_StreamExecutionArtifact_FullMethodName),
 			grpcserver.RejectMalformedStream,
 		),
 	)
@@ -241,7 +246,10 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	controlplanev1.RegisterPlatformCommandServiceServer(grpcServer, transport)
 	controlplanev1.RegisterSystemAssistantServiceServer(grpcServer, transport)
 	controlplanev1.RegisterRuntimeWorkServiceServer(grpcServer, transport)
+	controlplanev1.RegisterManagedConfigurationSourceWorkServiceServer(grpcServer, transport)
+	controlplanev1.RegisterManagedConfigurationGitWriteBackWorkServiceServer(grpcServer, transport)
 	controlplanev1.RegisterRuntimeSecretWorkServiceServer(grpcServer, transport)
+	controlplanev1.RegisterRuntimeSecretDraftWorkServiceServer(grpcServer, transport)
 	controlplanev1.RegisterSessionArchiveWorkServiceServer(grpcServer, transport)
 	controlplanev1.RegisterInteractionWorkServiceServer(grpcServer, transport)
 	controlplanev1.RegisterAccessServiceServer(grpcServer, transport)
@@ -263,6 +271,11 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	if err != nil {
 		return fmt.Errorf("construct provider credential cleanup worker: %w", err)
 	}
+	catalogHealth := serviceruntime.NewReadiness()
+	catalogWorker, catalogErr := providermodelcatalog.New(repository, providerMaterializer, service.Ready, config.InstanceID, catalogHealth, slog.Default())
+	if catalogErr != nil {
+		return fmt.Errorf("construct provider model catalog worker: %w", catalogErr)
+	}
 	listener, err := net.Listen("tcp", config.GRPCListen)
 	if err != nil {
 		return errors.New("listen control-plane gRPC")
@@ -272,10 +285,12 @@ func Run(lifecycle, shutdownBase context.Context, _ string) error {
 	workers := serviceruntime.StartWorkers(lifecycle,
 		serveGRPC(grpcServer, listener),
 		serveHTTP(technical),
-		monitorReadiness(service, repository, publisher, cleanupClaimHealth, readiness, slog.Default(), config),
+		monitorReadiness(service, repository, publisher, emailProjection, cleanupClaimHealth, readiness, slog.Default(), config, catalogHealth),
+		emailProjection.Run,
 		monitorOIDCSigningKeys(proofService, slog.Default(), config),
 		runOutboxRelay(repository, publisher, shutdownBase, config),
 		cleanupWorker.Run,
+		catalogWorker.Run,
 		runAgentAvatarCleanup(repository, slog.Default()),
 	)
 	workerDone := make(chan error, 1)
@@ -477,19 +492,28 @@ type readinessCondition interface {
 	Ready() (bool, string)
 }
 
-func monitorReadiness(service *platformservice.Service, store readinessStore, publisher readinessPublisher, cleanupClaim readinessCondition, readiness *serviceruntime.Readiness, logger *slog.Logger, config Config) serviceruntime.Worker {
+func monitorReadiness(service *platformservice.Service, store readinessStore, publisher readinessPublisher, emailProjection *emailProjection, cleanupClaim readinessCondition, readiness *serviceruntime.Readiness, logger *slog.Logger, config Config, catalogConditions ...readinessCondition) serviceruntime.Worker {
 	return func(ctx context.Context) error {
 		ticker := time.NewTicker(config.ReadinessInterval)
 		defer ticker.Stop()
 		for {
 			check, cancel := context.WithTimeout(ctx, config.ReadinessTimeout)
-			err := errors.Join(service.Ready(check), store.CheckOutbox(check), publisher.Check(check))
+			err := errors.Join(service.Ready(check), store.CheckOutbox(check), publisher.Check(check), emailProjection.Check(check))
 			cancel()
 			reason, errorClass := "direct_infrastructure_unavailable", "direct_infrastructure"
 			if cleanupReady, _ := cleanupClaim.Ready(); err == nil && !cleanupReady {
 				err = errors.New("provider credential cleanup claim is unavailable")
 				reason = "provider_credential_cleanup_claim_unavailable"
 				errorClass = "provider_credential_cleanup_claim"
+			}
+			if err == nil {
+				for _, condition := range catalogConditions {
+					if ready, _ := condition.Ready(); !ready {
+						err = errors.New("provider model catalog observer is unavailable")
+						reason, errorClass = "provider_model_catalog_observer_unavailable", "provider_model_catalog_observer"
+						break
+					}
+				}
 			}
 			if err == nil {
 				if readiness.Set(true, "ready") {

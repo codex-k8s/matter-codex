@@ -119,6 +119,10 @@ test-integration-deployed-e2e:
 test-agent-runner:
 	@./scripts/tests/agent-runner-test.sh
 
+.PHONY: test-runtime-controller-artifact-transfer
+test-runtime-controller-artifact-transfer:
+	@bash ./scripts/tests/runtime-controller-artifact-transfer-test.sh
+
 test-stt-tts-service-contract:
 	@./scripts/tests/stt-tts-service-contract-test.sh
 
@@ -162,6 +166,10 @@ test-email-bridge:
 
 test-email-bridge-render:
 	@bash scripts/tests/email-bridge-render-test.sh
+
+.PHONY: test-email-projection-render
+test-email-projection-render:
+	@bash scripts/tests/email-projection-render-test.sh
 
 test-email-bridge-install:
 	@timeout 420 bash scripts/tests/email-bridge-install-test.sh

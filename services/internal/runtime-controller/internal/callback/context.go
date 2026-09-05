@@ -1,17 +1,12 @@
 package callback
 
 import (
-	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
 
-	cp "github.com/codex-k8s/kodex/libs/go/controlplaneapi/gen/controlplane/v1"
 	"github.com/codex-k8s/kodex/libs/go/runtimecontract"
-	"google.golang.org/grpc"
 )
 
 func (server *Server) contextArtifact(writer http.ResponseWriter, request *http.Request, input runtimecontract.RunnerInput, artifactRef string) {
@@ -20,29 +15,8 @@ func (server *Server) contextArtifact(writer http.ResponseWriter, request *http.
 		http.NotFound(writer, request)
 		return
 	}
-	ctx, cancel := context.WithTimeout(request.Context(), server.config.RequestTimeout)
-	defer cancel()
-	response, err := server.control.Runtime.ReadExecutionArtifact(ctx, &cp.ReadExecutionArtifactRequest{
-		LeaseRef: input.LeaseRef, Fence: input.LeaseFence, Generation: input.LeaseGeneration, ArtifactRef: pin.ArtifactRef,
-	}, grpc.MaxCallRecvMsgSize(int(pin.SizeBytes)+(64<<10)))
-	if err != nil {
-		writeControlError(writer, err)
-		return
-	}
-	artifact, content := response.GetArtifact(), response.GetContent()
-	digest := sha256.Sum256(content)
-	if artifact.GetRef() != pin.ArtifactRef || artifact.GetProjectRef() != input.ProjectRef ||
-		int64(artifact.GetRevision()) != pin.ArtifactRevision || artifact.GetSizeBytes() != pin.SizeBytes ||
-		artifact.GetDigest() != pin.Digest || int64(len(content)) != pin.SizeBytes ||
-		"sha256:"+hex.EncodeToString(digest[:]) != pin.Digest {
-		http.Error(writer, "runtime context artifact binding is invalid", http.StatusConflict)
-		return
-	}
-	writer.Header().Set("Content-Type", "application/octet-stream")
-	writer.Header().Set("Content-Length", strconv.FormatInt(pin.SizeBytes, 10))
-	writer.Header().Set("X-Kodex-Artifact-Digest", pin.Digest)
-	writer.WriteHeader(http.StatusOK)
-	_, _ = writer.Write(content)
+	server.serveArtifactTransfer(writer, request, input, artifactTransferPin{ref: pin.ArtifactRef, project: input.ProjectRef,
+		digest: pin.Digest, size: pin.SizeBytes, revision: pin.ArtifactRevision}, "application/octet-stream")
 }
 
 // contextArtifactPin разрешает только точный файл immutable snapshot активной

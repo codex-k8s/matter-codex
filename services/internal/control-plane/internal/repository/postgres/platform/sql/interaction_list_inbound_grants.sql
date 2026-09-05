@@ -17,7 +17,9 @@ JOIN LATERAL (
       AND a.enabled
       AND a.state = 'READY'
       AND EXISTS (SELECT 1 FROM control_plane.instruction_versions instruction
-          WHERE instruction.agent_id=a.id AND instruction.state='PUBLISHED')
+          JOIN control_plane.agent_instruction_bindings binding ON binding.instruction_id=instruction.id
+          WHERE binding.agent_id=a.id AND binding.organization_id=a.organization_id
+            AND instruction.agent_id=a.id AND instruction.state='PUBLISHED')
     UNION ALL
     SELECT w.project_id
     FROM control_plane.workflows w
@@ -33,6 +35,10 @@ WHERE c.organization_id = @organization_id::uuid
   AND c.enabled
   AND c.state IN ('CONNECTED', 'DEGRADED')
   AND g.enabled
+  AND g.organization_id = c.organization_id
+  AND g.definition_version = c.definition_version
+  AND g.definition_digest = c.definition_digest
+  AND c.lifecycle_state = 'ACTIVE'
   AND g.capability_key = 'mattermost.inbound'
 ORDER BY g.ref
 LIMIT 2

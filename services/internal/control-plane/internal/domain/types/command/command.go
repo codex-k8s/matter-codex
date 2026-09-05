@@ -12,8 +12,27 @@ import (
 type Kind string
 
 const (
+	ConfigureRoleImageGitSource             Kind = "CONFIGURE_ROLE_IMAGE_GIT_SOURCE"
+	ConfigureIntegrationDefinitionGitSource Kind = "CONFIGURE_INTEGRATION_DEFINITION_GIT_SOURCE"
+	RefreshRoleImageGitSource               Kind = "REFRESH_ROLE_IMAGE_GIT_SOURCE"
+	RefreshIntegrationDefinitionGitSource   Kind = "REFRESH_INTEGRATION_DEFINITION_GIT_SOURCE"
+)
+
+type ManagedConfigurationGitSourceInput struct {
+	ConfigurationRef, ConnectionRef, RepositoryRef, RefName, Path, ContentFormat string
+	ExpectedConnectionVersion                                                    int64
+}
+
+const (
+	CreateEmailMailboxDraft            Kind = "CREATE_EMAIL_MAILBOX_DRAFT"
+	SaveEmailMailboxDraft              Kind = "SAVE_EMAIL_MAILBOX_DRAFT"
+	ValidateEmailMailboxDraft          Kind = "VALIDATE_EMAIL_MAILBOX_DRAFT"
+	PublishEmailMailboxDraft           Kind = "PUBLISH_EMAIL_MAILBOX_DRAFT"
+	DiscardEmailMailboxDraft           Kind = "DISCARD_EMAIL_MAILBOX_DRAFT"
+	BindEmailMailboxConfiguration      Kind = "BIND_EMAIL_MAILBOX_CONFIGURATION"
+	UnbindEmailMailboxConfiguration    Kind = "UNBIND_EMAIL_MAILBOX_CONFIGURATION"
 	ReconcileEmailEffect               Kind = "RECONCILE_EMAIL_EFFECT"
-	ReportEmailEffect                 Kind = "REPORT_EMAIL_EFFECT"
+	ReportEmailEffect                  Kind = "REPORT_EMAIL_EFFECT"
 	CreateSkillBundleDraft             Kind = "CREATE_SKILL_BUNDLE_DRAFT"
 	SaveSkillBundleDraft               Kind = "SAVE_SKILL_BUNDLE_DRAFT"
 	ValidateSkillBundleDraft           Kind = "VALIDATE_SKILL_BUNDLE_DRAFT"
@@ -48,6 +67,8 @@ const (
 	SetAgentAvatar                     Kind = "SET_AGENT_AVATAR"
 	RemoveAgentAvatar                  Kind = "REMOVE_AGENT_AVATAR"
 	CreateInstructions                 Kind = "CREATE_INSTRUCTION_DRAFT"
+	PrepareInstructionsImpact          Kind = "PREPARE_INSTRUCTIONS_IMPACT"
+	PreparePromptTemplateImpact        Kind = "PREPARE_PROMPT_TEMPLATE_IMPACT"
 	ValidateInstructions               Kind = "VALIDATE_INSTRUCTION_DRAFT"
 	PublishInstructions                Kind = "PUBLISH_INSTRUCTION_DRAFT"
 	RollbackInstructions               Kind = "ROLLBACK_INSTRUCTIONS"
@@ -108,11 +129,13 @@ const (
 	UpdateConnection                   Kind = "UPDATE_INTEGRATION_CONNECTION"
 	DeleteConnection                   Kind = "DELETE_INTEGRATION_CONNECTION"
 	ConfigureConnectionCredential      Kind = "CONFIGURE_INTEGRATION_CONNECTION_CREDENTIAL"
+	ConfigureEmailCredential           Kind = "CONFIGURE_EMAIL_MAILBOX_CREDENTIAL"
 	TestConnection                     Kind = "TEST_INTEGRATION_CONNECTION"
 	SetConnectionEnabled               Kind = "SET_INTEGRATION_CONNECTION_ENABLED"
 	ChangeIntegrationGrant             Kind = "CHANGE_INTEGRATION_GRANT"
 	CreateAssistantConversation        Kind = "CREATE_ASSISTANT_CONVERSATION"
 	UpdateAssistantConversation        Kind = "UPDATE_ASSISTANT_CONVERSATION_TITLE"
+	ArchiveAssistantConversation       Kind = "ARCHIVE_ASSISTANT_CONVERSATION"
 	AddAssistantTurn                   Kind = "ADD_ASSISTANT_TURN"
 	UpdateAssistantPlan                Kind = "UPDATE_ASSISTANT_PLAN_DRAFT"
 	ValidateAssistantPlan              Kind = "VALIDATE_ASSISTANT_PLAN"
@@ -162,6 +185,8 @@ const (
 	ValidateRoleImageRevision          Kind = "VALIDATE_ROLE_IMAGE_REVISION_DRAFT"
 	PublishRoleImageRevision           Kind = "PUBLISH_ROLE_IMAGE_REVISION_DRAFT"
 	RebindRoleImage                    Kind = "REBIND_ROLE_IMAGE_CONSUMERS"
+	PrepareRoleImageImpactPlan         Kind = "PREPARE_ROLE_IMAGE_IMPACT_PLAN"
+	PrepareEnvironmentDraftImpact      Kind = "PREPARE_ENVIRONMENT_DRAFT_IMPACT"
 	CreateIntegrationDefinition        Kind = "CREATE_INTEGRATION_DEFINITION_DRAFT"
 	ValidateIntegrationDefinition      Kind = "VALIDATE_INTEGRATION_DEFINITION_DRAFT"
 	PublishIntegrationDefinition       Kind = "PUBLISH_INTEGRATION_DEFINITION_DRAFT"
@@ -194,6 +219,8 @@ type MembershipInput struct {
 	Active                             bool
 }
 type AgentInput struct {
+	PlanRef                                                                                                 string
+	SelectedItemRefs                                                                                        []string
 	Ref, ProjectRef, RoleDefinitionRef, Name, Purpose, RoleDescription, AvatarURL, RuntimeRef, Instructions string
 	Enabled                                                                                                 bool
 }
@@ -220,6 +247,8 @@ type RuntimeEnvironmentDraftInput struct {
 	DraftRef, ProjectRef, EnvironmentRef string
 	ExpectedEnvironmentVersion           int64
 	Specification                        entity.RuntimeEnvironmentDraftSpecification
+	PlanRef                              string
+	SelectedItemRefs                     []string
 }
 type RuntimeSecretRebindInput struct {
 	SecretRef  string
@@ -268,6 +297,7 @@ type LaunchRunInput struct {
 }
 type SessionTurnInput struct {
 	SessionRef, RunRef, NodeRef, Task, AttachmentSetRef string
+	ExpectedPromptContextDigest                         string
 }
 type RunCommandInput struct{ RunRef, Reason string }
 type GateResolutionInput struct {
@@ -315,6 +345,13 @@ type AssistantConversationInput struct {
 	Context    entity.AssistantContextDescriptor
 }
 type AssistantConversationTitleInput struct{ ConversationRef, Title string }
+type AssistantConversationArchiveInput struct{ ConversationRef string }
+
+type EmailCredentialInput struct {
+	ConnectionRef string
+	Credential    entity.EmailMailboxCredential
+	ReplayOnly    bool
+}
 type AssistantTurnInput struct {
 	ConversationRef, Content, AttachmentSetRef string
 }
@@ -425,11 +462,27 @@ type InteractionIdentityInput struct {
 }
 
 type ManagedConfigurationInput struct {
+	PromptScope                                                                                 *PromptTemplateScopeInput
+	PlanRef                                                                                     string
+	SelectedItemRefs                                                                            []string
 	ConfigurationRef, ProjectRef, Name, Kind, ContentFormat, Content, RevisionRef, ImpactDigest string
 	Consumers                                                                                   []entity.ManagedConfigurationConsumer
 }
 
+type PromptTemplateScopeInput struct {
+	TargetKind, TargetRef, AgentRef, WorkflowRevisionRef, WorkflowStageKey, ExpectedContextDigest, TemplateKind string
+}
+
+type EmailMailboxInput struct {
+	ConnectionRef             string
+	ExpectedConnectionVersion int64
+	Managed                   ManagedConfigurationInput
+}
+
 type Result struct {
+	EmailMailbox            *entity.EmailMailboxConfigurationView
+	EmailPublication        *entity.EmailMailboxPublication
+	EmailConnectionVersion  int64
 	EmailReceipt            *entity.EmailEffectReceipt
 	EmailDecision           *entity.EmailReconciliationDecision
 	SkillBundle             *entity.SkillBundle
@@ -453,6 +506,7 @@ type Result struct {
 	Schedule                *entity.Schedule
 	Connection              *entity.IntegrationConnection
 	Conversation            *entity.AssistantConversation
+	EmailCredential         *entity.EmailMailboxCredential
 	Plan                    *entity.AssistantPlan
 	PlanReceipt             *entity.AssistantPlanReceipt
 	Assistant               *entity.SystemAssistant
@@ -466,7 +520,10 @@ type Result struct {
 	ProviderAccount         *entity.ProviderAccount
 	PromotionReceipt        *entity.RoleImagePromotionReceipt
 	ManagedConfiguration    *entity.ManagedConfigurationSet
+	ConfigurationWriteBack  *entity.ConfigurationWriteBack
 	ManagedRevision         *entity.ManagedConfigurationRevision
+	RoleImageImpactPlan     *entity.RoleImageImpactPlan
+	RevisionImpactPlan      *entity.RevisionImpactPlan
 }
 
 type EmailReconciliationInput struct {
