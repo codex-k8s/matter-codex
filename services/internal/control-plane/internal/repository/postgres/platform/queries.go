@@ -854,9 +854,9 @@ func (repository *Repository) ListRuns(ctx context.Context, principal value.Prin
 			return items, rows.Err()
 		}, func(item entity.Run) entity.AccessScope {
 			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "RUN", ResourceRef: item.Ref, ProjectRef: item.ProjectRef}
-		}, func(_ pgx.Tx, item *entity.Run, allowed func(string) bool) error {
+		}, func(tx pgx.Tx, item *entity.Run, allowed func(string) bool) error {
 			item.NextActions = runActions(item.State, allowed("run.cancel") || allowed("run.cancel.own"), false)
-			return nil
+			return projectArtifactResults(ctx, tx, scope, &command.Result{Run: item})
 		}, func(ctx context.Context, tx pgx.Tx) (int64, error) {
 			var total int64
 			err := tx.QueryRow(ctx, queryCatalogRunsCount, scope.organizationID, filter.ProjectRef, scope.actorID, filter.Query, filter.States, scope.authorityProjectID).Scan(&total)
@@ -1003,6 +1003,9 @@ func (repository *Repository) applyResultActionPermissions(
 			projectRef = result.Schedule.ProjectRef
 		}
 	}
+	if err := projectArtifactResults(ctx, runner, scope, result); err != nil {
+		return err
+	}
 	if projectRef == "" {
 		return nil
 	}
@@ -1028,9 +1031,6 @@ func (repository *Repository) applyResultActionPermissions(
 	}
 	if result.Gate != nil {
 		result.Gate.NextActions = gateActions(result.Gate.State, permissions.canResolveGates)
-	}
-	if result.Artifact != nil {
-		result.Artifact.NextActions = artifactActions(result.Artifact.ScanState, result.Artifact.LifecycleState, permissions.canManageArtifacts)
 	}
 	if result.Schedule != nil {
 		result.Schedule.NextActions = scheduleActions(*result.Schedule, permissions.canManageSchedules)
@@ -1074,9 +1074,6 @@ func applyEventActionPermissions(event *entity.RunEvent, permissions actorAction
 	if event.Delta.Gate != nil {
 		event.Delta.Gate.NextActions = gateActions(event.Delta.Gate.State, permissions.canResolveGates)
 	}
-	if event.Delta.Artifact != nil {
-		event.Delta.Artifact.NextActions = artifactActions(event.Delta.Artifact.ScanState, event.Delta.Artifact.LifecycleState, permissions.canManageArtifacts)
-	}
 }
 
 func (repository *Repository) GetRun(ctx context.Context, principal value.Principal, ref string) (entity.Run, error) {
@@ -1102,6 +1099,9 @@ func (repository *Repository) GetRun(ctx context.Context, principal value.Princi
 func (repository *Repository) readRunWithIncidents(ctx context.Context, runner queryRunner, scope scope, ref string) (entity.Run, error) {
 	item, err := scanRun(runner.QueryRow(ctx, queryQueriesGetrunSelectRunsOrganizationIdRefProjectId, scope.organizationID, ref, scope.role, scope.actorID), true)
 	if err != nil {
+		return entity.Run{}, err
+	}
+	if err := projectArtifactResults(ctx, runner, scope, &command.Result{Run: &item}); err != nil {
 		return entity.Run{}, err
 	}
 	rows, err := runner.Query(ctx, queryInteractionListRunIncidents, pgx.StrictNamedArgs{
@@ -1184,6 +1184,9 @@ func (repository *Repository) GetRunGraph(ctx context.Context, principal value.P
 		return entity.Run{}, entity.RunGraph{}, errs.ErrUnavailable
 	}
 	edgeRows.Close()
+	if err := projectArtifactResults(ctx, tx, scope, &command.Result{Graph: &graph}); err != nil {
+		return entity.Run{}, entity.RunGraph{}, err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return entity.Run{}, entity.RunGraph{}, errs.ErrUnavailable
 	}
@@ -1256,6 +1259,13 @@ func (repository *Repository) ListRunEvents(ctx context.Context, principal value
 	}
 	rows.Close()
 	complete := len(result) < int(limit) || len(result) > 0 && result[len(result)-1].Sequence == run.EventSequence
+	projections := make([]*command.Result, len(result))
+	for index := range result {
+		projections[index] = &command.Result{Event: &result[index]}
+	}
+	if err := projectArtifactResults(ctx, tx, scope, projections...); err != nil {
+		return nil, 0, false, err
+	}
 	if err := tx.Commit(ctx); err != nil {
 		return nil, 0, false, errs.ErrUnavailable
 	}
@@ -1358,27 +1368,7 @@ func (repository *Repository) ListArtifacts(ctx context.Context, principal value
 		}, func(item entity.Artifact) entity.AccessScope {
 			return entity.AccessScope{Kind: "RESOURCE_INSTANCE", ResourceKind: "ARTIFACT", ResourceRef: item.Ref, ProjectRef: item.ProjectRef}
 		}, func(_ pgx.Tx, item *entity.Artifact, allowed func(string) bool) error {
-			item.NextActions = nil
-			if item.LifecycleState == "DELETED" {
-				if allowed("artifact.restore") {
-					item.NextActions = append(item.NextActions, "RESTORE")
-				}
-				if allowed("artifact.purge") {
-					item.NextActions = append(item.NextActions, "PURGE")
-				}
-			} else if item.LifecycleState == "ACTIVE" {
-				if item.ScanState == "CLEAN" {
-					if allowed("artifact.download") {
-						item.NextActions = append(item.NextActions, "DOWNLOAD")
-					}
-					if allowed("artifact.bind") {
-						item.NextActions = append(item.NextActions, "BIND")
-					}
-				}
-				if allowed("artifact.delete") {
-					item.NextActions = append(item.NextActions, "DELETE")
-				}
-			}
+			item.NextActions = permittedArtifactActions(item.ScanState, item.LifecycleState, allowed)
 			return nil
 		}, func(ctx context.Context, tx pgx.Tx) (int64, error) {
 			var total int64
@@ -1462,11 +1452,28 @@ func artifactActions(scanState, lifecycleState string, canManage bool) []string 
 	return actions
 }
 func (repository *Repository) GetArtifact(ctx context.Context, principal value.Principal, ref string) (entity.Artifact, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	scope, err := repository.resolveScope(ctx, principal)
 	if err != nil {
 		return entity.Artifact{}, err
 	}
-	return scanArtifact(repository.pool.QueryRow(ctx, queryQueriesGetartifactSelectArtifactBindingsArtifactIdIdOrganizationId, scope.organizationID, ref, scope.role, scope.actorID))
+	tx, err := repository.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	if err != nil {
+		return entity.Artifact{}, errs.ErrUnavailable
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	item, err := scanArtifact(tx.QueryRow(ctx, queryQueriesGetartifactSelectArtifactBindingsArtifactIdIdOrganizationId, scope.organizationID, ref, scope.role, scope.actorID))
+	if err != nil {
+		return entity.Artifact{}, err
+	}
+	if err := projectArtifactEligibility(ctx, tx, scope, &item); err != nil {
+		return entity.Artifact{}, err
+	}
+	if tx.Commit(ctx) != nil {
+		return entity.Artifact{}, errs.ErrUnavailable
+	}
+	return item, nil
 }
 
 func (repository *Repository) ListSchedules(ctx context.Context, principal value.Principal, filter query.Filter) ([]entity.Schedule, string, error) {

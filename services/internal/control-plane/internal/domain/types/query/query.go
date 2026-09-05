@@ -7,6 +7,7 @@ type Page struct {
 }
 
 type Filter struct {
+	VFSKinds                                                                        []string                 `json:",omitempty"`
 	ExpectedCatalogRevision, ExpectedCatalogDigest                                  string                   `json:",omitempty"`
 	TemplateContext                                                                 *TemplateVariableContext `json:",omitempty"`
 	ProjectRef, ResourceRef, Query, State, Category, DefinitionKey, Action, Outcome string
